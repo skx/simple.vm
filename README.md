@@ -62,6 +62,25 @@ To constantly output increasing numbers:
     jump_label( "A" );
 
 
+As mentioned there are some perl generators:
+
+    perl ./make-count > count.raw
+    ./simple-vm ./count.raw
+
+To enable debugging:
+
+    DEBUG=1 ./simple-vm ./count.raw
+
+
+
+TODO: Storing
+-------------
+
+* Registers can only be loaded with integers in the range 00-ff
+
+* Strings have to have their lengths set, and are limited to lengths 00-ff.
+
+
 
 TODO: Fix Labels
 ----------------
