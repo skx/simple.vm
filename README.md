@@ -1,11 +1,12 @@
-A trivial register-based virtual machine with only the most basic
-operations supported.
+simple.vm
+---------
 
-TODO
-----
+This repository contains a simple virtual machine intepreter, which reads
+binary "bytecodes" from a file and executes them.
 
-1.  Add flags to allow tests.
-2.  Add loops/control-flow
+Because this is only a virtual machine there is no code-generation, if
+you wish to execute bytecode you must write it by hand - but to make that
+easier there is a perl-script with some generation functions.
 
 
 Instructions
@@ -62,18 +63,26 @@ To constantly output increasing numbers:
 
 
 
-TODO
-----
+TODO: Fix Labels
+----------------
 
-Caution labels should be given strings, but string-types have been
-defined with lenths, which means we'd need to have:
+In an ideal world labels would have string identifiers, and we
+could store them as we see them via a linked-list, or hash-table.
 
-  DEFINE_LABEL 3 "foo"
-  JMP_LABEL  3 "foo"
+However at the moment we just emit labels as instructions, so you
+might see:
 
-Instead I guess we must say "255 labels per program"
+    0a B   -> Declare label "B"
+    ..
+    0b B   -> Jump to label "B"
 
-Store labels in a linked-list of:
+Although this is simple enough it does mean that you can only
+jump backwards - because foreward declaration isn't possible.
 
-    LABEL[255] = eip;
 
+The only obvious solution here is to parse the code when it is
+loaded and look for labels - then build up the lable-jump-table
+before executing the code.
+
+Because instructions are different lengths though this becomes
+more of a pain that we'd like.
