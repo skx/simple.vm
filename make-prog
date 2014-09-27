@@ -87,34 +87,6 @@ sub add_print
 
 }
 
-sub emit_label
-{
-    my ($l) = (@_);
-    print chr EMIT_LABEL;
-    print ord $l;
-}
-sub jump_label
-{
-    my ($l) = (@_);
-    print chr JUMP_LABEL;
-    print ord $l;
-}
-
-
-store_int( 0x00, 0 );
-store_int( 0x01, 1 );
-
-emit_label( "A" );
-
-print chr IADD;
-print chr 0x00;
-print chr 0x00;
-print chr 0x01;
-
-print_int( 0x00 );
-
-jump_label( "A" );
-
 
 #
 #  Store a string in a register - then print it out.
@@ -122,7 +94,6 @@ jump_label( "A" );
 store_string( 0x02, "Kemp" );
 print_string(0x02);
 
-jump_label( "A" );
 
 #
 #  Store an integer in a register, then print it out.
