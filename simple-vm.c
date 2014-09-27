@@ -78,7 +78,7 @@ typedef struct registers {
 
 
 /**
- * Flags.
+ * Flags - NOTE: Unusused.
  */
 typedef struct flags {
     _Bool z;
