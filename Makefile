@@ -28,7 +28,7 @@ simple-vm: $(OBJECTS)
 #  Remove our compiled machine, and the sample programs.
 #
 clean:
-	@rm simple-vm *.raw || true
+	@rm simple-vm *.raw *.o || true
 
 
 
