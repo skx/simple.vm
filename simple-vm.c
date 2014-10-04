@@ -5,16 +5,6 @@
  *
  * The machine has 10 registers, numbered R00-R09.
  *
- * There are several primitives defined.
- *
- *  * Math Operations
- *
- *  * Load strings/numbers into registers.
- *
- *  * Print register contents.
- *
- *  * Call system()
- *
  * Steve
  *
  *
@@ -46,19 +36,16 @@
 /***
  * Our "opcodes".
  */
-#define OPCODE_EXIT   0x00      /* EXIT() */
-#define OPCODE_ADD    0x01      /* ADD(Reg_Out, Reg1, Reg2 ); */
-#define OPCODE_SUB    0x02      /* SUB(Reg_Out, Reg1, Reg2 ); */
-#define OPCODE_MUL    0x03      /* MUL(Reg_Out, Reg1, Reg2 ); */
-#define OPCODE_DIV    0x04      /* DIV(Reg_Out, Reg1, Reg2 ); */
-#define STORE_STRING  0x05      /* STORE_STRING( RegN, LEN, "STRING" ) */
-#define STORE_INT     0x06      /* STORE_INT( RegN, val ) */
-#define PRINT_STRING  0x07      /* PRINT_STRING( RegN ) */
-#define PRINT_INT     0x08      /* PRINT_INT( RegN ) */
-#define SYS_STR       0x09      /* SYSTEM( RegN ); */
+#define OPCODE_EXIT   0x00      /* EXIT() - Helpfully zero. */
 
-#define EMIT_LABEL    0x0a
-#define JUMP_LABEL    0x0b
+#define STORE_STRING  0x01      /* STORE_STRING( RegN, LEN, "STRING" ) */
+#define STORE_INT     0x02      /* STORE_INT( RegN, val ) */
+
+#define PRINT_STRING  0x03      /* PRINT_STRING( RegN ) */
+#define PRINT_INT     0x04      /* PRINT_INT( RegN ) */
+
+#define JUMP_TO       0x06      /* JUMP_TO address */
+
 
 
 
@@ -78,14 +65,6 @@ typedef struct registers {
 
 
 /**
- * Flags - NOTE: Unusused.
- */
-typedef struct flags {
-    _Bool z;
-} flag_t;
-
-
-/**
  * The CPU type, which contains:
  *
  * 1.  An array of registers.
@@ -95,7 +74,6 @@ typedef struct flags {
  */
 typedef struct cpu {
     reg_t registers[REGISTER_COUNT];
-    flag_t flags;
     unsigned int esp;
     unsigned int size;
     unsigned char *code;
@@ -206,22 +184,7 @@ void cpu_run(cpu_t * cpup)
 
         switch (cpup->code[cpup->esp])
         {
-#define MATHOP(INST, OP)                                                \
-            case INST: {                                                \
-                if ( getenv( "DEBUG") != NULL )                         \
-                     printf( "Math operation " #INST "\n" );            \
-                cpup->esp ++;                                           \
-                cpup->registers[cpup->code[cpup->esp]].num = cpup->registers[cpup->code[cpup->esp + 1]].num OP cpup->registers[cpup->code[cpup->esp + 2]].num; \
-                cpup->esp ++;                                           \
-                cpup->esp ++;                                           \
-                break;                                                  \
-            }
-            MATHOP(OPCODE_ADD, +);
-            MATHOP(OPCODE_SUB, -);
-            MATHOP(OPCODE_MUL, *);
-            MATHOP(OPCODE_DIV, /);
-#undef MATHOP
-            /* now our print instruction */
+
         case PRINT_INT:
         {
             cpup->esp++;
@@ -259,59 +222,25 @@ void cpu_run(cpu_t * cpup)
             }
             break;
         }
-        case SYS_STR:
+
+        case JUMP_TO:
         {
             cpup->esp++;
 
-            /* get the reg */
-            unsigned int reg = cpup->code[cpup->esp];
-
-            if (cpup->registers[reg].type == STR)
-            {
-                char *str = cpup->registers[reg].str;
-
-                if ( getenv( "DEBUG") != NULL )
-                    printf("Executing '%s'\n", str);
-
-                system(str);
-            }
-            else
-            {
-                printf("ERROR Register %02X is not a string!\n", reg );
-            }
-            break;
-        }
-
-        case EMIT_LABEL:
-        {
+            short off1 = cpup->code[cpup->esp];
             cpup->esp++;
-            short label = cpup->code[cpup->esp];
+            short off2 = cpup->code[cpup->esp];
+
+            int offset = off1 + ( 256 * off2 );
 
             if ( getenv( "DEBUG" ) != NULL )
-                printf("Found label with identifier %c\n", (char)label);
+                printf("Should jump to: %d Hex:%4x\n", offset, offset );
 
-            cpup->labels[label] = cpup->esp+1;
-
-            printf("Storing destination: %d\n", cpup->esp+1);
-            break;
-        }
-        case JUMP_LABEL:
-        {
-            cpup->esp++;
-            short label = cpup->code[cpup->esp];
-
-            if ( getenv( "DEBUG" ) != NULL )
-                printf("Found jump to label with identifier %c\n", (char)label);
-
-            unsigned int dest = cpup->labels[label];
-
-            if ( getenv( "DEBUG" ) != NULL )
-                printf("Should jump to offset: %d\n", dest );
-
-            cpup->esp = dest;
+            cpup->esp = offset;
             goto restart;
             break;
         }
+
         case STORE_INT:
         {
             /* store an int in a register */
@@ -322,20 +251,25 @@ void cpu_run(cpu_t * cpup)
             cpup->esp++;
 
             /* get the value */
-            unsigned int val = cpup->code[cpup->esp];
+            unsigned int val1 = cpup->code[cpup->esp];
+            cpup->esp++;
+            unsigned int val2 = cpup->code[cpup->esp];
+
+            int value = val1 + ( 256 * val2 );
 
             if ( getenv( "DEBUG") != NULL )
-                printf("STORE_INT(Reg:%02x => %d)\n", reg, val);
+                printf("STORE_INT(Reg:%02x => %d Hex:%4x 1:%d 2:%d)\n", reg, value, value, val1, val2);
 
             /* if the register stores a string .. free it */
             if ((cpup->registers[reg].type == STR) && (cpup->registers[reg].str))
                 free(cpup->registers[reg].str);
 
-            cpup->registers[reg].num = val;
+            cpup->registers[reg].num = value;
             cpup->registers[reg].type = INT;
 
             break;
         }
+
         case STORE_STRING:
         {
             /* store a string in a register */
@@ -352,8 +286,11 @@ void cpu_run(cpu_t * cpup)
             /**
              * If we have a string delete it.
              */
-            if (cpup->registers[reg].str)
+            if ( (cpup->registers[reg].type == STR ) &&
+                 (cpup->registers[reg].str) )
+            {
                 free(cpup->registers[reg].str);
+            }
 
             /**
              * Store the new string and set the register type.
@@ -377,6 +314,7 @@ void cpu_run(cpu_t * cpup)
 
             break;
         }
+
         case OPCODE_EXIT:
         {
             if ( getenv( "DEBUG") != NULL )
@@ -385,8 +323,7 @@ void cpu_run(cpu_t * cpup)
             break;
         }
         default:
-            if ( getenv( "DEBUG") != NULL )
-                printf("executed: 0x%08X\n", cpup->code[cpup->esp]);
+            printf("UNKNOWN INSTRUCTION\n");
             break;
         }
         cpup->esp++;
