@@ -25,6 +25,10 @@
         sub #1, #1, #2
 
         print_int #1
+
+        #
+        # This jump only occur if the zero-flag is set.
+        #
         jmpnz repeat
 
 
