@@ -65,11 +65,13 @@
 #define PRINT_INT     0x04      /* PRINT_INT( RegN ) */
 
 #define JUMP_TO       0x06      /* JUMP_TO address */
+#define JUMP_Z        0x07      /* JUMP_Z address */
+#define JUMP_NZ       0x08      /* JUMP_NZ address */
 
-#define ADD_OP 0x07
-#define SUB_OP 0x08
-#define MUL_OP 0x09
-#define DIV_OP 0x0A
+#define ADD_OP 0x09
+#define SUB_OP 0x0A
+#define MUL_OP 0x0B
+#define DIV_OP 0x0C
 
 
 
@@ -88,6 +90,15 @@ typedef struct registers {
 } reg_t;
 
 
+
+/**
+ * Flags - NOTE: Unusused.
+ */
+typedef struct flags {
+    _Bool z;
+} flag_t;
+
+
 /**
  * The CPU type, which contains:
  *
@@ -98,6 +109,7 @@ typedef struct registers {
  */
 typedef struct cpu {
     reg_t registers[REGISTER_COUNT];
+    flag_t flags;
     unsigned int esp;
     unsigned int size;
     unsigned char *code;
@@ -268,6 +280,53 @@ void cpu_run(cpu_t * cpup)
             break;
         }
 
+
+
+        case JUMP_Z:
+        {
+            cpup->esp++;
+
+            short off1 = cpup->code[cpup->esp];
+            cpup->esp++;
+            short off2 = cpup->code[cpup->esp];
+
+            int offset = off1 + ( 256 * off2 );
+
+            if ( getenv( "DEBUG" ) != NULL )
+                printf("Should jump to offset %04d [Hex:%04x] if Z\n", offset, offset );
+
+            if ( cpup->flags.z )
+            {
+                cpup->esp = offset;
+                goto restart;
+            }
+            break;
+        }
+
+
+        case JUMP_NZ:
+        {
+            cpup->esp++;
+
+            short off1 = cpup->code[cpup->esp];
+            cpup->esp++;
+            short off2 = cpup->code[cpup->esp];
+
+            int offset = off1 + ( 256 * off2 );
+
+            if ( getenv( "DEBUG" ) != NULL )
+                printf("Should jump to offset %04d [Hex:%04x] if NOT Z\n", offset, offset );
+
+            if ( ! cpup->flags.z )
+            {
+                cpup->esp = offset;
+                goto restart;
+            }
+            break;
+        }
+
+
+
         case STORE_INT:
         {
             /* store an int in a register */
@@ -357,6 +416,11 @@ void cpu_run(cpu_t * cpup)
 
             cpup->registers[reg].num = cpup->registers[src1].num - cpup->registers[src2].num;
             cpup->registers[reg].type = INT;
+
+            if ( cpup->registers[reg].num <= 0 )
+                cpup->flags.z = true;
+            else
+                cpup->flags.z = false;
 
             break;
         }

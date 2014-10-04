@@ -33,15 +33,17 @@ use constant PRINT_INT    => 0x04;
 #  Jumps
 #
 use constant JUMP_TO => 0x06;
+use constant JUMP_Z  => 0x07;
+use constant JUMP_NZ => 0x08;
 
 
 #
 #  Mathematical
 #
-use constant ADD_OP => 0x07;
-use constant SUB_OP => 0x08;
-use constant MUL_OP => 0x09;
-use constant DIV_OP => 0x0A;
+use constant ADD_OP => 0x09;
+use constant SUB_OP => 0x0A;
+use constant MUL_OP => 0x0B;
+use constant DIV_OP => 0x0C;
 
 
 
@@ -157,6 +159,47 @@ while ( my $file = shift )
             my $label = $1;
 
             print $out chr JUMP_TO;
+            print $out chr 0;    # this will be updated.
+            print $out chr 0;    # this will be updated.
+
+            $offset += 3;        # jump + val1 + val2
+
+            #
+            # we now need to record the fact we have to patch up this
+            # instruction.
+            #
+            push( @UPDATES,
+                  {  offset => ( $offset - 2 ),
+                     label  => $label
+                  } );
+        }
+
+
+        if ( $line =~ /jmpz\s+([^ ]+)/ )
+        {
+            my $label = $1;
+
+            print $out chr JUMP_Z;
+            print $out chr 0;    # this will be updated.
+            print $out chr 0;    # this will be updated.
+
+            $offset += 3;        # jump + val1 + val2
+
+            #
+            # we now need to record the fact we have to patch up this
+            # instruction.
+            #
+            push( @UPDATES,
+                  {  offset => ( $offset - 2 ),
+                     label  => $label
+                  } );
+        }
+
+        if ( $line =~ /jmpnz\s+([^ ]+)/ )
+        {
+            my $label = $1;
+
+            print $out chr JUMP_NZ;
             print $out chr 0;    # this will be updated.
             print $out chr 0;    # this will be updated.
 
