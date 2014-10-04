@@ -210,7 +210,7 @@ void svm_run(svm_t * cpup)
         switch (cpup->code[cpup->esp])
         {
 
-        case PRINT_INT:
+        case INT_PRINT:
             {
                 cpup->esp++;
 
@@ -341,7 +341,7 @@ void svm_run(svm_t * cpup)
 
 
 
-        case STORE_INT:
+        case INT_STORE:
             {
                 /* store an int in a register */
                 cpup->esp++;
@@ -367,6 +367,28 @@ void svm_run(svm_t * cpup)
 
                 cpup->registers[reg].num = value;
                 cpup->registers[reg].type = INT;
+
+                break;
+            }
+
+        case INT_TOSTRING:
+            {
+                /* convert an int-register to a string-register */
+                cpup->esp++;
+
+                /* get the reg */
+                unsigned int reg = cpup->code[cpup->esp];
+                BOUNDS_TEST_REGISTER(reg);
+
+                int tmp = cpup->registers[reg].num;
+
+                /* allocate a buffer. */
+                cpup->registers[reg].type = STR;
+                cpup->registers[reg].str = malloc(10);
+
+                /* store the string-value */
+                memset(cpup->registers[reg].str, '\0', 10);
+                sprintf(cpup->registers[reg].str, "%d",  tmp);
 
                 break;
             }
@@ -680,6 +702,33 @@ void svm_run(svm_t * cpup)
 
                 break;
             }
+
+        case STRING_TOINT:
+            {
+                /* convert an string-register to an int-register */
+                cpup->esp++;
+
+                /* get the reg */
+                unsigned int reg = cpup->code[cpup->esp];
+                BOUNDS_TEST_REGISTER(reg);
+
+
+                if (cpup->registers[reg].type != STR)
+                {
+                    printf("Attempt to read the string value of a register which is an integer\n" );
+                    exit(1);
+                }
+
+                int i = atoi(cpup->registers[reg].str);
+                free(cpup->registers[reg].str);
+
+                /* allocate a buffer. */
+                cpup->registers[reg].type = INT;
+                cpup->registers[reg].num  = i;
+
+                break;
+            }
+
 
         case OPCODE_EXIT:
             {

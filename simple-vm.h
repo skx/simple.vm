@@ -45,8 +45,9 @@
 /**
  * Integer things.
  */
-#define STORE_INT     0x01
-#define PRINT_INT     0x02
+#define INT_STORE     0x01
+#define INT_PRINT     0x02
+#define INT_TOSTRING  0x03
 
 
 /**
@@ -72,10 +73,11 @@
  * String things.
  */
 
-#define STRING_STORE  0x30
-#define STRING_PRINT  0x31
-#define STRING_CONCAT 0x32
-#define STRING_SYSTEM 0x33
+#define STRING_STORE   0x30
+#define STRING_PRINT   0x31
+#define STRING_CONCAT  0x32
+#define STRING_SYSTEM  0x33
+#define STRING_TOINT   0x34
 
 
 /**

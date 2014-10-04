@@ -37,8 +37,9 @@ use constant EXIT => 0x00;
 #
 #  Integer things.
 #
-use constant STORE_INT => 0x01;
-use constant PRINT_INT => 0x02;
+use constant INT_STORE    => 0x01;
+use constant INT_PRINT    => 0x02;
+use constant INT_TOSTRING => 0x03;
 
 #
 #  Jumps
@@ -67,7 +68,7 @@ use constant STRING_STORE  => 0x30;
 use constant STRING_PRINT  => 0x31;
 use constant STRING_CONCAT => 0x32;
 use constant STRING_SYSTEM => 0x33;
-
+use constant STRING_TOINT  => 0x34;
 
 
 #
@@ -146,7 +147,7 @@ while ( my $file = shift )
             my $val1 = $val % 256;
             my $val2 = ( $val - $val1 ) / 256;
 
-            print $out chr STORE_INT;
+            print $out chr INT_STORE;
             print $out chr $reg;
             print $out chr $val1;
             print $out chr $val2;
@@ -175,7 +176,7 @@ while ( my $file = shift )
         elsif ( $line =~ /^\s*print_int\s?#(.*)/ )
         {
             my $reg = $1;
-            print $out chr PRINT_INT;
+            print $out chr INT_PRINT;
             print $out chr $reg;
 
             $offset += 2;
@@ -334,6 +335,22 @@ while ( my $file = shift )
             print $out chr INC_OP;
             print $out chr $reg;
 
+            $offset += 2;    # INC + reg
+        }
+        elsif ( $line =~ /^\s*int2string\s+#([0-9]+)/ )
+        {
+            my $reg = $1;
+
+            print $out chr INT_TOSTRING;
+            print $out chr $reg;
+            $offset += 2;    # INC + reg
+        }
+        elsif ( $line =~ /^\s*string2int\s+#([0-9]+)/ )
+        {
+            my $reg = $1;
+
+            print $out chr STRING_TOINT;
+            print $out chr $reg;
             $offset += 2;    # INC + reg
         }
         elsif (
