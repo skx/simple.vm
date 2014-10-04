@@ -413,7 +413,7 @@ void cpu_run(cpu_t * cpup)
             /**
              * Overflow?!
              */
-            if ( cpup->registers[reg].num = 0 )
+            if ( cpup->registers[reg].num == 0 )
                 cpup->flags.z = true;
             else
                 cpup->flags.z = false;
@@ -451,7 +451,7 @@ void cpu_run(cpu_t * cpup)
             cpup->registers[reg].num = cpup->registers[src1].num - cpup->registers[src2].num;
             cpup->registers[reg].type = INT;
 
-            if ( cpup->registers[reg].num = 0 )
+            if ( cpup->registers[reg].num == 0 )
                 cpup->flags.z = true;
             else
                 cpup->flags.z = false;
