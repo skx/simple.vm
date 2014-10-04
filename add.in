@@ -1,0 +1,17 @@
+#
+# About
+#
+#  This program adds two numbers.
+#
+#
+# Usage
+#
+#  $ compiler ./add.in ; ./simple-vm ./add.raw
+#
+#
+#
+
+        store #1, 10
+        store #2, 20
+        add #0, #1, #2
+        print_int #0
