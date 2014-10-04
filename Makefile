@@ -7,7 +7,7 @@ all: simple-vm
 
 
 clean:
-	@ rm simple-vm prog.raw || true
+	@rm simple-vm *.raw || true
 
 simple-vm: simple-vm.c
 	@gcc -Wall -Wextra -o simple-vm simple-vm.c -ggdb
