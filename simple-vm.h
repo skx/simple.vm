@@ -56,8 +56,11 @@
 #define MUL_OP 0x0B
 #define DIV_OP 0x0C
 
+
 #define SYSTEM_STRING 0x0D
 
+#define INC_OP 0x0E
+#define DEC_OP 0x0F
 
 
 /**

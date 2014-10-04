@@ -324,6 +324,56 @@ void cpu_run(cpu_t * cpup)
                 break;
             }
 
+        case INC_OP:
+            {
+                /* increment the contents of a register */
+                cpup->esp++;
+
+                /* get the reg */
+                unsigned int reg = cpup->code[cpup->esp];
+
+
+                if (cpup->registers[reg].type != INT)
+                {
+                    printf("Tried to decrement aregister which is not an integer\n");
+                    exit(1);
+                }
+
+                cpup->registers[reg].num += 1;
+
+                if (cpup->registers[reg].num == 0)
+                    cpup->flags.z = true;
+                else
+                    cpup->flags.z = false;
+
+
+                break;
+            }
+        case DEC_OP:
+            {
+                /* increment the contents of a register */
+                cpup->esp++;
+
+                /* get the reg */
+                unsigned int reg = cpup->code[cpup->esp];
+
+
+                if (cpup->registers[reg].type != INT)
+                {
+                    printf("Tried to decrement aregister which is not an integer\n");
+                    exit(1);
+                }
+
+                cpup->registers[reg].num -= 1;
+
+                if (cpup->registers[reg].num == 0)
+                    cpup->flags.z = true;
+                else
+                    cpup->flags.z = false;
+
+
+                break;
+            }
         case ADD_OP:
             {
                 cpup->esp++;

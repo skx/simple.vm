@@ -69,6 +69,12 @@ use constant DIV_OP => 0x0C;
 use constant SYSTEM_STRING => 0x0D;
 
 
+#
+#  Increment/decrement the register contents
+#
+use constant INC_OP => 0x0E;
+use constant DEC_OP => 0x0F;
+
 
 #
 #  Labels - All are downcased and must be unique per-source.
@@ -304,6 +310,24 @@ while ( my $file = shift )
             print $out chr $src2;
 
             $offset += 4;    # add + dest + src1 + src2
+        }
+        elsif ( $line =~ /^\s*dec\s+#([0-9]+)/ )
+        {
+            my $reg = $1;
+
+            print $out chr DEC_OP;
+            print $out chr $reg;
+
+            $offset += 2;    # dec + reg
+        }
+        elsif ( $line =~ /^\s*inc\s+#([0-9]+)/ )
+        {
+            my $reg = $1;
+
+            print $out chr INC_OP;
+            print $out chr $reg;
+
+            $offset += 2;    # INC + reg
         }
         else
         {

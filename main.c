@@ -29,13 +29,13 @@
 
 
 
-int run_file( const char *filename, int dump_registers )
+int run_file(const char *filename, int dump_registers)
 {
     struct stat sb;
 
     if (stat(filename, &sb) != 0)
     {
-        printf("Failed to read file: %s\n", filename );
+        printf("Failed to read file: %s\n", filename);
         return 1;
     }
 
@@ -69,7 +69,7 @@ int run_file( const char *filename, int dump_registers )
     }
     cpu_run(cpu);
 
-    if ( dump_registers )
+    if (dump_registers)
         cpu_dump_registers(cpu);
 
 
@@ -96,10 +96,10 @@ int main(int argc, char **argv)
     }
 
     int dump_registers = 0;
-    if ( getenv( "DEBUG" ) != NULL )
+    if (getenv("DEBUG") != NULL)
         dump_registers = 1;
 
-    run_file( argv[1], dump_registers );
+    run_file(argv[1], dump_registers);
 
     return 1;                   /* return success */
 }
