@@ -46,6 +46,10 @@
 
 #define JUMP_TO       0x06      /* JUMP_TO address */
 
+#define ADD_OP 0x07
+#define SUB_OP 0x08
+#define MUL_OP 0x09
+#define DIV_OP 0x0A
 
 
 
@@ -265,6 +269,122 @@ void cpu_run(cpu_t * cpup)
                 free(cpup->registers[reg].str);
 
             cpup->registers[reg].num = value;
+            cpup->registers[reg].type = INT;
+
+            break;
+        }
+
+        case ADD_OP:
+        {
+            cpup->esp++;
+
+            /* get the destination register. */
+            unsigned int reg = cpup->code[cpup->esp];
+            cpup->esp++;
+            unsigned int src1 = cpup->code[cpup->esp];
+            cpup->esp++;
+            unsigned int src2 = cpup->code[cpup->esp];
+
+            /* if the register stores a string .. free it */
+            if ((cpup->registers[reg].type == STR) && (cpup->registers[reg].str))
+                free(cpup->registers[reg].str);
+
+            //
+            // TODO: Make sure source registers have integer values.
+            //
+            cpup->registers[reg].num = cpup->registers[src1].num +
+                cpup->registers[src2].num;
+
+            //
+            //  The result is an integer
+            //
+            cpup->registers[reg].type = INT;
+
+            break;
+        }
+
+        case SUB_OP:
+        {
+            cpup->esp++;
+
+            /* get the destination register. */
+            unsigned int reg = cpup->code[cpup->esp];
+            cpup->esp++;
+            unsigned int src1 = cpup->code[cpup->esp];
+            cpup->esp++;
+            unsigned int src2 = cpup->code[cpup->esp];
+
+            /* if the register stores a string .. free it */
+            if ((cpup->registers[reg].type == STR) && (cpup->registers[reg].str))
+                free(cpup->registers[reg].str);
+
+            //
+            // TODO: Make sure source registers have integer values.
+            //
+            cpup->registers[reg].num = cpup->registers[src1].num -
+                cpup->registers[src2].num;
+
+            //
+            //  The result is an integer
+            //
+            cpup->registers[reg].type = INT;
+
+            break;
+        }
+
+        case MUL_OP:
+        {
+            cpup->esp++;
+
+            /* get the destination register. */
+            unsigned int reg = cpup->code[cpup->esp];
+            cpup->esp++;
+            unsigned int src1 = cpup->code[cpup->esp];
+            cpup->esp++;
+            unsigned int src2 = cpup->code[cpup->esp];
+
+            /* if the register stores a string .. free it */
+            if ((cpup->registers[reg].type == STR) && (cpup->registers[reg].str))
+                free(cpup->registers[reg].str);
+
+            //
+            // TODO: Make sure source registers have integer values.
+            //
+            cpup->registers[reg].num = cpup->registers[src1].num *
+                cpup->registers[src2].num;
+
+            //
+            //  The result is an integer
+            //
+            cpup->registers[reg].type = INT;
+
+            break;
+        }
+
+        case DIV_OP:
+        {
+            cpup->esp++;
+
+            /* get the destination register. */
+            unsigned int reg = cpup->code[cpup->esp];
+            cpup->esp++;
+            unsigned int src1 = cpup->code[cpup->esp];
+            cpup->esp++;
+            unsigned int src2 = cpup->code[cpup->esp];
+
+            /* if the register stores a string .. free it */
+            if ((cpup->registers[reg].type == STR) && (cpup->registers[reg].str))
+                free(cpup->registers[reg].str);
+
+            //
+            // TODO: Make sure source registers have integer values.
+            //
+            cpup->registers[reg].num = cpup->registers[src1].num /
+                cpup->registers[src2].num;
+
+            //
+            //  The result is an integer
+            //
             cpup->registers[reg].type = INT;
 
             break;
