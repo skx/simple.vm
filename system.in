@@ -1,0 +1,15 @@
+#
+# About
+#
+#  This program just executes /bin/ls.
+#
+#
+# Usage
+#
+#  $ compiler ./system.in ; ./simple-vm ./system.raw
+#
+#
+#
+
+        store #1, "/bin/ls"
+        system #1

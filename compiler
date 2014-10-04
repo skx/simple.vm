@@ -46,6 +46,12 @@ use constant MUL_OP => 0x0B;
 use constant DIV_OP => 0x0C;
 
 
+#
+#  System
+#
+use constant SYSTEM_STRING => 0x0D;
+
+
 
 #
 #  Labels - All are downcased and must be unique per-source.
@@ -149,6 +155,15 @@ while ( my $file = shift )
         {
             my $reg = $1;
             print $out chr PRINT_STRING;
+            print $out chr $reg;
+
+            $offset += 2;
+        }
+
+        if ( $line =~ /system\s?#(.*)/ )
+        {
+            my $reg = $1;
+            print $out chr SYSTEM_STRING;
             print $out chr $reg;
 
             $offset += 2;

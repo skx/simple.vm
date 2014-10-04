@@ -73,6 +73,8 @@
 #define MUL_OP 0x0B
 #define DIV_OP 0x0C
 
+#define SYSTEM_STRING 0x0D
+
 
 
 /**
@@ -258,6 +260,25 @@ void cpu_run(cpu_t * cpup)
             else
             {
                 printf("ERROR Tried to print string contents of register %02x but it is an integer\n", reg );
+            }
+            break;
+        }
+
+
+        case SYSTEM_STRING:
+        {
+            cpup->esp++;
+
+            /* get the reg */
+            unsigned int reg = cpup->code[cpup->esp];
+
+            if (cpup->registers[reg].type == STR)
+            {
+                system(cpup->registers[reg].str);
+            }
+            else
+            {
+                printf("ERROR Tried to execute the contents register %02x but it is an integer\n", reg );
             }
             break;
         }
