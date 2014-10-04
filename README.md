@@ -25,18 +25,33 @@ There is a compiler which takes care of converting from labels to operations.
 Example
 -------
 
-The following program will just output a string:
+The following program will just endlessly output a string:
 
-    store #1, "I like loops"
-    print_str #1
-    jump 0
+     :start
+          store #1, "I like loops"
+          print_str #1
+          goto start
 
 This program first stores the string "`I like loops`" in register 1,
 then prints that register, before jumping to the start of the program.
 
-To enable the debugging of execution:
+To actually compile this program into bytecodes run:
 
-    DEBUG=1 ./simple-vm ./program.raw
+      $ ./compiler simple.in
+      1. Compiling simple.in into simple.raw
+      2. Post-compile jump-fixups for simple.raw
+          We must update offset 18 with the destination of the label: start
+
+This will produce the opcodes to the file `simple.raw`:
+
+      $ od -c simple.raw
+      0000000 001 001  \f   I       l   i   k   e       l   o   o   p   s 003
+      0000020 001 006  \0  \0
+      0000024
+
+Now we can execute that series of opcodes:
+
+      DEBUG=1 ./simple-vm ./simple.raw
 
 
 
