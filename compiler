@@ -1,7 +1,24 @@
 #!/usr/bin/perl -w
 #
-#  This is a simple "compiler" which will read an input file
+#  This is a simple compiler which will read an input file
 # and spit out the corresponding bytecodes for the program.
+#
+#  The only real complexity comes from having to account for labels
+# as our virtual machine only understands absolute jumping.
+#
+#      e.g. Rather than "jmp +3", or "jmp -8" we can only write
+#           "jump address", where "address" is an integer 0-64k.
+#
+#  To cope with this we initially write all jump-targets as
+# "JMP 0x0000" and keep track of the length of each instruction
+# we've generated.
+#
+#  After the whole program has been compiled we can go back and fill
+# in the absolute/real destination for the jumps.
+#
+#  Not ideal, but it is simpler than either parsing for-real or
+# using a multi-pass parser.
+#
 #
 # Steve
 # --
@@ -60,7 +77,8 @@ my %LABELS;
 
 
 #
-#  Reocrd of jump destinations we've got to update
+#  A running list of the jump-destinations we've got to update
+# post-compilation - see the note in the header.
 #
 my @UPDATES;
 
@@ -72,12 +90,17 @@ my @UPDATES;
 #
 while ( my $file = shift )
 {
+    #
+    #  Compiled programs have the same basename, but will have a .raw
+    # suffix appended.
+    #
     my $output = $file;
     $output =~ s/\.[^.]+$//;
     $output .= ".raw";
 
-    print "1. Compiling $file into $output\n";
-
+    #
+    #  Open our input/output files.
+    #
     open( my $in,  "<", $file )   or die "Failed to read source $file - $!";
     open( my $out, ">", $output ) or die "Failed to write to $output - $!";
 
@@ -85,24 +108,33 @@ while ( my $file = shift )
     #
     #  Amount of instructions we've output.
     #
-    #  This is used for labeling-purposes
+    #  This is label-related.
     #
     my $offset = 0;
 
+    #
+    #  Process each line of the input
+    #
     while ( my $line = <$in> )
     {
+        #
+        #  Except comments / empty lines.
+        #
         chomp($line);
         next if ( !length($line) || ( $line =~ /^\s*#/ ) );
 
 
-        if ( $line =~ /^:(.*)/ )
+        #
+        #  Label definition ":foo"
+        #
+        if ( $line =~ /^\s*:(.*)/ )
         {
             my $name = $1;
             $LABELS{ $name } = $offset;
 
             # so we found a label - store the offset of the code in our array.
         }
-        elsif ( $line =~ /store\s+#([0-9]+), ([0-9]+)/ )
+        elsif ( $line =~ /^\s*store\s+#([0-9]+), ([0-9]+)/ )
         {
             my $reg = $1;
             my $val = $2;
@@ -119,12 +151,12 @@ while ( my $file = shift )
 
             $offset += 4;
         }
-        elsif ( $line =~ /exit/ )
+        elsif ( $line =~ /^\s+exit/ )
         {
             print $out chr EXIT;
             $offset += 1;
         }
-        elsif ( $line =~ /store\s+#([0-9]+),\s?"([^"]+)"/ )
+        elsif ( $line =~ /^\s+store\s+#([0-9]+),\s?"([^"]+)"/ )
         {
             my $reg = $1;
             my $str = $2;
@@ -138,7 +170,7 @@ while ( my $file = shift )
             $offset += 3;              # store + reg + len
             $offset += length($str);
         }
-        elsif ( $line =~ /print_int\s?#(.*)/ )
+        elsif ( $line =~ /^\s*print_int\s?#(.*)/ )
         {
             my $reg = $1;
             print $out chr PRINT_INT;
@@ -146,7 +178,7 @@ while ( my $file = shift )
 
             $offset += 2;
         }
-        elsif ( $line =~ /print_str\s?#(.*)/ )
+        elsif ( $line =~ /^\s*print_str\s?#(.*)/ )
         {
             my $reg = $1;
             print $out chr PRINT_STRING;
@@ -154,7 +186,7 @@ while ( my $file = shift )
 
             $offset += 2;
         }
-        elsif ( $line =~ /system\s?#(.*)/ )
+        elsif ( $line =~ /^\s*system\s?#(.*)/ )
         {
             my $reg = $1;
             print $out chr SYSTEM_STRING;
@@ -162,7 +194,7 @@ while ( my $file = shift )
 
             $offset += 2;
         }
-        elsif ( $line =~ /goto\s+([^ ]+)/ )
+        elsif ( $line =~ /^\s*goto\s+([^ ]+)/ )
         {
             my $label = $1;
 
@@ -181,7 +213,7 @@ while ( my $file = shift )
                      label  => $label
                   } );
         }
-        elsif ( $line =~ /jmpz\s+([^ ]+)/ )
+        elsif ( $line =~ /^\s*jmpz\s+([^ ]+)/ )
         {
             my $label = $1;
 
@@ -200,7 +232,7 @@ while ( my $file = shift )
                      label  => $label
                   } );
         }
-        elsif ( $line =~ /jmpnz\s+([^ ]+)/ )
+        elsif ( $line =~ /^\s*jmpnz\s+([^ ]+)/ )
         {
             my $label = $1;
 
