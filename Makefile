@@ -3,7 +3,26 @@
 #
 
 
+#
+#  Common definitions.
+#
+CC=gcc
+LINKER=$(CC) -o
+CFLAGS+=-pedantic -std=c99 -Wall -Wextra
+
+
+
+
+SOURCES := $(wildcard *.c)
+OBJECTS := $(SOURCES:%.c=%.o)
+
+
+
 all: simple-vm
+
+simple-vm: $(OBJECTS)
+	$(LINKER) $@  $(OBJECTS) $(CFLAGS)
+
 
 #
 #  Remove our compiled machine, and the sample programs.
@@ -11,12 +30,6 @@ all: simple-vm
 clean:
 	@rm simple-vm *.raw || true
 
-
-#
-#  Compile the virtual machine.
-#
-simple-vm: simple-vm.c
-	@gcc -Wall -Wextra -o simple-vm simple-vm.c -ggdb
 
 
 #
