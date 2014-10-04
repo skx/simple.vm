@@ -1,0 +1,28 @@
+#
+# About
+#
+#  Use a conditional jump to loop ten times, the conditional will trigger
+# if a "SUB" operation results in <0.
+#
+#
+# Usage
+#
+#  $ compiler ./loop.in ; ./simple-vm ./loop.raw
+#
+#
+#
+
+        store #1, "Counting from ten to zero"
+        print_str #1
+
+        store #1, 10
+        store #2, 1
+:repeat
+        sub #1, #1, #2
+        print_int #1
+        jmpnz repeat
+
+
+        store #1, "Done"
+        print_str #1
+        exit
