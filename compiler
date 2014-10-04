@@ -90,6 +90,7 @@ my @UPDATES;
 #
 while ( my $file = shift )
 {
+
     #
     #  Compiled programs have the same basename, but will have a .raw
     # suffix appended.
@@ -117,6 +118,7 @@ while ( my $file = shift )
     #
     while ( my $line = <$in> )
     {
+
         #
         #  Except comments / empty lines.
         #
@@ -317,16 +319,14 @@ while ( my $file = shift )
     #  OK now this is nasty - we want to go back and patch up the jump
     # instructions we know we've emitted.
     #
-    print "2. Post-compile jump-fixups for $output\n";
-
     foreach my $update (@UPDATES)
     {
         my $offset = $update->{ 'offset' };
         my $label  = $update->{ 'label' };
 
-        print
-          "\tWe must update offset $offset with the destination of the label: $label\n";
-
+        #
+        #  Open for in-place editing and make sure we're at the right spot.
+        #
         open( my $tmp, "+<", $output ) or die "Failed to write to output - $!";
         seek $tmp, $offset, 0;
 
@@ -336,12 +336,21 @@ while ( my $file = shift )
         my $target = $LABELS{ $label };
         die "No target for label '$label'" unless ( defined($target) );
 
+        #
+        # Split the address into two bytes.
+        #
         my $t1 = $target % 256;
         my $t2 = ( $target - $t1 ) / 256;
 
+        #
+        # Update the compiled file on-disk.  (Remember the seek?)
+        #
         print $tmp chr $t1;
         print $tmp chr $t2;
 
+        #
+        # Close again.  Inefficient if we have >N labels..
+        #
         close($tmp);
     }
 }
