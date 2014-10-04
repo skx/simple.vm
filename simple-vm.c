@@ -3,7 +3,27 @@
  * This is a simple virtual-machine which uses registers, rather than
  * the stack.
  *
- * The machine has 10 registers, numbered R00-R09.
+ * The virtual machine will execute the contents of the named program-file,
+ * by reading the file and parsing the binary-opcodes.
+ *
+ * Each opcode is an integer between 0-255 inclusive, and will have a variable
+ * number of arguments.  The opcodes are divided into classes which are
+ * broadly:
+ *
+ * * Storing values in registers.
+ * * Running mathematical operations on registers.
+ * * etc.
+ *
+ * For example the addition operation looks like this:
+ *
+ *    ADD Register-For-Result, Source-Register-One, Source-REgister-Two
+ *
+ * And the storing of a number in a register looks like this:
+ *
+ *   STORE Register-For-Result NUMBER
+ *
+ * The machine has 10 registers total, numbered 00-09.
+ *
  *
  * Steve
  *
@@ -140,7 +160,7 @@ void dump_regs(cpu_t * cpup)
         }
         else if (cpup->registers[i].type == INT)
         {
-            printf("\tRegister %02d - Decimal:%04d Hex:%04X\n", i,
+            printf("\tRegister %02d - Decimal:%04d [Hex:%04X]\n", i,
                    cpup->registers[i].num,
                    cpup->registers[i].num);
         }
@@ -183,7 +203,8 @@ void cpu_run(cpu_t * cpup)
     restart:
 
         if ( getenv( "DEBUG" ) != NULL )
-            printf("%04x - Parsing OpCode: %02x\n", cpup->esp , cpup->code[cpup->esp]);
+            printf("%04x - Parsing OpCode: %d [Hex:%02x]\n", cpup->esp ,
+                   cpup->code[cpup->esp],cpup->code[cpup->esp]);
 
 
         switch (cpup->code[cpup->esp])
@@ -198,7 +219,9 @@ void cpu_run(cpu_t * cpup)
 
             if (cpup->registers[reg].type == INT)
             {
-                printf("[stdout] register R%02d = %04x\n", cpup->code[reg],
+                printf("[stdout] register R%02d = %d [Hex:%04x]\n",
+                       cpup->code[reg],
+                       cpup->registers[reg].num,
                        cpup->registers[reg].num);
             }
             else
@@ -238,7 +261,7 @@ void cpu_run(cpu_t * cpup)
             int offset = off1 + ( 256 * off2 );
 
             if ( getenv( "DEBUG" ) != NULL )
-                printf("Should jump to: %d Hex:%4x\n", offset, offset );
+                printf("Should jump to offset %04d [Hex:%04x]\n", offset, offset );
 
             cpup->esp = offset;
             goto restart;
@@ -262,7 +285,7 @@ void cpu_run(cpu_t * cpup)
             int value = val1 + ( 256 * val2 );
 
             if ( getenv( "DEBUG") != NULL )
-                printf("STORE_INT(Reg:%02x => %d Hex:%4x 1:%d 2:%d)\n", reg, value, value, val1, val2);
+                printf("STORE_INT(Reg:%02x) => %04d [Hex:%04x]\n", reg, value, value);
 
             /* if the register stores a string .. free it */
             if ((cpup->registers[reg].type == STR) && (cpup->registers[reg].str))
@@ -289,15 +312,18 @@ void cpu_run(cpu_t * cpup)
             if ((cpup->registers[reg].type == STR) && (cpup->registers[reg].str))
                 free(cpup->registers[reg].str);
 
-            //
-            // TODO: Make sure source registers have integer values.
-            //
+            /*
+             * Ensure both source registers have integer values.
+             */
+            if ((cpup->registers[src1].type != INT) ||
+                (cpup->registers[src2].type != INT) )
+            {
+                printf("Tried to add two registers which do not contain integers\n" );
+                exit(1);
+            }
+
             cpup->registers[reg].num = cpup->registers[src1].num +
                 cpup->registers[src2].num;
-
-            //
-            //  The result is an integer
-            //
             cpup->registers[reg].type = INT;
 
             break;
@@ -318,15 +344,18 @@ void cpu_run(cpu_t * cpup)
             if ((cpup->registers[reg].type == STR) && (cpup->registers[reg].str))
                 free(cpup->registers[reg].str);
 
-            //
-            // TODO: Make sure source registers have integer values.
-            //
-            cpup->registers[reg].num = cpup->registers[src1].num -
-                cpup->registers[src2].num;
 
-            //
-            //  The result is an integer
-            //
+            /*
+             * Ensure both source registers have integer values.
+             */
+            if ((cpup->registers[src1].type != INT) ||
+                (cpup->registers[src2].type != INT) )
+            {
+                printf("Tried to subtract two registers which do not contain integers\n" );
+                exit(1);
+            }
+
+            cpup->registers[reg].num = cpup->registers[src1].num - cpup->registers[src2].num;
             cpup->registers[reg].type = INT;
 
             break;
@@ -347,15 +376,18 @@ void cpu_run(cpu_t * cpup)
             if ((cpup->registers[reg].type == STR) && (cpup->registers[reg].str))
                 free(cpup->registers[reg].str);
 
-            //
-            // TODO: Make sure source registers have integer values.
-            //
+            /*
+             * Ensure both source registers have integer values.
+             */
+            if ((cpup->registers[src1].type != INT) ||
+                (cpup->registers[src2].type != INT) )
+            {
+                printf("Tried to multiply two registers which do not contain integers\n" );
+                exit(1);
+            }
+
             cpup->registers[reg].num = cpup->registers[src1].num *
                 cpup->registers[src2].num;
-
-            //
-            //  The result is an integer
-            //
             cpup->registers[reg].type = INT;
 
             break;
@@ -376,15 +408,18 @@ void cpu_run(cpu_t * cpup)
             if ((cpup->registers[reg].type == STR) && (cpup->registers[reg].str))
                 free(cpup->registers[reg].str);
 
-            //
-            // TODO: Make sure source registers have integer values.
-            //
+            /*
+             * Ensure both source registers have integer values.
+             */
+            if ((cpup->registers[src1].type != INT) ||
+                (cpup->registers[src2].type != INT) )
+            {
+                printf("Tried to subtract two registers which do not contain integers\n" );
+                exit(1);
+            }
+
             cpup->registers[reg].num = cpup->registers[src1].num /
                 cpup->registers[src2].num;
-
-            //
-            //  The result is an integer
-            //
             cpup->registers[reg].type = INT;
 
             break;
@@ -404,7 +439,7 @@ void cpu_run(cpu_t * cpup)
             cpup->esp++;
 
             /**
-             * If we have a string delete it.
+             * If we already have a string in the register delete it.
              */
             if ( (cpup->registers[reg].type == STR ) &&
                  (cpup->registers[reg].str) )
@@ -442,8 +477,11 @@ void cpu_run(cpu_t * cpup)
             run = 0;
             break;
         }
+
         default:
-            printf("UNKNOWN INSTRUCTION\n");
+            printf("UNKNOWN INSTRUCTION: %d [Hex: %2X]\n",
+                   cpup->code[cpup->esp],
+                   cpup->code[cpup->esp]);
             break;
         }
         cpup->esp++;
