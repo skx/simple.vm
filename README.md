@@ -55,5 +55,9 @@ If you wish to debug the execution then run:
 TODO
 ----
 
-* Add some form of conditional-jumping.
-* Add system(RegN), or similar.
+More operations - perhaps string-concat, str-str, etc.
+
+Otherwise relax.
+
+Steve
+--
