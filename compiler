@@ -15,12 +15,34 @@ use warnings;
 #
 #  These are the bytecodes we understand.
 #
-use constant EXIT         => 0x00;
+use constant EXIT => 0x00;
+
+#
+#  Store items.
+#
 use constant STORE_STRING => 0x01;
 use constant STORE_INT    => 0x02;
+
+#
+#  Print registers.
+#
 use constant PRINT_STRING => 0x03;
 use constant PRINT_INT    => 0x04;
-use constant JUMP_TO      => 0x06;
+
+#
+#  Jumps
+#
+use constant JUMP_TO => 0x06;
+
+
+#
+#  Mathematical
+#
+use constant ADD_OP => 0x07;
+use constant SUB_OP => 0x08;
+use constant MUL_OP => 0x09;
+use constant DIV_OP => 0x0A;
+
 
 
 #
@@ -148,6 +170,60 @@ while ( my $file = shift )
                   {  offset => ( $offset - 2 ),
                      label  => $label
                   } );
+        }
+
+        if ( $line =~ /^\s*add\s+#([0-9]+)\s*,\s*#([0-9]+)\s*,\s*#([0-9]+)/ )
+        {
+            my $dest = $1;
+            my $src1 = $2;
+            my $src2 = $3;
+
+            print $out chr ADD_OP;
+            print $out chr $dest;
+            print $out chr $src1;
+            print $out chr $src2;
+
+            $offset += 4;    # add + dest + src1 + src2
+        }
+
+        if ( $line =~ /^\s*sub\s+#([0-9]+)\s*,\s*#([0-9]+)\s*,\s*#([0-9]+)/ )
+        {
+            my $dest = $1;
+            my $src1 = $2;
+            my $src2 = $3;
+
+            print $out chr SUB_OP;
+            print $out chr $dest;
+            print $out chr $src1;
+            print $out chr $src2;
+
+            $offset += 4;    # sub + dest + src1 + src2
+        }
+        if ( $line =~ /^\s*mul\s+#([0-9]+)\s*,\s*#([0-9]+)\s*,\s*#([0-9]+)/ )
+        {
+            my $dest = $1;
+            my $src1 = $2;
+            my $src2 = $3;
+
+            print $out chr MUL_OP;
+            print $out chr $dest;
+            print $out chr $src1;
+            print $out chr $src2;
+
+            $offset += 4;    # mul + dest + src1 + src2
+        }
+        if ( $line =~ /^\s*div\s+#([0-9]+)\s*,\s*#([0-9]+)\s*,\s*#([0-9]+)/ )
+        {
+            my $dest = $1;
+            my $src1 = $2;
+            my $src2 = $3;
+
+            print $out chr DIV_OP;
+            print $out chr $dest;
+            print $out chr $src1;
+            print $out chr $src2;
+
+            $offset += 4;    # add + dest + src1 + src2
         }
     }
 
