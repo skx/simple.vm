@@ -18,11 +18,17 @@
         store #1, 10
         store #2, 1
 :repeat
+
+        #
+        # This means "reg1 = reg1 - reg2"
+        #
         sub #1, #1, #2
+
         print_int #1
         jmpnz repeat
 
 
         store #1, "Done"
         print_str #1
+
         exit
