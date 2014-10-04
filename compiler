@@ -51,6 +51,7 @@ use constant JUMP_NZ => 0x12;
 #
 #  Mathematical
 #
+use constant XOR_OP => 0x20;
 use constant ADD_OP => 0x21;
 use constant SUB_OP => 0x22;
 use constant MUL_OP => 0x23;
@@ -264,6 +265,19 @@ while ( my $file = shift )
             print $out chr $src2;
 
             $offset += 4;    # add + dest + src1 + src2
+        }
+        elsif ( $line =~ /^\s*xor\s+#([0-9]+)\s*,\s*#([0-9]+)\s*,\s*#([0-9]+)/ )
+        {
+            my $dest = $1;
+            my $src1 = $2;
+            my $src2 = $3;
+
+            print $out chr XOR_OP;
+            print $out chr $dest;
+            print $out chr $src1;
+            print $out chr $src2;
+
+            $offset += 4;    # xor + dest + src1 + src2
         }
         elsif ( $line =~ /^\s*sub\s+#([0-9]+)\s*,\s*#([0-9]+)\s*,\s*#([0-9]+)/ )
         {

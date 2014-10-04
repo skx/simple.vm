@@ -60,6 +60,7 @@
 /**
  * Math things.
  */
+#define XOR_OP 0x20
 #define ADD_OP 0x21
 #define SUB_OP 0x22
 #define MUL_OP 0x23

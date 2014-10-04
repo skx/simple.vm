@@ -421,6 +421,47 @@ void cpu_run(cpu_t * cpup)
                 break;
             }
 
+        case XOR_OP:
+            {
+                cpup->esp++;
+
+                /* get the destination register. */
+                unsigned int reg = cpup->code[cpup->esp];
+                cpup->esp++;
+                unsigned int src1 = cpup->code[cpup->esp];
+                cpup->esp++;
+                unsigned int src2 = cpup->code[cpup->esp];
+
+                /* if the register stores a string .. free it */
+                if ((cpup->registers[reg].type == STR) && (cpup->registers[reg].str))
+                    free(cpup->registers[reg].str);
+
+                /*
+                 * Ensure both source registers have integer values.
+                 */
+                if ((cpup->registers[src1].type != INT) ||
+                    (cpup->registers[src2].type != INT))
+                {
+                    printf("Tried to XOR two registers which do not contain integers\n");
+                    exit(1);
+                }
+
+                cpup->registers[reg].num = cpup->registers[src1].num ^
+                    cpup->registers[src2].num;
+                cpup->registers[reg].type = INT;
+
+            /**
+             * Zero?
+             */
+                if (cpup->registers[reg].num == 0)
+                    cpup->flags.z = true;
+                else
+                    cpup->flags.z = false;
+
+
+                break;
+            }
+
         case SUB_OP:
             {
                 cpup->esp++;
