@@ -1,0 +1,5 @@
+
+:start
+        store #1, "I like loops"
+        print_str #1
+        goto start
