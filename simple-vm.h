@@ -39,30 +39,42 @@
 /***
  * Our "opcodes".
  */
-#define OPCODE_EXIT   0x00      /* EXIT() - Helpfully zero. */
-
-#define STORE_STRING  0x01      /* STORE_STRING( RegN, LEN, "STRING" ) */
-#define STORE_INT     0x02      /* STORE_INT( RegN, val ) */
-
-#define PRINT_STRING  0x03      /* PRINT_STRING( RegN ) */
-#define PRINT_INT     0x04      /* PRINT_INT( RegN ) */
-
-#define JUMP_TO       0x06      /* JUMP_TO address */
-#define JUMP_Z        0x07      /* JUMP_Z address */
-#define JUMP_NZ       0x08      /* JUMP_NZ address */
-
-#define ADD_OP 0x09
-#define SUB_OP 0x0A
-#define MUL_OP 0x0B
-#define DIV_OP 0x0C
+#define OPCODE_EXIT   0x00
 
 
-#define SYSTEM_STRING 0x0D
+/**
+ * Integer things.
+ */
+#define STORE_INT     0x01
+#define PRINT_INT     0x02
 
-#define INC_OP 0x0E
-#define DEC_OP 0x0F
 
-#define STRING_CONCAT 0x10
+/**
+ * Jump things.
+ */
+#define JUMP_TO       0x10
+#define JUMP_Z        0x11
+#define JUMP_NZ       0x12
+
+
+/**
+ * Math things.
+ */
+#define ADD_OP 0x21
+#define SUB_OP 0x22
+#define MUL_OP 0x23
+#define DIV_OP 0x24
+#define INC_OP 0x25
+#define DEC_OP 0x26
+
+/**
+ * String things.
+ */
+
+#define STRING_STORE  0x30
+#define STRING_PRINT  0x31
+#define STRING_CONCAT 0x32
+#define STRING_SYSTEM 0x33
 
 
 /**

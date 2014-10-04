@@ -35,51 +35,38 @@ use warnings;
 use constant EXIT => 0x00;
 
 #
-#  Store items.
+#  Integer things.
 #
-use constant STORE_STRING => 0x01;
-use constant STORE_INT    => 0x02;
-
-#
-#  Print registers.
-#
-use constant PRINT_STRING => 0x03;
-use constant PRINT_INT    => 0x04;
+use constant STORE_INT => 0x01;
+use constant PRINT_INT => 0x02;
 
 #
 #  Jumps
 #
-use constant JUMP_TO => 0x06;
-use constant JUMP_Z  => 0x07;
-use constant JUMP_NZ => 0x08;
+use constant JUMP_TO => 0x10;
+use constant JUMP_Z  => 0x11;
+use constant JUMP_NZ => 0x12;
 
 
 #
 #  Mathematical
 #
-use constant ADD_OP => 0x09;
-use constant SUB_OP => 0x0A;
-use constant MUL_OP => 0x0B;
-use constant DIV_OP => 0x0C;
-
-
-#
-#  System
-#
-use constant SYSTEM_STRING => 0x0D;
-
-
-#
-#  Increment/decrement the register contents
-#
-use constant INC_OP => 0x0E;
-use constant DEC_OP => 0x0F;
+use constant ADD_OP => 0x21;
+use constant SUB_OP => 0x22;
+use constant MUL_OP => 0x23;
+use constant DIV_OP => 0x24;
+use constant INC_OP => 0x25;
+use constant DEC_OP => 0x26;
 
 
 #
 #  String operations
 #
-use constant STRING_CONCAT => 0x10;
+use constant STRING_STORE  => 0x30;
+use constant STRING_PRINT  => 0x31;
+use constant STRING_CONCAT => 0x32;
+use constant STRING_SYSTEM => 0x33;
+
 
 
 #
@@ -176,7 +163,7 @@ while ( my $file = shift )
             my $str = $2;
             my $len = length($str);
 
-            print $out chr STORE_STRING;
+            print $out chr STRING_STORE;
             print $out chr $reg;
             print $out chr $len;
             print $out $str;
@@ -195,7 +182,7 @@ while ( my $file = shift )
         elsif ( $line =~ /^\s*print_str\s?#(.*)/ )
         {
             my $reg = $1;
-            print $out chr PRINT_STRING;
+            print $out chr STRING_PRINT;
             print $out chr $reg;
 
             $offset += 2;
@@ -203,7 +190,7 @@ while ( my $file = shift )
         elsif ( $line =~ /^\s*system\s?#(.*)/ )
         {
             my $reg = $1;
-            print $out chr SYSTEM_STRING;
+            print $out chr STRING_SYSTEM;
             print $out chr $reg;
 
             $offset += 2;
@@ -335,7 +322,8 @@ while ( my $file = shift )
 
             $offset += 2;    # INC + reg
         }
-        elsif ( $line =~ /^\s*concat\s+#([0-9]+)\s*,\s*#([0-9]+)\s*,\s*#([0-9]+)/ )
+        elsif (
+             $line =~ /^\s*concat\s+#([0-9]+)\s*,\s*#([0-9]+)\s*,\s*#([0-9]+)/ )
         {
             my $dest = $1;
             my $src1 = $2;

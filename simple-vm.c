@@ -154,9 +154,15 @@ void cpu_run(cpu_t * cpup)
         return;
 
 
+    /**
+     * The code will start executing from offset 0.
+     */
     cpup->esp = 0;
+
+
     while (run && (cpup->esp < cpup->size))
     {
+
       restart:
 
         if (getenv("DEBUG") != NULL)
@@ -188,7 +194,7 @@ void cpu_run(cpu_t * cpup)
                 break;
             }
 
-        case PRINT_STRING:
+        case STRING_PRINT:
             {
                 cpup->esp++;
 
@@ -209,7 +215,7 @@ void cpu_run(cpu_t * cpup)
             }
 
 
-        case SYSTEM_STRING:
+        case STRING_SYSTEM:
             {
                 cpup->esp++;
 
@@ -520,7 +526,7 @@ void cpu_run(cpu_t * cpup)
                 break;
             }
 
-        case STORE_STRING:
+        case STRING_STORE:
             {
                 /* store a string in a register */
                 cpup->esp++;
@@ -556,7 +562,7 @@ void cpu_run(cpu_t * cpup)
                 }
 
                 if (getenv("DEBUG") != NULL)
-                    printf("STORE_STRING(Reg:%02x => \"%s\" [%02x bytes]\n", reg,
+                    printf("STRING_STORE(Reg:%02x => \"%s\" [%02x bytes]\n", reg,
                            cpup->registers[reg].str, len);
 
                 cpup->esp--;
