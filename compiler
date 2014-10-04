@@ -92,7 +92,7 @@ while ( my $file = shift )
     while ( my $line = <$in> )
     {
         chomp($line);
-        next if ( !length($line) || ( $line =~ /^#/ ) );
+        next if ( !length($line) || ( $line =~ /^\s*#/ ) );
 
 
         if ( $line =~ /^:(.*)/ )
@@ -102,8 +102,7 @@ while ( my $file = shift )
 
             # so we found a label - store the offset of the code in our array.
         }
-
-        if ( $line =~ /store\s+#([0-9]+), ([0-9]+)/ )
+        elsif ( $line =~ /store\s+#([0-9]+), ([0-9]+)/ )
         {
             my $reg = $1;
             my $val = $2;
@@ -120,14 +119,12 @@ while ( my $file = shift )
 
             $offset += 4;
         }
-
-        if ( $line =~ /exit/ )
+        elsif ( $line =~ /exit/ )
         {
             print $out chr EXIT;
             $offset += 1;
         }
-
-        if ( $line =~ /store\s+#([0-9]+),\s?"([^"]+)"/ )
+        elsif ( $line =~ /store\s+#([0-9]+),\s?"([^"]+)"/ )
         {
             my $reg = $1;
             my $str = $2;
@@ -141,8 +138,7 @@ while ( my $file = shift )
             $offset += 3;              # store + reg + len
             $offset += length($str);
         }
-
-        if ( $line =~ /print_int\s?#(.*)/ )
+        elsif ( $line =~ /print_int\s?#(.*)/ )
         {
             my $reg = $1;
             print $out chr PRINT_INT;
@@ -150,8 +146,7 @@ while ( my $file = shift )
 
             $offset += 2;
         }
-
-        if ( $line =~ /print_str\s?#(.*)/ )
+        elsif ( $line =~ /print_str\s?#(.*)/ )
         {
             my $reg = $1;
             print $out chr PRINT_STRING;
@@ -159,8 +154,7 @@ while ( my $file = shift )
 
             $offset += 2;
         }
-
-        if ( $line =~ /system\s?#(.*)/ )
+        elsif ( $line =~ /system\s?#(.*)/ )
         {
             my $reg = $1;
             print $out chr SYSTEM_STRING;
@@ -168,8 +162,7 @@ while ( my $file = shift )
 
             $offset += 2;
         }
-
-        if ( $line =~ /goto\s+([^ ]+)/ )
+        elsif ( $line =~ /goto\s+([^ ]+)/ )
         {
             my $label = $1;
 
@@ -188,9 +181,7 @@ while ( my $file = shift )
                      label  => $label
                   } );
         }
-
-
-        if ( $line =~ /jmpz\s+([^ ]+)/ )
+        elsif ( $line =~ /jmpz\s+([^ ]+)/ )
         {
             my $label = $1;
 
@@ -209,8 +200,7 @@ while ( my $file = shift )
                      label  => $label
                   } );
         }
-
-        if ( $line =~ /jmpnz\s+([^ ]+)/ )
+        elsif ( $line =~ /jmpnz\s+([^ ]+)/ )
         {
             my $label = $1;
 
@@ -229,8 +219,7 @@ while ( my $file = shift )
                      label  => $label
                   } );
         }
-
-        if ( $line =~ /^\s*add\s+#([0-9]+)\s*,\s*#([0-9]+)\s*,\s*#([0-9]+)/ )
+        elsif ( $line =~ /^\s*add\s+#([0-9]+)\s*,\s*#([0-9]+)\s*,\s*#([0-9]+)/ )
         {
             my $dest = $1;
             my $src1 = $2;
@@ -243,8 +232,7 @@ while ( my $file = shift )
 
             $offset += 4;    # add + dest + src1 + src2
         }
-
-        if ( $line =~ /^\s*sub\s+#([0-9]+)\s*,\s*#([0-9]+)\s*,\s*#([0-9]+)/ )
+        elsif ( $line =~ /^\s*sub\s+#([0-9]+)\s*,\s*#([0-9]+)\s*,\s*#([0-9]+)/ )
         {
             my $dest = $1;
             my $src1 = $2;
@@ -257,7 +245,7 @@ while ( my $file = shift )
 
             $offset += 4;    # sub + dest + src1 + src2
         }
-        if ( $line =~ /^\s*mul\s+#([0-9]+)\s*,\s*#([0-9]+)\s*,\s*#([0-9]+)/ )
+        elsif ( $line =~ /^\s*mul\s+#([0-9]+)\s*,\s*#([0-9]+)\s*,\s*#([0-9]+)/ )
         {
             my $dest = $1;
             my $src1 = $2;
@@ -270,7 +258,7 @@ while ( my $file = shift )
 
             $offset += 4;    # mul + dest + src1 + src2
         }
-        if ( $line =~ /^\s*div\s+#([0-9]+)\s*,\s*#([0-9]+)\s*,\s*#([0-9]+)/ )
+        elsif ( $line =~ /^\s*div\s+#([0-9]+)\s*,\s*#([0-9]+)\s*,\s*#([0-9]+)/ )
         {
             my $dest = $1;
             my $src1 = $2;
@@ -282,6 +270,10 @@ while ( my $file = shift )
             print $out chr $src2;
 
             $offset += 4;    # add + dest + src1 + src2
+        }
+        else
+        {
+            print "WARNING UNKNOWN LINE: $line\n";
         }
     }
 
