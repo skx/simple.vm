@@ -68,6 +68,14 @@
 #include <unistd.h>
 
 
+
+/**
+ * Trivial helper to test registers are not out of bounds.
+ */
+#define BOUNDS_TEST_REGISTER( r ) { if ( r >= REGISTER_COUNT )  { printf("Register out of bounds: 0 <= %d >= %d", reg, REGISTER_COUNT ); exit(1); } }
+
+
+
 /**
  * Allocate a new CPU.
  */
@@ -179,6 +187,7 @@ void cpu_run(cpu_t * cpup)
 
                 /* get the reg */
                 unsigned int reg = cpup->code[cpup->esp];
+                BOUNDS_TEST_REGISTER( reg );
 
                 if (cpup->registers[reg].type == INT)
                 {
@@ -200,6 +209,7 @@ void cpu_run(cpu_t * cpup)
 
                 /* get the reg */
                 unsigned int reg = cpup->code[cpup->esp];
+                BOUNDS_TEST_REGISTER( reg );
 
                 if (cpup->registers[reg].type == STR)
                 {
@@ -221,6 +231,7 @@ void cpu_run(cpu_t * cpup)
 
                 /* get the reg */
                 unsigned int reg = cpup->code[cpup->esp];
+                BOUNDS_TEST_REGISTER( reg );
 
                 if (cpup->registers[reg].type == STR)
                 {
@@ -308,9 +319,10 @@ void cpu_run(cpu_t * cpup)
 
                 /* get the reg */
                 unsigned int reg = cpup->code[cpup->esp];
-                cpup->esp++;
+                BOUNDS_TEST_REGISTER( reg );
 
                 /* get the value */
+                cpup->esp++;
                 unsigned int val1 = cpup->code[cpup->esp];
                 cpup->esp++;
                 unsigned int val2 = cpup->code[cpup->esp];
@@ -337,7 +349,7 @@ void cpu_run(cpu_t * cpup)
 
                 /* get the reg */
                 unsigned int reg = cpup->code[cpup->esp];
-
+                BOUNDS_TEST_REGISTER( reg );
 
                 if (cpup->registers[reg].type != INT)
                 {
@@ -362,6 +374,7 @@ void cpu_run(cpu_t * cpup)
 
                 /* get the reg */
                 unsigned int reg = cpup->code[cpup->esp];
+                BOUNDS_TEST_REGISTER( reg );
 
 
                 if (cpup->registers[reg].type != INT)
@@ -386,10 +399,15 @@ void cpu_run(cpu_t * cpup)
 
                 /* get the destination register. */
                 unsigned int reg = cpup->code[cpup->esp];
+                BOUNDS_TEST_REGISTER( reg );
+
                 cpup->esp++;
                 unsigned int src1 = cpup->code[cpup->esp];
+                BOUNDS_TEST_REGISTER( src1 );
+
                 cpup->esp++;
                 unsigned int src2 = cpup->code[cpup->esp];
+                BOUNDS_TEST_REGISTER( src2 );
 
                 /* if the register stores a string .. free it */
                 if ((cpup->registers[reg].type == STR) && (cpup->registers[reg].str))
@@ -427,10 +445,15 @@ void cpu_run(cpu_t * cpup)
 
                 /* get the destination register. */
                 unsigned int reg = cpup->code[cpup->esp];
+                BOUNDS_TEST_REGISTER( reg );
+
                 cpup->esp++;
                 unsigned int src1 = cpup->code[cpup->esp];
+                BOUNDS_TEST_REGISTER( src1 );
+
                 cpup->esp++;
                 unsigned int src2 = cpup->code[cpup->esp];
+                BOUNDS_TEST_REGISTER( src2 );
 
                 /* if the register stores a string .. free it */
                 if ((cpup->registers[reg].type == STR) && (cpup->registers[reg].str))
@@ -468,10 +491,15 @@ void cpu_run(cpu_t * cpup)
 
                 /* get the destination register. */
                 unsigned int reg = cpup->code[cpup->esp];
+                BOUNDS_TEST_REGISTER( reg );
+
                 cpup->esp++;
                 unsigned int src1 = cpup->code[cpup->esp];
+                BOUNDS_TEST_REGISTER( src1 );
+
                 cpup->esp++;
                 unsigned int src2 = cpup->code[cpup->esp];
+                BOUNDS_TEST_REGISTER( src2 );
 
                 /* if the register stores a string .. free it */
                 if ((cpup->registers[reg].type == STR) && (cpup->registers[reg].str))
@@ -507,10 +535,15 @@ void cpu_run(cpu_t * cpup)
 
                 /* get the destination register. */
                 unsigned int reg = cpup->code[cpup->esp];
+                BOUNDS_TEST_REGISTER( reg );
+
                 cpup->esp++;
                 unsigned int src1 = cpup->code[cpup->esp];
+                BOUNDS_TEST_REGISTER( src1 );
+
                 cpup->esp++;
                 unsigned int src2 = cpup->code[cpup->esp];
+                BOUNDS_TEST_REGISTER( src2 );
 
                 /* if the register stores a string .. free it */
                 if ((cpup->registers[reg].type == STR) && (cpup->registers[reg].str))
@@ -540,10 +573,16 @@ void cpu_run(cpu_t * cpup)
 
                 /* get the destination register. */
                 unsigned int reg = cpup->code[cpup->esp];
+                BOUNDS_TEST_REGISTER( reg );
+
                 cpup->esp++;
                 unsigned int src1 = cpup->code[cpup->esp];
+                BOUNDS_TEST_REGISTER( src1 );
+
                 cpup->esp++;
                 unsigned int src2 = cpup->code[cpup->esp];
+                BOUNDS_TEST_REGISTER( src2 );
+
 
                 /* if the register stores a string .. free it */
                 if ((cpup->registers[reg].type == STR) && (cpup->registers[reg].str))
@@ -574,6 +613,8 @@ void cpu_run(cpu_t * cpup)
 
                 /* get the destination register. */
                 unsigned int reg = cpup->code[cpup->esp];
+                BOUNDS_TEST_REGISTER( reg );
+
                 cpup->esp++;
 
                 /* get the length */
@@ -625,10 +666,16 @@ void cpu_run(cpu_t * cpup)
 
                 /* get the destination register. */
                 unsigned int reg = cpup->code[cpup->esp];
+                BOUNDS_TEST_REGISTER( reg );
+
                 cpup->esp++;
                 unsigned int src1 = cpup->code[cpup->esp];
+                BOUNDS_TEST_REGISTER( src1 );
+
                 cpup->esp++;
                 unsigned int src2 = cpup->code[cpup->esp];
+                BOUNDS_TEST_REGISTER( src2 );
+
 
                 /*
                  * Ensure both source registers have string values.
