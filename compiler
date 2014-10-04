@@ -40,7 +40,7 @@ my @UPDATES;
 #
 #  Get the input file we'll parse
 #
-while( my $file = shift )
+while ( my $file = shift )
 {
     my $output = $file;
     $output =~ s/\.[^.]+$//;
@@ -48,7 +48,7 @@ while( my $file = shift )
 
     print "1. Compiling $file into $output\n";
 
-    open( my $in, "<", $file ) or die "Failed to read source $file - $!";
+    open( my $in,  "<", $file )   or die "Failed to read source $file - $!";
     open( my $out, ">", $output ) or die "Failed to write to $output - $!";
 
 
@@ -108,7 +108,7 @@ while( my $file = shift )
             print $out chr $len;
             print $out $str;
 
-            $offset += 3;    # store + reg + len
+            $offset += 3;              # store + reg + len
             $offset += length($str);
         }
 
@@ -135,23 +135,25 @@ while( my $file = shift )
             my $label = $1;
 
             print $out chr JUMP_TO;
-            print $out chr 0;  # this will be updated.
-            print $out chr 0;  # this will be updated.
+            print $out chr 0;    # this will be updated.
+            print $out chr 0;    # this will be updated.
 
-            $offset += 3;  # jump + val1 + val2
+            $offset += 3;        # jump + val1 + val2
 
             #
             # we now need to record the fact we have to patch up this
             # instruction.
             #
-            push(@UPDATES, { offset => ($offset-2),
-                             label => $label} );
+            push( @UPDATES,
+                  {  offset => ( $offset - 2 ),
+                     label  => $label
+                  } );
         }
     }
 
 
-    close( $in );
-    close( $out );
+    close($in);
+    close($out);
 
     #
     #  OK now this is nasty - we want to go back and patch up the jump
@@ -159,12 +161,13 @@ while( my $file = shift )
     #
     print "2. Post-compile jump-fixups for $output\n";
 
-    foreach my $update ( @UPDATES )
+    foreach my $update (@UPDATES)
     {
-        my $offset = $update->{'offset'};
-        my $label  = $update->{'label'};
+        my $offset = $update->{ 'offset' };
+        my $label  = $update->{ 'label' };
 
-        print "\tWe must update offset $offset with the destination of the label: $label\n";
+        print
+          "\tWe must update offset $offset with the destination of the label: $label\n";
 
         open( my $tmp, "+<", $output ) or die "Failed to write to output - $!";
         seek $tmp, $offset, 0;
@@ -172,8 +175,8 @@ while( my $file = shift )
         #
         # now we find the target of the label
         #
-        my $target = $LABELS{$label};
-        die "No target for label '$label'" unless( defined($target) );
+        my $target = $LABELS{ $label };
+        die "No target for label '$label'" unless ( defined($target) );
 
         my $t1 = $target % 256;
         my $t2 = ( $target - $t1 ) / 256;
@@ -181,6 +184,6 @@ while( my $file = shift )
         print $tmp chr $t1;
         print $tmp chr $t2;
 
-        close( $tmp );
+        close($tmp);
     }
 }

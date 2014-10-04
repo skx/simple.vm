@@ -4,9 +4,8 @@ simple.vm
 This repository contains a toy virtual machine intepreter, which reads
 binary "bytecodes" from a file and executes them.
 
-Because this is only a virtual machine there is no code-generation, if
-you wish to execute bytecode you must write it by hand - but to make that
-easier there is a perl-script with some generation functions.
+There is a simple "compiler" which will generate bytecodes from a given
+program - it isn't quite a compiler, but it will let you write simple scripts.
 
 
 Instructions
@@ -14,11 +13,13 @@ Instructions
 
 We have several instruction types:
 
-   1.  Save string/int into register N.
+   1.  Store a string/int into the given register.
 
-   2.  Output operations.
+   2.  Output the contents of a given register. (string/int).
 
-   3.  A jump operation
+   3.  A jump operation.
+
+There is a compiler which takes care of converting from labels to operations.
 
 
 Example
@@ -38,3 +39,10 @@ To enable the debugging of execution:
     DEBUG=1 ./simple-vm ./program.raw
 
 
+
+TODO
+----
+
+* Reinstate the mathematical operations.
+* Add some form of conditional(s).
+* Add system(RegN), or similar.
