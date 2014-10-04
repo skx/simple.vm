@@ -77,6 +77,12 @@ use constant DEC_OP => 0x0F;
 
 
 #
+#  String operations
+#
+use constant STRING_CONCAT => 0x10;
+
+
+#
 #  Labels - All are downcased and must be unique per-source.
 #
 my %LABELS;
@@ -164,7 +170,7 @@ while ( my $file = shift )
             print $out chr EXIT;
             $offset += 1;
         }
-        elsif ( $line =~ /^\s+store\s+#([0-9]+),\s?"([^"]+)"/ )
+        elsif ( $line =~ /^\s+store\s+#([0-9]+),\s?"([^"]*)"/ )
         {
             my $reg = $1;
             my $str = $2;
@@ -328,6 +334,19 @@ while ( my $file = shift )
             print $out chr $reg;
 
             $offset += 2;    # INC + reg
+        }
+        elsif ( $line =~ /^\s*concat\s+#([0-9]+)\s*,\s*#([0-9]+)\s*,\s*#([0-9]+)/ )
+        {
+            my $dest = $1;
+            my $src1 = $2;
+            my $src2 = $3;
+
+            print $out chr STRING_CONCAT;
+            print $out chr $dest;
+            print $out chr $src1;
+            print $out chr $src2;
+
+            $offset += 4;    # concat + dest + src1 + src2
         }
         else
         {

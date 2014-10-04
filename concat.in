@@ -1,0 +1,41 @@
+#
+# About
+#
+#  Use a conditional jump to loop ten times, building up a string as we go.
+#
+#
+# Usage
+#
+#  $ compiler ./concat.in ; ./simple-vm ./concat.raw
+#
+#
+#
+
+        store #1, "Counting bananas"
+        print_str #1
+
+        store #1, 10
+        store #2, 1
+
+        store #3, ""
+        store #4, " banana"
+:repeat
+
+        #
+        # This means "reg1 = reg1 - reg2"
+        #
+        sub #1, #1, #2
+
+        concat #3, #3, #4
+        print_str #3
+
+        #
+        # This jump only occur if the zero-flag is set.
+        #
+        jmpnz repeat
+
+
+        store #1, "Done"
+        print_str #1
+
+        exit

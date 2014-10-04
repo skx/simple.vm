@@ -572,6 +572,58 @@ void cpu_run(cpu_t * cpup)
                 break;
             }
 
+        case STRING_CONCAT:
+            {
+                cpup->esp++;
+
+                /* get the destination register. */
+                unsigned int reg = cpup->code[cpup->esp];
+                cpup->esp++;
+                unsigned int src1 = cpup->code[cpup->esp];
+                cpup->esp++;
+                unsigned int src2 = cpup->code[cpup->esp];
+
+                /*
+                 * Ensure both source registers have string values.
+                 */
+                if ((cpup->registers[src1].type != STR) ||
+                    (cpup->registers[src2].type != STR))
+                {
+                    printf
+                        ("Tried to concat two registers which do not contain strings\n");
+                    exit(1);
+                }
+
+                /**
+                 * Allocate RAM for two strings.
+                 */
+                int len = strlen(cpup->registers[src1].str) +
+                    strlen(cpup->registers[src2].str) + 1;
+
+                /**
+                 * Zero.
+                 */
+                char *tmp = malloc(len);
+                memset(tmp, '\0', len);
+
+                /**
+                 * Assign.
+                 */
+                sprintf(tmp, "%s%s",
+                        cpup->registers[src1].str, cpup->registers[src2].str);
+
+
+                /* if the destination currently contains a string .. free it */
+                if ((cpup->registers[reg].type == STR) && (cpup->registers[reg].str))
+                    free(cpup->registers[reg].str);
+
+                cpup->registers[reg].str = tmp;
+                cpup->registers[reg].type = STR;
+
+                break;
+
+            }
+
         default:
             printf("UNKNOWN INSTRUCTION: %d [Hex: %2X]\n",
                    cpup->code[cpup->esp], cpup->code[cpup->esp]);

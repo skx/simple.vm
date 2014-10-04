@@ -62,6 +62,8 @@
 #define INC_OP 0x0E
 #define DEC_OP 0x0F
 
+#define STRING_CONCAT 0x10
+
 
 /**
  * The type of content a register has.
