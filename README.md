@@ -1,25 +1,23 @@
 simple.vm
 ---------
 
-This repository contains a toy virtual machine intepreter, which reads
-binary "bytecodes" from a file and executes them.
+This repository contains a toy virtual machine intepreter, which reads binary "bytecodes" from a file and executes them.
 
 There is a simple "compiler" which will generate bytecodes from a given
-program - it isn't quite a compiler, but it will let you write simple scripts.
+program.  It isn't _really_ a compiler, but it will let you write simple scripts, and will keep track of labels which may be used prior to being defined.
 
 
 Instructions
 ------------
 
-We have several instruction types:
+There are several implemented instruction-types:
 
-   1.  Store a string/int into the given register.
+*  Store a string/int into the given register.
+*  Mathematical operatoins: add, sub, multiply, divide.
+*  Output the contents of a given register. (string/int).
+*  A jump (immediate) operation.
 
-   2.  Output the contents of a given register. (string/int).
-
-   3.  A jump operation.
-
-There is a compiler which takes care of converting from labels to operations.
+The instructions are pretty basic, as this is just a toy, but adding new ones isn't difficult and the available primitives are reasonably useful as-is.
 
 
 Example
@@ -32,17 +30,13 @@ The following program will just endlessly output a string:
           print_str #1
           goto start
 
-This program first stores the string "`I like loops`" in register 1,
-then prints that register, before jumping to the start of the program.
+This program first stores the string "`I like loops`" in register 1, then prints that register, before jumping to the start of the program.
 
 To actually compile this program into bytecodes run:
 
       $ ./compiler simple.in
-      1. Compiling simple.in into simple.raw
-      2. Post-compile jump-fixups for simple.raw
-          We must update offset 18 with the destination of the label: start
 
-This will produce the opcodes to the file `simple.raw`:
+This will produce an output file full of binary-opcodes in the file `simple.raw`:
 
       $ od -c simple.raw
       0000000 001 001  \f   I       l   i   k   e       l   o   o   p   s 003
@@ -51,13 +45,15 @@ This will produce the opcodes to the file `simple.raw`:
 
 Now we can execute that series of opcodes:
 
-      DEBUG=1 ./simple-vm ./simple.raw
+      ./simple-vm ./simple.raw
 
+If you wish to debug the execution then run:
+
+      DEBUG=1 ./simple-vm ./simple.raw
 
 
 TODO
 ----
 
-* Reinstate the mathematical operations.
-* Add some form of conditional(s).
+* Add some form of conditional-jumping.
 * Add system(RegN), or similar.
