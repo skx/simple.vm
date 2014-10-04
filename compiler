@@ -12,8 +12,10 @@ use strict;
 use warnings;
 
 
-use constant EXIT => 0x00;
-
+#
+#  These are the bytecodes we understand.
+#
+use constant EXIT         => 0x00;
 use constant STORE_STRING => 0x01;
 use constant STORE_INT    => 0x02;
 use constant PRINT_STRING => 0x03;
@@ -22,120 +24,163 @@ use constant JUMP_TO      => 0x06;
 
 
 #
-#  Amount of instructions we've output.
-#
-#  This is used for labeling-purposes
-#
-my $offset = 0;
-
-#
-#  Labels - ALl are downcased and must be unique per-source.
+#  Labels - All are downcased and must be unique per-source.
 #
 my %LABELS;
 
 
-while ( my $line = <DATA> )
+#
+#  Reocrd of jump destinations we've got to update
+#
+my @UPDATES;
+
+
+
+
+#
+#  Get the input file we'll parse
+#
+while( my $file = shift )
 {
-    chomp($line);
-    next if ( !length($line) || ( $line =~ /^#/ ) );
+    my $output = $file;
+    $output =~ s/\.[^.]+$//;
+    $output .= ".raw";
 
-    if ( $line =~ /^:(.*)/ )
+    print "1. Compiling $file into $output\n";
+
+    open( my $in, "<", $file ) or die "Failed to read source $file - $!";
+    open( my $out, ">", $output ) or die "Failed to write to $output - $!";
+
+
+    #
+    #  Amount of instructions we've output.
+    #
+    #  This is used for labeling-purposes
+    #
+    my $offset = 0;
+
+    while ( my $line = <$in> )
     {
-        my $name = $1;
-        $LABELS{ $name } = $offset;
-    }
+        chomp($line);
+        next if ( !length($line) || ( $line =~ /^#/ ) );
 
-    if ( $line =~ /store\s+#([0-9]+), ([0-9]+)/ )
-    {
-        my $reg = $1;
-        my $val = $2;
 
-        die "Int too large" if ( $val >= 65535 );
-
-        my $val1 = $val % 256;
-        my $val2 = ( $val - $val1 ) / 256;
-
-        print chr STORE_INT;
-        print chr $reg;
-        print chr $val1;
-        print chr $val2;
-
-        $offset += 4;
-    }
-
-    if ( $line =~ /store\s+#([0-9]+),\s?"([^"]+)"/ )
-    {
-        my $reg = $1;
-        my $str = $2;
-        my $len = length($str);
-
-        print chr STORE_STRING;
-        print chr $reg;
-        print chr $len;
-        print $str;
-
-        $offset += 3;    # store + reg + len
-        $offset += length($str);
-    }
-
-    if ( $line =~ /goto\s+:(.*)/ )
-    {
-        my $lab = $1;
-
-        if ( defined $LABELS{ $lab } )
+        if ( $line =~ /^:(.*)/ )
         {
-            print chr JUMP_TO;
-            print chr($offset);
+            my $name = $1;
+            $LABELS{ $name } = $offset;
+
+            # so we found a label - store the offset of the code in our array.
         }
-        else
+
+        if ( $line =~ /store\s+#([0-9]+), ([0-9]+)/ )
         {
-            die "Undefined label\n";
+            my $reg = $1;
+            my $val = $2;
+
+            die "Int too large" if ( $val >= 65535 );
+
+            my $val1 = $val % 256;
+            my $val2 = ( $val - $val1 ) / 256;
+
+            print $out chr STORE_INT;
+            print $out chr $reg;
+            print $out chr $val1;
+            print $out chr $val2;
+
+            $offset += 4;
+        }
+
+        if ( $line =~ /exit/ )
+        {
+            print $out chr EXIT;
+            $offset += 1;
+        }
+
+        if ( $line =~ /store\s+#([0-9]+),\s?"([^"]+)"/ )
+        {
+            my $reg = $1;
+            my $str = $2;
+            my $len = length($str);
+
+            print $out chr STORE_STRING;
+            print $out chr $reg;
+            print $out chr $len;
+            print $out $str;
+
+            $offset += 3;    # store + reg + len
+            $offset += length($str);
+        }
+
+        if ( $line =~ /print_int\s?#(.*)/ )
+        {
+            my $reg = $1;
+            print $out chr PRINT_INT;
+            print $out chr $reg;
+
+            $offset += 2;
+        }
+
+        if ( $line =~ /print_str\s?#(.*)/ )
+        {
+            my $reg = $1;
+            print $out chr PRINT_STRING;
+            print $out chr $reg;
+
+            $offset += 2;
+        }
+
+        if ( $line =~ /goto\s+([^ ]+)/ )
+        {
+            my $label = $1;
+
+            print $out chr JUMP_TO;
+            print $out chr 0;  # this will be updated.
+            print $out chr 0;  # this will be updated.
+
+            $offset += 3;  # jump + val1 + val2
+
+            #
+            # we now need to record the fact we have to patch up this
+            # instruction.
+            #
+            push(@UPDATES, { offset => ($offset-2),
+                             label => $label} );
         }
     }
-    if ( $line =~ /print_int\s?#(.*)/ )
+
+
+    close( $in );
+    close( $out );
+
+    #
+    #  OK now this is nasty - we want to go back and patch up the jump
+    # instructions we know we've emitted.
+    #
+    print "2. Post-compile jump-fixups for $output\n";
+
+    foreach my $update ( @UPDATES )
     {
-        my $reg = $1;
-        print chr PRINT_INT;
-        print chr $reg;
+        my $offset = $update->{'offset'};
+        my $label  = $update->{'label'};
 
-        $offset += 2;
+        print "\tWe must update offset $offset with the destination of the label: $label\n";
 
-    }
+        open( my $tmp, "+<", $output ) or die "Failed to write to output - $!";
+        seek $tmp, $offset, 0;
 
-    if ( $line =~ /print_str\s?#(.*)/ )
-    {
-        my $reg = $1;
-        print chr PRINT_STRING;
-        print chr $reg;
+        #
+        # now we find the target of the label
+        #
+        my $target = $LABELS{$label};
+        die "No target for label '$label'" unless( defined($target) );
 
-        $offset += 2;
-    }
+        my $t1 = $target % 256;
+        my $t2 = ( $target - $t1 ) / 256;
 
-    if ( $line =~ /jump\s+([0-9]+)/ )
-    {
-        my $dst = $1;
+        print $tmp chr $t1;
+        print $tmp chr $t2;
 
-        die "Int too large" if ( $dst >= 65535 );
-
-        my $d1 = $dst % 256;
-        my $d2 = ( $dst - $d1 ) / 256;
-
-        print chr JUMP_TO;
-        print chr $d1;
-        print chr $d2;
-
-        $offset += 3;
+        close( $tmp );
     }
 }
-
-
-__DATA__
-
-:label
-  store #1, "Steve Kemp"
-  print_str #1
-
-  store #1, 32
-  print_int #1
-
-  jump 0
