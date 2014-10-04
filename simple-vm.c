@@ -77,22 +77,24 @@
 
 
 /**
- * Allocate a new CPU.
+ * Allocate a new virtual machine.
+ *
+ * The given code will be loaded into the code-area of the machine.
  */
-cpu_t *cpu_new(unsigned char *code, unsigned int size)
+svm_t *svm_new(unsigned char *code, unsigned int size)
 {
-    cpu_t *cpun;
+    svm_t *cpun;
     int i;
 
 
     if (!code || !size)
         return NULL;
 
-    cpun = malloc(sizeof(struct cpu));
+    cpun = malloc(sizeof(struct svm));
     if (!cpun)
         return NULL;
 
-    memset(cpun, '\0', sizeof(struct cpu));
+    memset(cpun, '\0', sizeof(struct svm));
 
     cpun->esp = 0;
     cpun->size = size;
@@ -108,6 +110,11 @@ cpu_t *cpu_new(unsigned char *code, unsigned int size)
         cpun->registers[i].str = NULL;
     }
 
+    /**
+     * Reset the flags.
+     */
+    cpun->flags.z = false;
+
     return cpun;
 }
 
@@ -115,7 +122,7 @@ cpu_t *cpu_new(unsigned char *code, unsigned int size)
 /**
  * Show the content of the various registers.
  */
-void cpu_dump_registers(cpu_t * cpup)
+void svm_dump_registers(svm_t * cpup)
 {
     int i;
 
@@ -139,9 +146,9 @@ void cpu_dump_registers(cpu_t * cpup)
 
 
 /**
- * Delete a CPU.
+ * Delete a virtual machine.
  */
-void cpu_del(cpu_t * cpup)
+void svm_free(svm_t * cpup)
 {
     if (!cpup)
         return;
@@ -153,7 +160,7 @@ void cpu_del(cpu_t * cpup)
 /**
  *  Main virtual machine execution loop
  */
-void cpu_run(cpu_t * cpup)
+void svm_run(svm_t * cpup)
 {
     /**
      * How many instructions this run handled.
@@ -185,6 +192,11 @@ void cpu_run(cpu_t * cpup)
     cpup->esp = 0;
 
 
+    /**
+     * Run continuously - unless we walk off the end of our
+     * allocated code, or an exit instruction causes our run
+     * flag to be set to zero.
+     */
     while (run && (cpup->esp < cpup->size))
     {
 

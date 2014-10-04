@@ -61,20 +61,20 @@ int run_file(const char *filename, int dump_registers)
     fread(code, 1, size, fp);
     fclose(fp);
 
-    cpu_t *cpu = cpu_new(code, size);
+    svm_t *cpu = svm_new(code, size);
     if (!cpu)
     {
         printf("Failed to create virtual machine instance.\n");
         return 1;
     }
-    cpu_run(cpu);
+    svm_run(cpu);
 
     if (dump_registers)
-        cpu_dump_registers(cpu);
+        svm_dump_registers(cpu);
 
 
-    cpu_del(cpu);
-    free(code);                 /* free code */
+    svm_free(cpu);
+    free(code);
     return 0;
 }
 

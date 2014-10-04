@@ -107,46 +107,46 @@ typedef struct flags {
 
 
 /**
- * The CPU type, which contains:
+ * The Simple Virtual Machine type, which contains:
  *
  * 1.  An array of registers.
- * 2.  An instruction pointer.
- * 3.  A set of code to execute - which has a size.
+ * 2.  A set of virtual-flags.
+ * 3.  An instruction pointer.
+ * 4.  A set of code to execute - which has a size.
  *
  */
-typedef struct cpu {
+typedef struct svm {
     reg_t registers[REGISTER_COUNT];
     flag_t flags;
     unsigned int esp;
     unsigned int size;
     unsigned char *code;
-
-    unsigned int labels[255];
-} cpu_t;
+} svm_t;
 
 
 
 /**
- * Allocate a new CPU.
+ * Allocate a new virtual machine.
  */
-cpu_t *cpu_new(unsigned char *code, unsigned int size);
+svm_t *svm_new(unsigned char *code, unsigned int size);
 
 
 /**
- * Dump the registers of the CPU.
+ * Dump the registers of the virtual machine.
  */
-void cpu_dump_registers(cpu_t * cpup);
+void svm_dump_registers(svm_t * cpup);
 
 
 /**
- * Delete a CPU.
+ * Delete a virtuall machine.
  */
-void cpu_del(cpu_t * cpup);
+void svm_free(svm_t * cpup);
+
 
 /**
  *  Main virtual machine execution loop
  */
-void cpu_run(cpu_t * cpup);
+void svm_run(svm_t * cpup);
 
 
 #endif                          /* SIMPLE_VM_H */
