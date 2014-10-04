@@ -94,7 +94,11 @@ typedef struct registers {
 
 
 /**
- * Flags - NOTE: Unusused.
+ * Flags.
+ *
+ * The add/sub instructions set the Z flag if the result is zero.
+ *
+ * This flag can then be used for the JMP_Z and JUMP_NZ instructions.
  */
 typedef struct flags {
     _Bool z;
