@@ -38,10 +38,10 @@ To actually compile this program into bytecodes run:
 
 This will produce an output file full of binary-opcodes in the file `simple.raw`:
 
-      $ od -c simple.raw
-      0000000 001 001  \f   I       l   i   k   e       l   o   o   p   s 003
-      0000020 001 006  \0  \0
-      0000024
+      $ od -t x1 -An ./simple.raw
+      01 01 0c 49 20 6c 69 6b 65 20 6c 6f 6f 70 73 03
+      01 06 00 00
+
 
 Now we can execute that series of opcodes:
 
