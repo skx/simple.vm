@@ -5,14 +5,25 @@
 
 all: simple-vm
 
-
+#
+#  Remove our compiled machine, and the sample programs.
+#
 clean:
 	@rm simple-vm *.raw || true
 
+
+#
+#  Compile the virtual machine.
+#
 simple-vm: simple-vm.c
 	@gcc -Wall -Wextra -o simple-vm simple-vm.c -ggdb
 
-test: simple-vm
-	@./make-prog > prog.raw || true
-	@./simple-vm ./prog.raw    || true
+
+#
+#  Compile all the examples.
+#
+compile:
+	for i in *.in; do ./compiler $$i >/dev/null  ; done
+
+
 
