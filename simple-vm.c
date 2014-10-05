@@ -894,7 +894,7 @@ void svm_run(svm_t * cpup)
                 unsigned int reg2 = cpup->code[cpup->esp];
                 BOUNDS_TEST_REGISTER(reg2);
 
-                int equal = 0;
+                cpup->flags.z = false;
 
                 if (cpup->registers[reg1].type == cpup->registers[reg2].type)
                 {
@@ -902,22 +902,15 @@ void svm_run(svm_t * cpup)
                     {
                         if (strcmp(cpup->registers[reg1].string,
                                    cpup->registers[reg2].string) == 0 )
-                            equal = 1;
-                    } else
+                            cpup->flags.z = true;
+                    }
+                    else
                     {
                         if (cpup->registers[reg1].integer ==
                             cpup->registers[reg2].integer)
-                            equal = 1;
+                            cpup->flags.z = true;
                     }
-                } else
-                {
-                    equal = 0;
                 }
-
-                if (equal)
-                    cpup->flags.z = true;
-                else
-                    cpup->flags.z = false;
 
                 break;
 
