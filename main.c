@@ -100,6 +100,6 @@ int main(int argc, char **argv)
     if (getenv("DEBUG") != NULL)
         dump_registers = 1;
 
-    return( run_file(argv[1], dump_registers) );
+    return (run_file(argv[1], dump_registers));
 
 }

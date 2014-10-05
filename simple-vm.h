@@ -91,6 +91,12 @@
 #define NOP_OP  0x50
 
 
+/**
+ * RAM things.
+ */
+#define LOAD_FROM_RAM 0x60
+#define STORE_IN_RAM  0x61
+
 
 
 /**

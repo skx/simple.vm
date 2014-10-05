@@ -83,6 +83,9 @@ The following are examples of all instructions:
 
     cmp #3, #4        # Compare contents of reg 3 & 4, set the Z-flag.
 
+    load #1, #4       # Load register 1 with the contents of the address in #4.
+    store #1, #4      # Load the address stored in register4 with the contents of reg1.
+
 
 
 Simple Example
@@ -118,6 +121,7 @@ If you wish to debug the execution then run:
 
 There are more examples stored beneath the `examples/` subdirectory in this repository.
 
+The file `examples/quine.in` shows a good example of various features - it outputs its own opcodes.
 
 Steve
 --

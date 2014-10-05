@@ -1,0 +1,43 @@
+#
+# About
+#
+#  Show the binary opcodes of this program!
+#
+#
+# Usage
+#
+#  $ compiler ./quine.in ; ./simple-vm ./quine.raw
+#
+#
+#
+
+        #
+        #  Bytes to show
+        #
+        store #1, 27
+        store #2, 1
+
+        #
+        #  Address to show
+        #
+        store #3, 0
+
+:repeat
+        #
+        #  Get the contents of the byte and show it
+        #
+        load #5, #3
+        print_int #5
+
+        #
+        #  Increase to show the next address.
+        #
+        inc #3
+
+        #
+        #  Loop until we're done.
+        #
+        sub #1, #1, #2
+        jmpnz repeat
+
+        exit

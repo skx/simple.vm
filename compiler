@@ -70,6 +70,7 @@ use constant STRING_CONCAT => 0x32;
 use constant STRING_SYSTEM => 0x33;
 use constant STRING_TOINT  => 0x34;
 
+
 #
 #  Comparison functions
 #
@@ -79,6 +80,13 @@ use constant CMP_REG => 0x40;
 #  Misc things
 #
 use constant NOP_OP => 0x50;
+
+
+#
+#  Load from RAM/store in RAM
+#
+use constant LOAD_FROM_RAM => 0x60;
+use constant STORE_IN_RAM  => 0x61;
 
 
 #
@@ -347,7 +355,25 @@ while ( my $file = shift )
 
             $offset += 3;
         }
+        elsif ( $line =~ /^\s*load\s+#([0-9]+)\s*,\s*#([0-9]+)/ )
+        {
+            my $reg  = $1;
+            my $addr = $2;
+            print $out chr LOAD_FROM_RAM;
+            print $out chr $reg;
+            print $out chr $addr;
 
+            $offset += 3;
+        }
+        elsif ( $line =~ /^\s*store\s+#([0-9]+)\s*,\s*#([0-9]+)/ )
+        {
+            my $reg  = $1;
+            my $addr = $2;
+            print $out chr STORE_IN_RAM;
+            print $out chr $reg;
+            print $out chr $addr;
+            $offset += 3;
+        }
         else
         {
             print "WARNING UNKNOWN LINE: $line\n";

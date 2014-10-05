@@ -148,11 +148,10 @@ void svm_dump_registers(svm_t * cpup)
         }
     }
 
-    if ( cpup->flags.z == true )
+    if (cpup->flags.z == true)
     {
         printf("\tZ-FLAG:true\n");
-    }
-    else
+    } else
     {
         printf("\tZ-FLAG:false\n");
     }
@@ -819,6 +818,53 @@ void svm_run(svm_t * cpup)
 
             }
 
+        case LOAD_FROM_RAM:
+            {
+                cpup->esp++;
+                unsigned int reg = cpup->code[cpup->esp];
+                BOUNDS_TEST_REGISTER(reg);
+
+                cpup->esp++;
+                unsigned int addr = cpup->code[cpup->esp];
+                BOUNDS_TEST_REGISTER(addr);
+
+                // Read the value from the RAM
+                int val = cpup->code[cpup->registers[addr].num];
+
+                /* if the destination currently contains a string .. free it */
+                if ((cpup->registers[reg].type == STR) && (cpup->registers[reg].str))
+                    free(cpup->registers[reg].str);
+
+                cpup->registers[reg].num = val;
+                cpup->registers[reg].type = INT;
+
+                break;
+            }
+        case STORE_IN_RAM:
+            {
+                cpup->esp++;
+                unsigned int reg = cpup->code[cpup->esp];
+                BOUNDS_TEST_REGISTER(reg);
+
+                cpup->esp++;
+                unsigned int addr = cpup->code[cpup->esp];
+                BOUNDS_TEST_REGISTER(addr);
+
+                // If the register contains a number then we're golden
+                if (cpup->registers[addr].type == INT)
+                {
+                    int val = cpup->registers[reg].num;
+                    int addr = cpup->registers[addr].num;
+
+                    cpup->code[addr] = val;
+                } else
+                {
+                    printf("Tried to store a string in RAM!\n");
+                    exit(1);
+                }
+
+                break;
+            }
 
         case CMP_REG:
             {
