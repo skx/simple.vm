@@ -36,7 +36,7 @@ clean:
 #  Compile all the examples.
 #
 compile:
-	for i in *.in; do ./compiler $$i >/dev/null  ; done
+	for i in examples/*.in; do ./compiler $$i >/dev/null  ; done
 
 
 
