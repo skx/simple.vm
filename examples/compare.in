@@ -1,0 +1,25 @@
+#
+# About
+#
+#  This program compares the number in a register with a constant.
+#
+#
+# Usage
+#
+#  $ compiler ./compare.in ; ./simple-vm ./compare.raw
+#
+#
+#
+
+        store #1, 44
+        cmp #1, 44
+        jmpz equal
+
+        store #1, "Inequal"
+        print_str #1
+        exit
+
+:equal
+        store #1, "EQUAL"
+        print_str #1
+        exit

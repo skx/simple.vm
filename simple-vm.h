@@ -82,7 +82,8 @@
 /**
  * Comparisons
  */
-#define CMP_REG      0x40
+#define CMP_REG       0x40
+#define CMP_IMMEDIATE 0x41
 
 
 /**

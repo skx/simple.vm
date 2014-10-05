@@ -922,6 +922,37 @@ void svm_run(svm_t * cpup)
 
             }
 
+        case CMP_IMMEDIATE:
+            {
+                cpup->esp++;
+                unsigned int reg = cpup->code[cpup->esp];
+                BOUNDS_TEST_REGISTER(reg);
+
+                /* get the value */
+                cpup->esp++;
+                unsigned int val1 = cpup->code[cpup->esp];
+                cpup->esp++;
+                unsigned int val2 = cpup->code[cpup->esp];
+
+                int val = BYTES_TO_ADDR(val1, val2);
+
+
+                cpup->flags.z = false;
+
+                if (cpup->registers[reg].type == INTEGER)
+                {
+                    if ((int) cpup->registers[reg].integer == val)
+                        cpup->flags.z = true;
+                } else
+                {
+                    printf("Tried to compare an integer to a string!\n");
+                    exit(0);
+                }
+
+                break;
+
+            }
+
         default:
             printf("UNKNOWN INSTRUCTION: %d [Hex: %2X]\n",
                    cpup->code[cpup->esp], cpup->code[cpup->esp]);

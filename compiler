@@ -74,7 +74,9 @@ use constant STRING_TOINT  => 0x34;
 #
 #  Comparison functions
 #
-use constant CMP_REG => 0x40;
+use constant CMP_REG       => 0x40;
+use constant CMP_IMMEDIATE => 0x41;
+
 
 #
 #  Misc things
@@ -354,6 +356,21 @@ while ( my $file = shift )
             print $out chr $reg2;
 
             $offset += 3;
+        }
+        elsif ( $line =~ /^\s*cmp\s+#([0-9]+)\s*,\s*([0-9]+)\s*/i )
+        {
+            my $reg = $1;
+            my $val = $2;
+
+            my $val1 = $val % 256;
+            my $val2 = ( $val - $val1 ) / 256;
+
+            print $out chr CMP_IMMEDIATE;
+            print $out chr $reg;
+            print $out chr $val1;
+            print $out chr $val2;
+
+            $offset += 4;    # cmp reg val1 val2
         }
         elsif ( $line =~ /^\s*load\s+#([0-9]+)\s*,\s*#([0-9]+)/ )
         {
