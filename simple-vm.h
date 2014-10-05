@@ -103,9 +103,12 @@
  * A single register, which may be used to store a string or an integer.
  */
 typedef struct registers {
-    unsigned int num;
+    union {
+        unsigned int integer;
+        char *string;
+    };
     char *str;
-    enum { INT, STR } type;
+    enum { INTEGER, STRING } type;
 } reg_t;
 
 
