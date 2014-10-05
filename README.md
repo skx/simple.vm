@@ -72,8 +72,8 @@ The following are examples of all instructions:
 
 
 
-Example
--------
+Simple Example
+--------------
 
 The following program will just endlessly output a string:
 
@@ -102,6 +102,9 @@ Now we can execute that series of opcodes:
 If you wish to debug the execution then run:
 
       DEBUG=1 ./simple-vm ./simple.raw
+
+There are more examples stored beneath the `examples/` subdirectory in this repository.
+
 
 Steve
 --
