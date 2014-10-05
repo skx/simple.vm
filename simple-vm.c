@@ -900,7 +900,8 @@ void svm_run(svm_t * cpup)
                 {
                     if (cpup->registers[reg1].type == STRING)
                     {
-                        if (cpup->registers[reg1].string == cpup->registers[reg2].string)
+                        if (strcmp(cpup->registers[reg1].string,
+                                   cpup->registers[reg2].string) == 0 )
                             equal = 1;
                     } else
                     {
@@ -935,7 +936,6 @@ void svm_run(svm_t * cpup)
                 unsigned int val2 = cpup->code[cpup->esp];
 
                 int val = BYTES_TO_ADDR(val1, val2);
-
 
                 cpup->flags.z = false;
 
