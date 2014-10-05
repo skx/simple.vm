@@ -93,16 +93,22 @@
  * This function is called if there is an error in handling
  * some bytecode, or some other part of the system.
  */
-void svm_error_handler(char *msg)
+void svm_error_handler(svm_t * cpup, char *msg)
 {
-    fprintf(stderr, "%s\n", msg);
-    exit(1);
+    if (cpup->error_handler)
+    {
+        (*cpup->error_handler) (msg);
+    } else
+    {
+        fprintf(stderr, "%s\n", msg);
+        exit(1);
+    }
 }
 
 
 
 /**
- * Allocate a new virtual machine.
+ * Allocate a new virtual machine instance.
  *
  * The given code will be loaded into the code-area of the machine.
  */
@@ -110,7 +116,6 @@ svm_t *svm_new(unsigned char *code, unsigned int size)
 {
     svm_t *cpun;
     int i;
-
 
     if (!code || !size)
         return NULL;
@@ -121,6 +126,7 @@ svm_t *svm_new(unsigned char *code, unsigned int size)
 
     memset(cpun, '\0', sizeof(struct svm));
 
+    cpun->error_handler = NULL;
     cpun->esp = 0;
     cpun->size = size;
     cpun->code = code;
@@ -141,6 +147,23 @@ svm_t *svm_new(unsigned char *code, unsigned int size)
     cpun->flags.z = false;
 
     return cpun;
+}
+
+
+/**
+ * Configure a dedicated error-handler.
+ *
+ * The default error-handler will be called if the bytecode tries to
+ * do something crazy, and will merely output a message to the console
+ * and terminate.
+ *
+ * If you wish to handle errors in a GUI system, or similar, you should
+ * setup your own error-handler here.
+ *
+ */
+void svm_set_error_handler(svm_t * cpup, void (*fp) (char *msg))
+{
+    cpup->error_handler = fp;
 }
 
 
@@ -266,9 +289,9 @@ void svm_run(svm_t * cpup)
                            cpup->registers[reg].integer, cpup->registers[reg].integer);
                 } else
                 {
-                    printf
-                        ("ERROR Tried to print integer contents of register %02x but it is a string\n",
-                         reg);
+                    svm_error_handler
+                        (cpup,
+                         "ERROR Tried to print integer contents of string-register");
                 }
                 break;
             }
@@ -287,9 +310,8 @@ void svm_run(svm_t * cpup)
                            cpup->registers[reg].string);
                 } else
                 {
-                    printf
-                        ("ERROR Tried to print string contents of register %02x but it is an integer\n",
-                         reg);
+                    svm_error_handler(cpup,
+                                      "Tried to print string contents of integer-register");
                 }
                 break;
             }
@@ -308,9 +330,8 @@ void svm_run(svm_t * cpup)
                     system(cpup->registers[reg].string);
                 } else
                 {
-                    printf
-                        ("ERROR Tried to execute the contents register %02x but it is an integer\n",
-                         reg);
+                    svm_error_handler(cpup,
+                                      "Tried to run system against an integer-register");
                 }
                 break;
             }
@@ -447,7 +468,7 @@ void svm_run(svm_t * cpup)
                 if (cpup->registers[reg].type != INTEGER)
                 {
                     svm_error_handler
-                        ("Tried to increment non-integer-containing register");
+                        (cpup, "Tried to increment non-integer-containing register");
                 }
 
                 cpup->registers[reg].integer += 1;
@@ -473,7 +494,7 @@ void svm_run(svm_t * cpup)
                 if (cpup->registers[reg].type != INTEGER)
                 {
                     svm_error_handler
-                        ("Tried to decrement non-integer-containing register");
+                        (cpup, "Tried to decrement non-integer-containing register");
                 }
 
                 cpup->registers[reg].integer -= 1;
@@ -514,7 +535,8 @@ void svm_run(svm_t * cpup)
                     (cpup->registers[src2].type != INTEGER))
                 {
                     svm_error_handler
-                        ("Tried to add two registers which do not contain integers");
+                        (cpup,
+                         "Tried to add two registers which do not contain integers");
                 }
 
                 cpup->registers[reg].integer = cpup->registers[src1].integer +
@@ -561,7 +583,8 @@ void svm_run(svm_t * cpup)
                     (cpup->registers[src2].type != INTEGER))
                 {
                     svm_error_handler
-                        ("Tried to XOR two registers which do not contain integers");
+                        (cpup,
+                         "Tried to XOR two registers which do not contain integers");
                 }
 
                 cpup->registers[reg].integer = cpup->registers[src1].integer ^
@@ -609,7 +632,8 @@ void svm_run(svm_t * cpup)
                     (cpup->registers[src2].type != INTEGER))
                 {
                     svm_error_handler
-                        ("Tried to SUB two registers which do not contain integers");
+                        (cpup,
+                         "Tried to SUB two registers which do not contain integers");
                 }
 
                 cpup->registers[reg].integer =
@@ -652,7 +676,8 @@ void svm_run(svm_t * cpup)
                     (cpup->registers[src2].type != INTEGER))
                 {
                     svm_error_handler
-                        ("Tried to MUL two registers which do not contain integers");
+                        (cpup,
+                         "Tried to MUL two registers which do not contain integers");
                 }
 
                 cpup->registers[reg].integer = cpup->registers[src1].integer *
@@ -691,7 +716,8 @@ void svm_run(svm_t * cpup)
                     (cpup->registers[src2].type != INTEGER))
                 {
                     svm_error_handler
-                        ("Tried to DIV two registers which do not contain integers");
+                        (cpup,
+                         "Tried to DIV two registers which do not contain integers");
                 }
 
                 cpup->registers[reg].integer = cpup->registers[src1].integer /
@@ -760,7 +786,8 @@ void svm_run(svm_t * cpup)
 
                 if (cpup->registers[reg].type != STRING)
                 {
-                    svm_error_handler("Tried to convert a non-string from string to int");
+                    svm_error_handler(cpup,
+                                      "Tried to convert a non-string from string to int");
                 }
 
                 int i = atoi(cpup->registers[reg].string);
@@ -806,7 +833,8 @@ void svm_run(svm_t * cpup)
                     (cpup->registers[src2].type != STRING))
                 {
                     svm_error_handler
-                        ("Tried to CONCAT two registers which do not contain strings");
+                        (cpup,
+                         "Tried to CONCAT two registers which do not contain strings");
                 }
 
                 /**
@@ -882,7 +910,7 @@ void svm_run(svm_t * cpup)
                     cpup->code[addr] = val;
                 } else
                 {
-                    svm_error_handler("Tried to store a string in RAM");
+                    svm_error_handler(cpup, "Tried to store a string in RAM");
                 }
 
                 break;
@@ -944,7 +972,7 @@ void svm_run(svm_t * cpup)
                         cpup->flags.z = true;
                 } else
                 {
-                    svm_error_handler("Tried to compare a string and integer");
+                    svm_error_handler(cpup, "Tried to compare a string and integer");
                 }
 
                 break;
@@ -959,7 +987,7 @@ void svm_run(svm_t * cpup)
 
             if (unknown >= 20)
             {
-                printf("Aborting due to too many unknown instructions\n");
+                svm_error_handler(cpup, "Aborting due to too many unknown instructions");
                 run = 0;
             }
             break;

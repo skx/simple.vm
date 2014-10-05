@@ -28,6 +28,13 @@
 
 
 
+void error(char *msg)
+{
+    fprintf(stderr, "ERROR running script - %s\n", msg);
+    exit(1);
+}
+
+
 
 int run_file(const char *filename, int dump_registers)
 {
@@ -67,12 +74,29 @@ int run_file(const char *filename, int dump_registers)
         printf("Failed to create virtual machine instance.\n");
         return 1;
     }
+
+    /**
+     * Set the error-handler.
+     */
+    svm_set_error_handler(cpu, &error);
+
+
+    /**
+     * Run the bytecode.
+     */
     svm_run(cpu);
 
+
+    /**
+     * Dump?
+     */
     if (dump_registers)
         svm_dump_registers(cpu);
 
 
+    /**
+     * Cleanup.
+     */
     svm_free(cpu);
     free(code);
     return 0;

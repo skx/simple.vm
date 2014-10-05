@@ -133,6 +133,7 @@ typedef struct flags {
  * 2.  A set of virtual-flags.
  * 3.  An instruction pointer.
  * 4.  A set of code to execute - which has a size.
+ * 5.  An error-handler to be called on (fatal) errors.
  *
  */
 typedef struct svm {
@@ -141,14 +142,29 @@ typedef struct svm {
     unsigned int esp;
     unsigned int size;
     unsigned char *code;
+    void (*error_handler) (char *msg);
 } svm_t;
 
 
 
 /**
- * Allocate a new virtual machine.
+ * Allocate a new virtual machine instance.
  */
 svm_t *svm_new(unsigned char *code, unsigned int size);
+
+
+/**
+ * Configure a dedicated error-handler.
+ *
+ * The default error-handler will be called if the bytecode tries to
+ * do something crazy, and will merely output a message to the console
+ * and terminate.
+ *
+ * If you wish to handle errors in a GUI system, or similar, you should
+ * setup your own error-handler here.
+ *
+ */
+void svm_set_error_handler(svm_t * cpup, void (*fp) (char *msg));
 
 
 /**
