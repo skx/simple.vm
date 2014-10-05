@@ -1,0 +1,34 @@
+#
+# About
+#
+#  This program tests our comparision operation.
+#
+#
+# Usage
+#
+#  $ compiler ./equal.in ; ./simple-vm ./equal.raw
+#
+#
+#
+
+        store #1, 20
+        store #2, 30
+
+        cmp #1, #2
+        jmpz twenty_eq_thirty
+
+        store #2, 20
+        cmp #1, #2
+        jmpz twenty_eq_twenty
+
+        exit
+
+:twenty_eq_twenty
+        store #0, "20 == 20 - OK!"
+        print_str #0
+        exit
+
+:twenty_eq_thirty
+        store #0, "20 == 30 - Bug!"
+        print_str #0
+        exit
