@@ -82,6 +82,12 @@
 
 
 /**
+ * Helper to convert a two-byte value to an integer in the range
+ * 0x0000-0xffff
+ */
+#define BYTES_TO_ADDR(one,two) (one + ( 256 * two ))
+
+/**
  * Allocate a new virtual machine.
  *
  * The given code will be loaded into the code-area of the machine.
@@ -137,7 +143,7 @@ void svm_dump_registers(svm_t * cpup)
     {
         if (cpup->registers[i].type == STRING)
         {
-            printf("\tRegister %02d - str: %s\n", i, cpup->registers[i].str);
+            printf("\tRegister %02d - str: %s\n", i, cpup->registers[i].string);
         } else if (cpup->registers[i].type == INTEGER)
         {
             printf("\tRegister %02d - Decimal:%04d [Hex:%04X]\n", i,
@@ -264,7 +270,7 @@ void svm_run(svm_t * cpup)
                 if (cpup->registers[reg].type == STRING)
                 {
                     printf("[stdout] register R%02d = %s\n", reg,
-                           cpup->registers[reg].str);
+                           cpup->registers[reg].string);
                 } else
                 {
                     printf
@@ -285,7 +291,7 @@ void svm_run(svm_t * cpup)
 
                 if (cpup->registers[reg].type == STRING)
                 {
-                    system(cpup->registers[reg].str);
+                    system(cpup->registers[reg].string);
                 } else
                 {
                     printf
@@ -303,7 +309,7 @@ void svm_run(svm_t * cpup)
                 cpup->esp++;
                 short off2 = cpup->code[cpup->esp];
 
-                int offset = off1 + (256 * off2);
+                int offset = BYTES_TO_ADDR( off1, off2 );
 
                 if (getenv("DEBUG") != NULL)
                     printf("Should jump to offset %04d [Hex:%04x]\n", offset, offset);
@@ -323,7 +329,7 @@ void svm_run(svm_t * cpup)
                 cpup->esp++;
                 short off2 = cpup->code[cpup->esp];
 
-                int offset = off1 + (256 * off2);
+                int offset = BYTES_TO_ADDR( off1, off2 );
 
                 if (getenv("DEBUG") != NULL)
                     printf("Should jump to offset %04d [Hex:%04x] if Z\n", offset,
@@ -346,7 +352,7 @@ void svm_run(svm_t * cpup)
                 cpup->esp++;
                 short off2 = cpup->code[cpup->esp];
 
-                int offset = off1 + (256 * off2);
+                int offset = BYTES_TO_ADDR(off1, off2);
 
                 if (getenv("DEBUG") != NULL)
                     printf("Should jump to offset %04d [Hex:%04x] if NOT Z\n", offset,
@@ -377,7 +383,7 @@ void svm_run(svm_t * cpup)
                 cpup->esp++;
                 unsigned int val2 = cpup->code[cpup->esp];
 
-                int value = val1 + (256 * val2);
+                int value = BYTES_TO_ADDR( val1, val2 );
 
                 if (getenv("DEBUG") != NULL)
                     printf("STORE_INT(Reg:%02x) => %04d [Hex:%04x]\n", reg, value, value);
@@ -485,7 +491,7 @@ void svm_run(svm_t * cpup)
                 /* if the register stores a string .. free it */
                 if ((cpup->registers[reg].type == STRING)
                     && (cpup->registers[reg].string))
-                    free(cpup->registers[reg].str);
+                    free(cpup->registers[reg].string);
 
                 /*
                  * Ensure both source registers have integer values.
@@ -532,7 +538,7 @@ void svm_run(svm_t * cpup)
                 /* if the register stores a string .. free it */
                 if ((cpup->registers[reg].type == STRING)
                     && (cpup->registers[reg].string))
-                    free(cpup->registers[reg].str);
+                    free(cpup->registers[reg].string);
 
                 /*
                  * Ensure both source registers have integer values.
@@ -724,7 +730,7 @@ void svm_run(svm_t * cpup)
 
                 if (getenv("DEBUG") != NULL)
                     printf("STRING_STORE(Reg:%02x => \"%s\" [%02x bytes]\n", reg,
-                           cpup->registers[reg].str, len);
+                           cpup->registers[reg].string, len);
 
                 cpup->esp--;
 
@@ -748,8 +754,8 @@ void svm_run(svm_t * cpup)
                     exit(1);
                 }
 
-                int i = atoi(cpup->registers[reg].str);
-                free(cpup->registers[reg].str);
+                int i = atoi(cpup->registers[reg].string);
+                free(cpup->registers[reg].string);
 
                 /* allocate a buffer. */
                 cpup->registers[reg].type = INTEGER;
@@ -798,8 +804,8 @@ void svm_run(svm_t * cpup)
                 /**
                  * Allocate RAM for two strings.
                  */
-                int len = strlen(cpup->registers[src1].str) +
-                    strlen(cpup->registers[src2].str) + 1;
+                int len = strlen(cpup->registers[src1].string) +
+                    strlen(cpup->registers[src2].string) + 1;
 
                 /**
                  * Zero.
@@ -811,7 +817,7 @@ void svm_run(svm_t * cpup)
                  * Assign.
                  */
                 sprintf(tmp, "%s%s",
-                        cpup->registers[src1].str, cpup->registers[src2].str);
+                        cpup->registers[src1].string, cpup->registers[src2].string);
 
 
                 /* if the destination currently contains a string .. free it */
