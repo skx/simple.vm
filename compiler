@@ -1,22 +1,22 @@
 #!/usr/bin/perl -w
 #
-#  This is a simple compiler which will read an input file
+# This is a simple compiler which will read an input file
 # and spit out the corresponding bytecodes for the program.
 #
-#  The only real complexity comes from having to account for labels
-# as our virtual machine only understands absolute jumping.
+# The only real complexity comes from having to account for labels
+# as our virtual machine only understands absolute jumps.
 #
-#      e.g. Rather than "jmp +3", or "jmp -8" we can only write
+#      e.g. Rather than "jmp $+3", or "jmp $-8" we can only write
 #           "jump address", where "address" is an integer 0-64k.
 #
-#  To cope with this we initially write all jump-targets as
+# To cope with this we initially write all jump-targets as
 # "JMP 0x0000" and keep track of the length of each instruction
 # we've generated.
 #
-#  After the whole program has been compiled we can go back and fill
+# After the whole program has been compiled we can go back and fill
 # in the absolute/real destination for the jumps.
 #
-#  Not ideal, but it is simpler than either parsing for-real or
+# Not ideal, but it is simpler than either parsing for-real or
 # using a multi-pass parser.
 #
 #
@@ -70,6 +70,16 @@ use constant STRING_CONCAT => 0x32;
 use constant STRING_SYSTEM => 0x33;
 use constant STRING_TOINT  => 0x34;
 
+#
+#  Comparison functions
+#
+use constant CMP_REG => 0x40;
+
+#
+#  Misc things
+#
+use constant NOP_OP => 0x50;
+
 
 #
 #  Labels - All are downcased and must be unique per-source.
@@ -110,7 +120,9 @@ while ( my $file = shift )
     #
     #  Amount of instructions we've output.
     #
-    #  This is label-related.
+    #  As instructions aren't the same lengths we need to
+    # ensure we keep track of them so we can calculate jumping
+    # offsets.
     #
     my $offset = 0;
 
@@ -137,7 +149,7 @@ while ( my $file = shift )
 
             # so we found a label - store the offset of the code in our array.
         }
-        elsif ( $line =~ /^\s*store\s+#([0-9]+), ([0-9]+)/ )
+        elsif ( $line =~ /^\s*store\s+#([0-9]+)\s*,\s*([0-9]+)/i )
         {
             my $reg = $1;
             my $val = $2;
@@ -159,7 +171,12 @@ while ( my $file = shift )
             print $out chr EXIT;
             $offset += 1;
         }
-        elsif ( $line =~ /^\s+store\s+#([0-9]+),\s?"([^"]*)"/ )
+        elsif ( $line =~ /^\s+nop/ )
+        {
+            print $out chr NOP_OP;
+            $offset += 1;
+        }
+        elsif ( $line =~ /^\s+store\s+#([0-9]+)\s?,\s?"([^"]*)"/ )
         {
             my $reg = $1;
             my $str = $2;
@@ -176,25 +193,25 @@ while ( my $file = shift )
         elsif ( $line =~ /^\s*print_int\s?#(.*)/ )
         {
             my $reg = $1;
+
             print $out chr INT_PRINT;
             print $out chr $reg;
-
             $offset += 2;
         }
         elsif ( $line =~ /^\s*print_str\s?#(.*)/ )
         {
             my $reg = $1;
+
             print $out chr STRING_PRINT;
             print $out chr $reg;
-
             $offset += 2;
         }
         elsif ( $line =~ /^\s*system\s?#(.*)/ )
         {
             my $reg = $1;
+
             print $out chr STRING_SYSTEM;
             print $out chr $reg;
-
             $offset += 2;
         }
         elsif ( $line =~ /^\s*goto\s+([^ ]+)/ )
@@ -254,70 +271,36 @@ while ( my $file = shift )
                      label  => $label
                   } );
         }
-        elsif ( $line =~ /^\s*add\s+#([0-9]+)\s*,\s*#([0-9]+)\s*,\s*#([0-9]+)/ )
+        elsif ( $line =~
+            /^\s*(add|sub|mul|div|xor|concat)\s+#([0-9]+)\s*,\s*#([0-9]+)\s*,\s*#([0-9]+)/
+          )
         {
-            my $dest = $1;
-            my $src1 = $2;
-            my $src2 = $3;
 
-            print $out chr ADD_OP;
+            #
+            #  All these operations have args of the form:
+            #
+            #   OPERATION Result-Register, SrcReg1, SrcReg2
+            #
+            my %maths = ( add    => ADD_OP,
+                          sub    => SUB_OP,
+                          mul    => MUL_OP,
+                          div    => DIV_OP,
+                          xor    => XOR_OP,
+                          concat => STRING_CONCAT,
+                        );
+
+            my $opr  = $1;
+            my $dest = $2;
+            my $src1 = $3;
+            my $src2 = $4;
+
+
+            print $out chr $maths{ lc $opr };
             print $out chr $dest;
             print $out chr $src1;
             print $out chr $src2;
 
-            $offset += 4;    # add + dest + src1 + src2
-        }
-        elsif ( $line =~ /^\s*xor\s+#([0-9]+)\s*,\s*#([0-9]+)\s*,\s*#([0-9]+)/ )
-        {
-            my $dest = $1;
-            my $src1 = $2;
-            my $src2 = $3;
-
-            print $out chr XOR_OP;
-            print $out chr $dest;
-            print $out chr $src1;
-            print $out chr $src2;
-
-            $offset += 4;    # xor + dest + src1 + src2
-        }
-        elsif ( $line =~ /^\s*sub\s+#([0-9]+)\s*,\s*#([0-9]+)\s*,\s*#([0-9]+)/ )
-        {
-            my $dest = $1;
-            my $src1 = $2;
-            my $src2 = $3;
-
-            print $out chr SUB_OP;
-            print $out chr $dest;
-            print $out chr $src1;
-            print $out chr $src2;
-
-            $offset += 4;    # sub + dest + src1 + src2
-        }
-        elsif ( $line =~ /^\s*mul\s+#([0-9]+)\s*,\s*#([0-9]+)\s*,\s*#([0-9]+)/ )
-        {
-            my $dest = $1;
-            my $src1 = $2;
-            my $src2 = $3;
-
-            print $out chr MUL_OP;
-            print $out chr $dest;
-            print $out chr $src1;
-            print $out chr $src2;
-
-            $offset += 4;    # mul + dest + src1 + src2
-        }
-        elsif ( $line =~ /^\s*div\s+#([0-9]+)\s*,\s*#([0-9]+)\s*,\s*#([0-9]+)/ )
-        {
-            my $dest = $1;
-            my $src1 = $2;
-            my $src2 = $3;
-
-            print $out chr DIV_OP;
-            print $out chr $dest;
-            print $out chr $src1;
-            print $out chr $src2;
-
-            $offset += 4;    # add + dest + src1 + src2
+            $offset += 4;    # op + dest + src1 + src2
         }
         elsif ( $line =~ /^\s*dec\s+#([0-9]+)/ )
         {
@@ -326,7 +309,7 @@ while ( my $file = shift )
             print $out chr DEC_OP;
             print $out chr $reg;
 
-            $offset += 2;    # dec + reg
+            $offset += 2;
         }
         elsif ( $line =~ /^\s*inc\s+#([0-9]+)/ )
         {
@@ -335,7 +318,7 @@ while ( my $file = shift )
             print $out chr INC_OP;
             print $out chr $reg;
 
-            $offset += 2;    # INC + reg
+            $offset += 2;
         }
         elsif ( $line =~ /^\s*int2string\s+#([0-9]+)/ )
         {
@@ -343,7 +326,7 @@ while ( my $file = shift )
 
             print $out chr INT_TOSTRING;
             print $out chr $reg;
-            $offset += 2;    # INC + reg
+            $offset += 2;
         }
         elsif ( $line =~ /^\s*string2int\s+#([0-9]+)/ )
         {
@@ -351,22 +334,20 @@ while ( my $file = shift )
 
             print $out chr STRING_TOINT;
             print $out chr $reg;
-            $offset += 2;    # INC + reg
+            $offset += 2;
         }
-        elsif (
-             $line =~ /^\s*concat\s+#([0-9]+)\s*,\s*#([0-9]+)\s*,\s*#([0-9]+)/ )
+        elsif ( $line =~ /^\s*cmp\s+#([0-9]+)\s*,\s*#([0-9]+)\s*/i )
         {
-            my $dest = $1;
-            my $src1 = $2;
-            my $src2 = $3;
+            my $reg1 = $1;
+            my $reg2 = $2;
 
-            print $out chr STRING_CONCAT;
-            print $out chr $dest;
-            print $out chr $src1;
-            print $out chr $src2;
+            print $out chr CMP_REG;
+            print $out chr $reg1;
+            print $out chr $reg2;
 
-            $offset += 4;    # concat + dest + src1 + src2
+            $offset += 3;
         }
+
         else
         {
             print "WARNING UNKNOWN LINE: $line\n";

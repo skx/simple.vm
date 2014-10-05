@@ -72,7 +72,7 @@
 /**
  * Trivial helper to test registers are not out of bounds.
  */
-#define BOUNDS_TEST_REGISTER( r ) { if ( r >= REGISTER_COUNT )  { printf("Register out of bounds: 0 <= %d >= %d", reg, REGISTER_COUNT ); exit(1); } }
+#define BOUNDS_TEST_REGISTER( r ) { if ( r >= REGISTER_COUNT )  { printf("Register out of bounds: 0 <= %d >= %d", r, REGISTER_COUNT ); exit(1); } }
 
 
 
@@ -209,7 +209,13 @@ void svm_run(svm_t * cpup)
 
         switch (cpup->code[cpup->esp])
         {
-
+        case NOP_OP:
+            {
+                /**
+                 * Nothing to do :)
+                 */
+                break;
+            }
         case INT_PRINT:
             {
                 cpup->esp++;
@@ -388,7 +394,7 @@ void svm_run(svm_t * cpup)
 
                 /* store the string-value */
                 memset(cpup->registers[reg].str, '\0', 10);
-                sprintf(cpup->registers[reg].str, "%d",  tmp);
+                sprintf(cpup->registers[reg].str, "%d", tmp);
 
                 break;
             }
@@ -715,7 +721,8 @@ void svm_run(svm_t * cpup)
 
                 if (cpup->registers[reg].type != STR)
                 {
-                    printf("Attempt to read the string value of a register which is an integer\n" );
+                    printf
+                        ("Attempt to read the string value of a register which is an integer\n");
                     exit(1);
                 }
 
@@ -724,7 +731,7 @@ void svm_run(svm_t * cpup)
 
                 /* allocate a buffer. */
                 cpup->registers[reg].type = INT;
-                cpup->registers[reg].num  = i;
+                cpup->registers[reg].num = i;
 
                 break;
             }
@@ -791,6 +798,47 @@ void svm_run(svm_t * cpup)
 
                 cpup->registers[reg].str = tmp;
                 cpup->registers[reg].type = STR;
+
+                break;
+
+            }
+
+
+        case CMP_REG:
+            {
+                /**
+                 * Do two registers have the same value?
+                 */
+                cpup->esp++;
+                unsigned int reg1 = cpup->code[cpup->esp];
+                BOUNDS_TEST_REGISTER(reg1);
+
+                cpup->esp++;
+                unsigned int reg2 = cpup->code[cpup->esp];
+                BOUNDS_TEST_REGISTER(reg2);
+
+                int equal = 0;
+
+                if (cpup->registers[reg1].type == cpup->registers[reg2].type)
+                {
+                    if (cpup->registers[reg1].type == STR)
+                    {
+                        if (cpup->registers[reg1].str == cpup->registers[reg2].str)
+                            equal = 1;
+                    } else
+                    {
+                        if (cpup->registers[reg1].num == cpup->registers[reg2].num)
+                            equal = 1;
+                    }
+                } else
+                {
+                    equal = 0;
+                }
+
+                if (equal)
+                    cpup->flags.z = true;
+                else
+                    cpup->flags.z = false;
 
                 break;
 

@@ -38,9 +38,11 @@ Instructions
 There are several implemented instruction-types:
 
 *  Store a string/int into the given register.
-*  Mathematical operatoins: add, sub, multiply, divide.
+*  Mathematical operations: add, sub, multiply, divide, incr, dec.
 *  Output the contents of a given register. (string/int).
 *  A jump (immediate) operation.
+*  Comparison of register contents.
+*  String to integer conversion, and vice-versa.
 
 The instructions are pretty basic, as this is just a toy, but adding new ones isn't difficult and the available primitives are reasonably useful as-is.
 
@@ -75,14 +77,6 @@ Now we can execute that series of opcodes:
 If you wish to debug the execution then run:
 
       DEBUG=1 ./simple-vm ./simple.raw
-
-
-TODO
-----
-
-More operations - perhaps string-concat, str-str, etc.
-
-Otherwise relax.
 
 Steve
 --

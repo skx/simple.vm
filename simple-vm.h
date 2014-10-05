@@ -81,6 +81,19 @@
 
 
 /**
+ * Comparisons
+ */
+#define CMP_REG      0x40
+
+
+/**
+ * Misc
+ */
+#define NOP_OP  0x50
+
+
+
+/**
  * The type of content a register has.
  */
 enum TypeTag { INT, STR };

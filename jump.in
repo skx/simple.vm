@@ -18,7 +18,7 @@
         goto number
 
         # padding here - just for amusement.
-        exit
+        nop
         exit
 
 :kirsi
