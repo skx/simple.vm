@@ -309,7 +309,7 @@ void svm_run(svm_t * cpup)
                 cpup->esp++;
                 short off2 = cpup->code[cpup->esp];
 
-                int offset = BYTES_TO_ADDR( off1, off2 );
+                int offset = BYTES_TO_ADDR(off1, off2);
 
                 if (getenv("DEBUG") != NULL)
                     printf("Should jump to offset %04d [Hex:%04x]\n", offset, offset);
@@ -329,7 +329,7 @@ void svm_run(svm_t * cpup)
                 cpup->esp++;
                 short off2 = cpup->code[cpup->esp];
 
-                int offset = BYTES_TO_ADDR( off1, off2 );
+                int offset = BYTES_TO_ADDR(off1, off2);
 
                 if (getenv("DEBUG") != NULL)
                     printf("Should jump to offset %04d [Hex:%04x] if Z\n", offset,
@@ -383,7 +383,7 @@ void svm_run(svm_t * cpup)
                 cpup->esp++;
                 unsigned int val2 = cpup->code[cpup->esp];
 
-                int value = BYTES_TO_ADDR( val1, val2 );
+                int value = BYTES_TO_ADDR(val1, val2);
 
                 if (getenv("DEBUG") != NULL)
                     printf("STORE_INT(Reg:%02x) => %04d [Hex:%04x]\n", reg, value, value);
