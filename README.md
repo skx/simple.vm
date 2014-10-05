@@ -46,6 +46,31 @@ There are several implemented instruction-types:
 
 The instructions are pretty basic, as this is just a toy, but adding new ones isn't difficult and the available primitives are reasonably useful as-is.
 
+The following are examples of all instructions:
+
+    :label
+    goto  label       # Jump to the given label
+    jmpnz label       # Jump to label if Zero-Flag is not set
+    jmpz  label       # Jump to label if Zero-Flag is set
+
+    store #1, 33      # store 33 in register 1
+    store #2, "Steve" # Store the string "Steve" in register 1.
+    exit              # Stop processing.
+    nop               # Do nothing
+    print_int #3      # Print the (integer) contents of register 3
+    print_str #3      # Print the (string) contents of register 3
+    system #3         # Call the (string) command stored in register 3
+    add #1, #2, #3    # Add register 2 + register 3 contents, store in reg 1
+    sub #1, #2, #3    # sub register 2 + register 3 contents, store in reg 1
+    mul #1, #2, #3    # multiply register 2 + register 3 contents, store in reg 1
+    concat #1, #2,#3  # store concatenated strings from reg2 + reg3 in reg1.
+    dec #2            # Decrement the integer in register 2
+    inc #2            # Increment the integer in register 2
+    string2int #3     # Change register 3 to have a string from an int
+    int2string #3     # Change register 3 to have an int from a string
+    cmp #3, #4        # Compare contents of reg 3 & 4.
+
+
 
 Example
 -------
