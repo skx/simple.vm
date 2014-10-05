@@ -72,7 +72,6 @@
 /**
  * String things.
  */
-
 #define STRING_STORE   0x30
 #define STRING_PRINT   0x31
 #define STRING_CONCAT  0x32
@@ -93,10 +92,6 @@
 
 
 
-/**
- * The type of content a register has.
- */
-enum TypeTag { INT, STR };
 
 /**
  * A single register, which may be used to store a string or an integer.
@@ -104,7 +99,7 @@ enum TypeTag { INT, STR };
 typedef struct registers {
     unsigned int num;
     char *str;
-    enum TypeTag type;
+    enum { INT, STR } type;
 } reg_t;
 
 
@@ -112,7 +107,7 @@ typedef struct registers {
 /**
  * Flags.
  *
- * The add/sub instructions set the Z flag if the result is zero.
+ * The add/sub/incr/dec/cmp instructions set the Z flag if the result is zero.
  *
  * This flag can then be used for the JMP_Z and JUMP_NZ instructions.
  */
@@ -147,13 +142,13 @@ svm_t *svm_new(unsigned char *code, unsigned int size);
 
 
 /**
- * Dump the registers of the virtual machine.
+ * Dump the virtual machine registers.
  */
 void svm_dump_registers(svm_t * cpup);
 
 
 /**
- * Delete a virtuall machine.
+ * Delete a virtual machine.
  */
 void svm_free(svm_t * cpup);
 

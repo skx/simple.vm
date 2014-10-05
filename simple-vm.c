@@ -31,20 +31,20 @@
  * This is a simple virtual-machine which uses registers, rather than
  * the stack.
  *
- * The virtual machine will execute the contents of the named program-file,
- * by reading the file and parsing the binary-opcodes.
+ * The virtual machine will read a series of opcodes an intepret them.
  *
  * Each opcode is an integer between 0-255 inclusive, and will have a variable
- * number of arguments.  The opcodes are divided into classes which are
- * broadly:
+ * number of arguments.  The opcodes are divided into groups and allow things
+ * such as:
  *
  * * Storing values in registers.
  * * Running mathematical operations on registers.
- * * etc.
+ * * Jump operations.
+ * * Comparisons.
  *
  * For example the addition operation looks like this:
  *
- *    ADD Register-For-Result, Source-Register-One, Source-REgister-Two
+ *    ADD Register-For-Result, Source-Register-One, Source-Register-Two
  *
  * And the storing of a number in a register looks like this:
  *
@@ -72,7 +72,12 @@
 /**
  * Trivial helper to test registers are not out of bounds.
  */
-#define BOUNDS_TEST_REGISTER( r ) { if ( r >= REGISTER_COUNT )  { printf("Register out of bounds: 0 <= %d >= %d", r, REGISTER_COUNT ); exit(1); } }
+#define BOUNDS_TEST_REGISTER( r ) { if ( r >= REGISTER_COUNT ) \
+                                    {  \
+                                        printf("Register out of bounds: 0 <= %d >= %d", r, REGISTER_COUNT ); \
+                                        exit(1); \
+                                    } \
+                                  }
 
 
 
@@ -142,6 +147,16 @@ void svm_dump_registers(svm_t * cpup)
             printf("\tRegister %02d has unknown type!\n", i);
         }
     }
+
+    if ( cpup->flags.z == true )
+    {
+        printf("\tZ-FLAG:true\n");
+    }
+    else
+    {
+        printf("\tZ-FLAG:false\n");
+    }
+
 }
 
 
@@ -166,6 +181,7 @@ void svm_run(svm_t * cpup)
      * How many instructions this run handled.
      */
     int iterations = 0;
+
 
     /**
      * How many unrecognized instructions.
