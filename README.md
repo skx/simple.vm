@@ -86,22 +86,22 @@ This program first stores the string "`I like loops`" in register 1, then prints
 
 To actually compile this program into bytecodes run:
 
-      $ ./compiler simple.in
+      $ ./compiler ./examples/simple.in
 
 This will produce an output file full of binary-opcodes in the file `simple.raw`:
 
-      $ od -t x1 -An ./simple.raw
+      $ od -t x1 -An ./examples/simple.raw
       01 01 0c 49 20 6c 69 6b 65 20 6c 6f 6f 70 73 03
       01 06 00 00
 
 
 Now we can execute that series of opcodes:
 
-      ./simple-vm ./simple.raw
+      ./simple-vm ./examples/simple.raw
 
 If you wish to debug the execution then run:
 
-      DEBUG=1 ./simple-vm ./simple.raw
+      DEBUG=1 ./simple-vm ./examples/simple.raw
 
 There are more examples stored beneath the `examples/` subdirectory in this repository.
 
