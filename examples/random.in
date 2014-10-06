@@ -1,0 +1,38 @@
+#
+# About
+#
+#  Output ten random integers.
+#
+#
+# Usage
+#
+#  $ compiler ./random.in ; ./simple-vm ./random.raw
+#
+#
+#
+
+        store #1, "Generating ten random integers"
+        print_str #1
+
+        store #1, 10
+        store #2, 1
+:repeat
+
+        #
+        # This means "reg1 = reg1 - reg2"
+        #
+        sub #1, #1, #2
+
+        random #5
+        print_int #5
+
+        #
+        # This jump only occur if the zero-flag is set.
+        #
+        jmpnz repeat
+
+
+        store #1, "Done"
+        print_str #1
+
+        exit
