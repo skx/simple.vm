@@ -22,28 +22,27 @@
 :equal
         store #1, "EQUAL"
         print_str #1
-        exit
 
 
         store #1, "Steve"
         cmp #1, "Kemp"
-        jmpnz stevekemp
+        jmpnz str1
 
         store #1, "Eek string 1 compare failed - BUG?"
         print_str #1
         exit
 
-:stevekemp
+:str1
         store #1, "Steve"
         cmp #1, "Steve"
-        jmpz stevekemp
+        jmpz str2
 
         store #1, "Eek string 2 compare failed - BUG?"
         print_str #1
         exit
 
 
-:stevekemp
-        store #1, "All OK"
+:str2
+        store #1, "String comparisions OK"
         print_str #1
         exit
