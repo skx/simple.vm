@@ -25,6 +25,14 @@ simple-vm: main.o simple-vm.o simple-vm-opcodes.o
 
 
 #
+#  A program that contains an embedded virtual machine and allows
+# that machine to call into the application via a custom opcode 0xCD.
+#
+embedded: embedded.o simple-vm.o simple-vm-opcodes.o
+	$(LINKER) $@  $(OBJECTS) $(CFLAGS) simple-vm.o embedded.o simple-vm-opcodes.o
+
+
+#
 #  Remove our compiled machine, and the sample programs.
 #
 clean:
@@ -45,3 +53,4 @@ compile:
 #
 indent:
 	find . \( -name '*.c' -o -name '*.h' \) -exec indent  --braces-after-if-line --no-tabs  --k-and-r-style --line-length 90 --indent-level 4 -bli0 \{\} \;
+	perltidy compiler
