@@ -77,6 +77,7 @@ use constant STRING_TOINT  => 0x34;
 #
 use constant CMP_REG       => 0x40;
 use constant CMP_IMMEDIATE => 0x41;
+use constant CMP_STRING    => 0x42;
 
 
 #
@@ -380,6 +381,20 @@ while ( my $file = shift )
             print $out chr $val2;
 
             $offset += 4;    # cmp reg val1 val2
+        }
+        elsif ( $line =~ /^\s+cmp\s+#([0-9]+)\s?,\s?"([^"]*)"/ )
+        {
+            my $reg = $1;
+            my $str = $2;
+            my $len = length($str);
+
+            print $out chr CMP_STRING;
+            print $out chr $reg;
+            print $out chr $len;
+            print $out $str;
+
+            $offset += 3;              # cmp + reg + len
+            $offset += length($str);
         }
         elsif ( $line =~ /^\s*load\s+#([0-9]+)\s*,\s*#([0-9]+)/ )
         {
