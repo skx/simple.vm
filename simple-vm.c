@@ -88,6 +88,9 @@
 
 
 
+
+
+
 /**
  * This function is called if there is an error in handling
  * some bytecode, or some other part of the system.
@@ -102,6 +105,34 @@ void svm_error_handler(svm_t * cpup, char *msg)
         fprintf(stderr, "%s\n", msg);
         exit(1);
     }
+}
+
+
+
+
+/**
+ * Helper to return the string content of a register.
+ */
+char *get_string_reg(svm_t * cpu, int reg)
+{
+    if (cpu->registers[reg].type == STRING)
+        return (cpu->registers[reg].string);
+    else
+        svm_error_handler(cpu, "The register deesn't contain a string");
+    return NULL;
+}
+
+
+/**
+ * Helper to return the integer content of a register.
+ */
+int get_int_reg(svm_t * cpu, int reg)
+{
+    if (cpu->registers[reg].type == INTEGER)
+        return (cpu->registers[reg].integer);
+    else
+        svm_error_handler(cpu, "The register doesn't contain an integer");
+    return 0;
 }
 
 
@@ -277,21 +308,14 @@ void svm_run(svm_t * cpup)
             {
                 cpup->esp++;
 
-                /* get the reg */
+                /* get the register number to print */
                 unsigned int reg = cpup->code[cpup->esp];
                 BOUNDS_TEST_REGISTER(cpup, reg);
 
-                if (cpup->registers[reg].type == INTEGER)
-                {
-                    printf("[stdout] register R%02d = %d [Hex:%04x]\n",
-                           cpup->code[reg],
-                           cpup->registers[reg].integer, cpup->registers[reg].integer);
-                } else
-                {
-                    svm_error_handler
-                        (cpup,
-                         "ERROR Tried to print integer contents of string-register");
-                }
+                /* get the register contents. */
+                int val = get_int_reg(cpup, reg);
+
+                printf("[stdout] Register R%02d => %d [Hex:%04x]\n", reg, val, val);
                 break;
             }
 
@@ -299,19 +323,15 @@ void svm_run(svm_t * cpup)
             {
                 cpup->esp++;
 
-                /* get the reg */
+                /* get the reg number to print */
                 unsigned int reg = cpup->code[cpup->esp];
                 BOUNDS_TEST_REGISTER(cpup, reg);
 
-                if (cpup->registers[reg].type == STRING)
-                {
-                    printf("[stdout] register R%02d = %s\n", reg,
-                           cpup->registers[reg].string);
-                } else
-                {
-                    svm_error_handler(cpup,
-                                      "Tried to print string contents of integer-register");
-                }
+                /* get the contents of the register */
+                char *str = get_string_reg(cpup, reg);
+
+                /* print */
+                printf("[stdout] register R%02d => %s\n", reg, str);
                 break;
             }
 
@@ -324,14 +344,8 @@ void svm_run(svm_t * cpup)
                 unsigned int reg = cpup->code[cpup->esp];
                 BOUNDS_TEST_REGISTER(cpup, reg);
 
-                if (cpup->registers[reg].type == STRING)
-                {
-                    system(cpup->registers[reg].string);
-                } else
-                {
-                    svm_error_handler(cpup,
-                                      "Tried to run system against an integer-register");
-                }
+                char *str = get_string_reg(cpup, reg);
+                system(str);
                 break;
             }
 
@@ -442,7 +456,8 @@ void svm_run(svm_t * cpup)
                 unsigned int reg = cpup->code[cpup->esp];
                 BOUNDS_TEST_REGISTER(cpup, reg);
 
-                int tmp = cpup->registers[reg].integer;
+                /* get the contents of the register */
+                int cur = get_int_reg(cpup, reg);
 
                 /* allocate a buffer. */
                 cpup->registers[reg].type = STRING;
@@ -450,7 +465,7 @@ void svm_run(svm_t * cpup)
 
                 /* store the string-value */
                 memset(cpup->registers[reg].string, '\0', 10);
-                sprintf(cpup->registers[reg].string, "%d", tmp);
+                sprintf(cpup->registers[reg].string, "%d", cur);
 
                 break;
             }
@@ -464,13 +479,10 @@ void svm_run(svm_t * cpup)
                 unsigned int reg = cpup->code[cpup->esp];
                 BOUNDS_TEST_REGISTER(cpup, reg);
 
-                if (cpup->registers[reg].type != INTEGER)
-                {
-                    svm_error_handler
-                        (cpup, "Tried to increment non-integer-containing register");
-                }
-
-                cpup->registers[reg].integer += 1;
+                /* get, incr, set */
+                int cur = get_int_reg(cpup, reg);
+                cur += 1;
+                cpup->registers[reg].integer = cur;
 
                 if (cpup->registers[reg].integer == 0)
                     cpup->flags.z = true;
@@ -490,13 +502,10 @@ void svm_run(svm_t * cpup)
                 BOUNDS_TEST_REGISTER(cpup, reg);
 
 
-                if (cpup->registers[reg].type != INTEGER)
-                {
-                    svm_error_handler
-                        (cpup, "Tried to decrement non-integer-containing register");
-                }
-
-                cpup->registers[reg].integer -= 1;
+                /* get, decr, set */
+                int cur = get_int_reg(cpup, reg);
+                cur -= 1;
+                cpup->registers[reg].integer = cur;
 
                 if (cpup->registers[reg].integer == 0)
                     cpup->flags.z = true;
@@ -522,7 +531,7 @@ void svm_run(svm_t * cpup)
                 unsigned int src2 = cpup->code[cpup->esp];
                 BOUNDS_TEST_REGISTER(cpup, src2);
 
-                /* if the register stores a string .. free it */
+                /* if the result-register stores a string .. free it */
                 if ((cpup->registers[reg].type == STRING)
                     && (cpup->registers[reg].string))
                     free(cpup->registers[reg].string);
@@ -530,16 +539,13 @@ void svm_run(svm_t * cpup)
                 /*
                  * Ensure both source registers have integer values.
                  */
-                if ((cpup->registers[src1].type != INTEGER) ||
-                    (cpup->registers[src2].type != INTEGER))
-                {
-                    svm_error_handler
-                        (cpup,
-                         "Tried to add two registers which do not contain integers");
-                }
+                int val1 = get_int_reg(cpup, src1);
+                int val2 = get_int_reg(cpup, src2);
 
-                cpup->registers[reg].integer = cpup->registers[src1].integer +
-                    cpup->registers[src2].integer;
+                /**
+                 * Store the result.
+                 */
+                cpup->registers[reg].integer = val1 + val2;
                 cpup->registers[reg].type = INTEGER;
 
             /**
@@ -570,7 +576,7 @@ void svm_run(svm_t * cpup)
                 unsigned int src2 = cpup->code[cpup->esp];
                 BOUNDS_TEST_REGISTER(cpup, src2);
 
-                /* if the register stores a string .. free it */
+                /* if the result-register stores a string .. free it */
                 if ((cpup->registers[reg].type == STRING)
                     && (cpup->registers[reg].string))
                     free(cpup->registers[reg].string);
@@ -578,16 +584,14 @@ void svm_run(svm_t * cpup)
                 /*
                  * Ensure both source registers have integer values.
                  */
-                if ((cpup->registers[src1].type != INTEGER) ||
-                    (cpup->registers[src2].type != INTEGER))
-                {
-                    svm_error_handler
-                        (cpup,
-                         "Tried to XOR two registers which do not contain integers");
-                }
+                int val1 = get_int_reg(cpup, src1);
+                int val2 = get_int_reg(cpup, src2);
 
-                cpup->registers[reg].integer = cpup->registers[src1].integer ^
-                    cpup->registers[src2].integer;
+                /**
+                 * Store the result.
+                 */
+                cpup->registers[reg].integer = val1 ^ val2;
+                cpup->registers[reg].type = INTEGER;
                 cpup->registers[reg].type = INTEGER;
 
             /**
@@ -618,25 +622,21 @@ void svm_run(svm_t * cpup)
                 unsigned int src2 = cpup->code[cpup->esp];
                 BOUNDS_TEST_REGISTER(cpup, src2);
 
-                /* if the register stores a string .. free it */
+                /* if the result-register stores a string .. free it */
                 if ((cpup->registers[reg].type == STRING)
                     && (cpup->registers[reg].string))
                     free(cpup->registers[reg].string);
 
-
                 /*
                  * Ensure both source registers have integer values.
                  */
-                if ((cpup->registers[src1].type != INTEGER) ||
-                    (cpup->registers[src2].type != INTEGER))
-                {
-                    svm_error_handler
-                        (cpup,
-                         "Tried to SUB two registers which do not contain integers");
-                }
+                int val1 = get_int_reg(cpup, src1);
+                int val2 = get_int_reg(cpup, src2);
 
-                cpup->registers[reg].integer =
-                    cpup->registers[src1].integer - cpup->registers[src2].integer;
+                /**
+                 * Store the result.
+                 */
+                cpup->registers[reg].integer = val1 - val2;
                 cpup->registers[reg].type = INTEGER;
 
                 if (cpup->registers[reg].integer == 0)
@@ -663,7 +663,7 @@ void svm_run(svm_t * cpup)
                 unsigned int src2 = cpup->code[cpup->esp];
                 BOUNDS_TEST_REGISTER(cpup, src2);
 
-                /* if the register stores a string .. free it */
+                /* if the result-register stores a string .. free it */
                 if ((cpup->registers[reg].type == STRING)
                     && (cpup->registers[reg].string))
                     free(cpup->registers[reg].string);
@@ -671,16 +671,13 @@ void svm_run(svm_t * cpup)
                 /*
                  * Ensure both source registers have integer values.
                  */
-                if ((cpup->registers[src1].type != INTEGER) ||
-                    (cpup->registers[src2].type != INTEGER))
-                {
-                    svm_error_handler
-                        (cpup,
-                         "Tried to MUL two registers which do not contain integers");
-                }
+                int val1 = get_int_reg(cpup, src1);
+                int val2 = get_int_reg(cpup, src2);
 
-                cpup->registers[reg].integer = cpup->registers[src1].integer *
-                    cpup->registers[src2].integer;
+                /**
+                 * Store the result.
+                 */
+                cpup->registers[reg].integer = val1 * val2;
                 cpup->registers[reg].type = INTEGER;
 
                 break;
@@ -703,7 +700,7 @@ void svm_run(svm_t * cpup)
                 BOUNDS_TEST_REGISTER(cpup, src2);
 
 
-                /* if the register stores a string .. free it */
+                /* if the result-register stores a string .. free it */
                 if ((cpup->registers[reg].type == STRING)
                     && (cpup->registers[reg].string))
                     free(cpup->registers[reg].string);
@@ -711,16 +708,13 @@ void svm_run(svm_t * cpup)
                 /*
                  * Ensure both source registers have integer values.
                  */
-                if ((cpup->registers[src1].type != INTEGER) ||
-                    (cpup->registers[src2].type != INTEGER))
-                {
-                    svm_error_handler
-                        (cpup,
-                         "Tried to DIV two registers which do not contain integers");
-                }
+                int val1 = get_int_reg(cpup, src1);
+                int val2 = get_int_reg(cpup, src2);
 
-                cpup->registers[reg].integer = cpup->registers[src1].integer /
-                    cpup->registers[src2].integer;
+                /**
+                 * Store the result.
+                 */
+                cpup->registers[reg].integer = val1 / val2;
                 cpup->registers[reg].type = INTEGER;
 
                 break;
@@ -782,17 +776,14 @@ void svm_run(svm_t * cpup)
                 unsigned int reg = cpup->code[cpup->esp];
                 BOUNDS_TEST_REGISTER(cpup, reg);
 
+                /* get the string and convert to integer */
+                char *str = get_string_reg(cpup, reg);
+                int i = atoi(str);
 
-                if (cpup->registers[reg].type != STRING)
-                {
-                    svm_error_handler(cpup,
-                                      "Tried to convert a non-string from string to int");
-                }
-
-                int i = atoi(cpup->registers[reg].string);
+                /* free the old version */
                 free(cpup->registers[reg].string);
 
-                /* allocate a buffer. */
+                /* set the int. */
                 cpup->registers[reg].type = INTEGER;
                 cpup->registers[reg].integer = i;
 
@@ -828,19 +819,13 @@ void svm_run(svm_t * cpup)
                 /*
                  * Ensure both source registers have string values.
                  */
-                if ((cpup->registers[src1].type != STRING) ||
-                    (cpup->registers[src2].type != STRING))
-                {
-                    svm_error_handler
-                        (cpup,
-                         "Tried to CONCAT two registers which do not contain strings");
-                }
+                char *str1 = get_string_reg(cpup, src1);
+                char *str2 = get_string_reg(cpup, src2);
 
                 /**
                  * Allocate RAM for two strings.
                  */
-                int len = strlen(cpup->registers[src1].string) +
-                    strlen(cpup->registers[src2].string) + 1;
+                int len = strlen(str1) + strlen(str2) + 1;
 
                 /**
                  * Zero.
@@ -851,11 +836,10 @@ void svm_run(svm_t * cpup)
                 /**
                  * Assign.
                  */
-                sprintf(tmp, "%s%s",
-                        cpup->registers[src1].string, cpup->registers[src2].string);
+                sprintf(tmp, "%s%s", str1, str2);
 
 
-                /* if the destination currently contains a string .. free it */
+                /* if the destination-register currently contains a string .. free it */
                 if ((cpup->registers[reg].type == STRING)
                     && (cpup->registers[reg].string))
                     free(cpup->registers[reg].string);
@@ -965,14 +949,10 @@ void svm_run(svm_t * cpup)
 
                 cpup->flags.z = false;
 
-                if (cpup->registers[reg].type == INTEGER)
-                {
-                    if ((int) cpup->registers[reg].integer == val)
-                        cpup->flags.z = true;
-                } else
-                {
-                    svm_error_handler(cpup, "Tried to compare a string and integer");
-                }
+                int cur = (int) get_int_reg(cpup, reg);
+
+                if (cur == val)
+                    cpup->flags.z = true;
 
                 break;
 
