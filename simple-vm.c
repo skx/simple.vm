@@ -90,7 +90,6 @@
 
 
 
-
 /**
  * This function is called if there is an error in handling
  * some bytecode, or some other part of the system.
@@ -299,6 +298,9 @@ void svm_run(svm_t * cpup)
         {
         case NOP_OP:
             {
+                if (getenv("DEBUG") != NULL)
+                    printf("NOP\n");
+
                 /**
                  * Nothing to do :)
                  */
@@ -311,6 +313,10 @@ void svm_run(svm_t * cpup)
                 /* get the register number to print */
                 unsigned int reg = cpup->code[cpup->esp];
                 BOUNDS_TEST_REGISTER(cpup, reg);
+
+                if (getenv("DEBUG") != NULL)
+                    printf("INT_PRINT(Register %d)\n", reg);
+
 
                 /* get the register contents. */
                 int val = get_int_reg(cpup, reg);
@@ -326,6 +332,9 @@ void svm_run(svm_t * cpup)
                 /* get the reg number to print */
                 unsigned int reg = cpup->code[cpup->esp];
                 BOUNDS_TEST_REGISTER(cpup, reg);
+
+                if (getenv("DEBUG") != NULL)
+                    printf("STRING_PRINT(Register %d)\n", reg);
 
                 /* get the contents of the register */
                 char *str = get_string_reg(cpup, reg);
@@ -344,6 +353,9 @@ void svm_run(svm_t * cpup)
                 unsigned int reg = cpup->code[cpup->esp];
                 BOUNDS_TEST_REGISTER(cpup, reg);
 
+                if (getenv("DEBUG") != NULL)
+                    printf("STRING_SYSTEM(Register %d)\n", reg);
+
                 char *str = get_string_reg(cpup, reg);
                 system(str);
                 break;
@@ -360,7 +372,7 @@ void svm_run(svm_t * cpup)
                 int offset = BYTES_TO_ADDR(off1, off2);
 
                 if (getenv("DEBUG") != NULL)
-                    printf("Should jump to offset %04d [Hex:%04x]\n", offset, offset);
+                    printf("JUMP_TO(Offset:%d [Hex:%04X]\n", offset, offset);
 
                 cpup->esp = offset;
                 goto restart;
@@ -380,8 +392,7 @@ void svm_run(svm_t * cpup)
                 int offset = BYTES_TO_ADDR(off1, off2);
 
                 if (getenv("DEBUG") != NULL)
-                    printf("Should jump to offset %04d [Hex:%04x] if Z\n", offset,
-                           offset);
+                    printf("JUMP_Z(Offset:%d [Hex:%04X]\n", offset, offset);
 
                 if (cpup->flags.z)
                 {
@@ -403,8 +414,7 @@ void svm_run(svm_t * cpup)
                 int offset = BYTES_TO_ADDR(off1, off2);
 
                 if (getenv("DEBUG") != NULL)
-                    printf("Should jump to offset %04d [Hex:%04x] if NOT Z\n", offset,
-                           offset);
+                    printf("JUMP_NZ(Offset:%d [Hex:%04X]\n", offset, offset);
 
                 if (!cpup->flags.z)
                 {
@@ -456,6 +466,9 @@ void svm_run(svm_t * cpup)
                 unsigned int reg = cpup->code[cpup->esp];
                 BOUNDS_TEST_REGISTER(cpup, reg);
 
+                if (getenv("DEBUG") != NULL)
+                    printf("INT_TOSTRING(Register %d)\n", reg);
+
                 /* get the contents of the register */
                 int cur = get_int_reg(cpup, reg);
 
@@ -479,6 +492,9 @@ void svm_run(svm_t * cpup)
                 unsigned int reg = cpup->code[cpup->esp];
                 BOUNDS_TEST_REGISTER(cpup, reg);
 
+                if (getenv("DEBUG") != NULL)
+                    printf("INC_OP(Register %d)\n", reg);
+
                 /* get, incr, set */
                 int cur = get_int_reg(cpup, reg);
                 cur += 1;
@@ -501,6 +517,8 @@ void svm_run(svm_t * cpup)
                 unsigned int reg = cpup->code[cpup->esp];
                 BOUNDS_TEST_REGISTER(cpup, reg);
 
+                if (getenv("DEBUG") != NULL)
+                    printf("DEC_OP(Register %d)\n", reg);
 
                 /* get, decr, set */
                 int cur = get_int_reg(cpup, reg);
@@ -530,6 +548,10 @@ void svm_run(svm_t * cpup)
                 cpup->esp++;
                 unsigned int src2 = cpup->code[cpup->esp];
                 BOUNDS_TEST_REGISTER(cpup, src2);
+
+                if (getenv("DEBUG") != NULL)
+                    printf("ADD_OP(Register:%d = Register:%d + Register:%d)\n", reg, src1,
+                           src2);
 
                 /* if the result-register stores a string .. free it */
                 if ((cpup->registers[reg].type == STRING)
@@ -575,6 +597,11 @@ void svm_run(svm_t * cpup)
                 cpup->esp++;
                 unsigned int src2 = cpup->code[cpup->esp];
                 BOUNDS_TEST_REGISTER(cpup, src2);
+
+                if (getenv("DEBUG") != NULL)
+                    printf("XOR_OP(Register:%d = Register:%d ^ Register:%d)\n", reg, src1,
+                           src2);
+
 
                 /* if the result-register stores a string .. free it */
                 if ((cpup->registers[reg].type == STRING)
@@ -622,6 +649,10 @@ void svm_run(svm_t * cpup)
                 unsigned int src2 = cpup->code[cpup->esp];
                 BOUNDS_TEST_REGISTER(cpup, src2);
 
+                if (getenv("DEBUG") != NULL)
+                    printf("SUB_OP(Register:%d = Register:%d - Register:%d)\n", reg, src1,
+                           src2);
+
                 /* if the result-register stores a string .. free it */
                 if ((cpup->registers[reg].type == STRING)
                     && (cpup->registers[reg].string))
@@ -663,6 +694,10 @@ void svm_run(svm_t * cpup)
                 unsigned int src2 = cpup->code[cpup->esp];
                 BOUNDS_TEST_REGISTER(cpup, src2);
 
+                if (getenv("DEBUG") != NULL)
+                    printf("MUL_OP(Register:%d = Register:%d * Register:%d)\n", reg, src1,
+                           src2);
+
                 /* if the result-register stores a string .. free it */
                 if ((cpup->registers[reg].type == STRING)
                     && (cpup->registers[reg].string))
@@ -699,6 +734,9 @@ void svm_run(svm_t * cpup)
                 unsigned int src2 = cpup->code[cpup->esp];
                 BOUNDS_TEST_REGISTER(cpup, src2);
 
+                if (getenv("DEBUG") != NULL)
+                    printf("DIV_OP(Register:%d = Register:%d / Register:%d)\n", reg, src1,
+                           src2);
 
                 /* if the result-register stores a string .. free it */
                 if ((cpup->registers[reg].type == STRING)
@@ -776,6 +814,9 @@ void svm_run(svm_t * cpup)
                 unsigned int reg = cpup->code[cpup->esp];
                 BOUNDS_TEST_REGISTER(cpup, reg);
 
+                if (getenv("DEBUG") != NULL)
+                    printf("STRING_TOINT(Register:%d)\n", reg);
+
                 /* get the string and convert to integer */
                 char *str = get_string_reg(cpup, reg);
                 int i = atoi(str);
@@ -815,6 +856,10 @@ void svm_run(svm_t * cpup)
                 unsigned int src2 = cpup->code[cpup->esp];
                 BOUNDS_TEST_REGISTER(cpup, src2);
 
+
+                if (getenv("DEBUG") != NULL)
+                    printf("STRING_CONCAT(Register:%d = Register:%d + Register:%d)\n",
+                           reg, src1, src2);
 
                 /*
                  * Ensure both source registers have string values.
@@ -861,6 +906,11 @@ void svm_run(svm_t * cpup)
                 unsigned int addr = cpup->code[cpup->esp];
                 BOUNDS_TEST_REGISTER(cpup, addr);
 
+                if (getenv("DEBUG") != NULL)
+                    printf
+                        ("LOAD_FROM_RAM(Register:%d will contain contents of address %04X)\n",
+                         reg, addr);
+
                 // Read the value from the RAM
                 int val = cpup->code[cpup->registers[addr].integer];
 
@@ -883,6 +933,11 @@ void svm_run(svm_t * cpup)
                 cpup->esp++;
                 unsigned int addr = cpup->code[cpup->esp];
                 BOUNDS_TEST_REGISTER(cpup, addr);
+
+                if (getenv("DEBUG") != NULL)
+                    printf("STORE_IN_RAM(Address %04X set to contents of register %d)\n",
+                           addr, reg);
+
 
                 // If the register contains a number then we're golden
                 if (cpup->registers[addr].type == INTEGER)
@@ -911,6 +966,9 @@ void svm_run(svm_t * cpup)
                 cpup->esp++;
                 unsigned int reg2 = cpup->code[cpup->esp];
                 BOUNDS_TEST_REGISTER(cpup, reg2);
+
+                if (getenv("DEBUG") != NULL)
+                    printf("CMP(Register:%d vs Register:%d)\n", reg1, reg2);
 
                 cpup->flags.z = false;
 
@@ -946,6 +1004,10 @@ void svm_run(svm_t * cpup)
                 unsigned int val2 = cpup->code[cpup->esp];
 
                 int val = BYTES_TO_ADDR(val1, val2);
+
+                if (getenv("DEBUG") != NULL)
+                    printf("CMP_IMMEDIATE(Register:%d vs %d [Hex:%04X])\n", reg, val,
+                           val);
 
                 cpup->flags.z = false;
 
