@@ -106,6 +106,7 @@ The following are examples of all instructions:
 
     cmp #3, #4        # Compare contents of reg 3 & 4, set the Z-flag.
     cmp #3, 42        # Compare contents of reg 3 with the constant 42.  sets z.
+    cmp #3, "Moi"     # Compare contents of reg 3 with the constant string "Moi".  sets z.
 
     load #1, #4       # Load register 1 with the contents of the address in #4.
     store #1, #4      # Load the address stored in register4 with the contents of reg1.
