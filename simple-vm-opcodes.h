@@ -71,6 +71,7 @@
  */
 #define CMP_REG       0x40
 #define CMP_IMMEDIATE 0x41
+#define CMP_STRING    0x42
 
 
 /**
@@ -115,6 +116,7 @@ _Bool op_dec(void *in);
 
 _Bool op_cmp_reg(void *in);
 _Bool op_cmp_immediate(void *in);
+_Bool op_cmp_string(void *in);
 
 _Bool op_nop(void *in);
 

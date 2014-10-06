@@ -791,6 +791,43 @@ _Bool op_cmp_immediate(void *in)
     return (false);
 }
 
+_Bool op_cmp_string(void *in)
+{
+    svm_t *svm = (svm_t *) in;
+
+    /* get the source register */
+    unsigned int reg = READ_BYTE();
+    BOUNDS_TEST_REGISTER(reg);
+
+    /* Now we get the string to compare against. */
+    /* the string length - max 255 - FIXME */
+    unsigned int len = READ_BYTE();
+
+    /* get the string content */
+    char *cur = get_string_reg(svm, reg);
+    svm->ip += 1;
+
+    if (getenv("DEBUG") != NULL)
+        printf("Comparing contents of register: %d - with string '%s' [length %d]\n", reg,
+               cur, len);
+
+
+    /* compare */
+    if (strncmp(cur, (char *) svm->code + svm->ip, len) == 0)
+    {
+        svm->flags.z = true;
+    } else
+    {
+        svm->flags.z = false;
+    }
+
+    /* IP bump */
+    svm->ip += len;
+
+    /* We've tweaked the IP by jumping over the inline-string. */
+    return (true);
+}
+
 _Bool op_load_from_ram(void *in)
 {
     svm_t *svm = (svm_t *) in;
@@ -918,4 +955,5 @@ void opcode_init(svm_t * svm)
     // comparisons
     svm->opcodes[CMP_REG] = op_cmp_reg;
     svm->opcodes[CMP_IMMEDIATE] = op_cmp_immediate;
+    svm->opcodes[CMP_STRING] = op_cmp_string;
 }
