@@ -139,7 +139,7 @@ typedef struct flags {
 typedef struct svm {
     reg_t registers[REGISTER_COUNT];
     flag_t flags;
-    unsigned int esp;
+    unsigned int ip;
     unsigned int size;
     unsigned char *code;
     void (*error_handler) (char *msg);

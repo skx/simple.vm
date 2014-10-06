@@ -81,9 +81,17 @@
 
 
 /**
+ * Read and return the next byte from the current instruction-pointer.
+ */
+#define READ_BYTE() (cpup->code[++cpup->ip])
+
+
+
+/**
  * Helper to convert a two-byte value to an integer in the range 0x0000-0xffff
  */
 #define BYTES_TO_ADDR(one,two) (one + ( 256 * two ))
+
 
 
 
@@ -165,7 +173,7 @@ svm_t *svm_new(unsigned char *code, unsigned int size)
     memset(cpun, '\0', sizeof(struct svm));
 
     cpun->error_handler = NULL;
-    cpun->esp = 0;
+    cpun->ip = 0;
     cpun->size = size;
     cpun->code = code;
 
@@ -293,7 +301,7 @@ void svm_run(svm_t * cpup)
     /**
      * The code will start executing from offset 0.
      */
-    cpup->esp = 0;
+    cpup->ip = 0;
 
 
     /**
@@ -301,14 +309,14 @@ void svm_run(svm_t * cpup)
      * allocated code, or an EXIT instruction causes our run
      * flag to be set to zero.
      */
-    while (run && (cpup->esp < cpup->size))
+    while (run && (cpup->ip < cpup->size))
     {
 
         /**
-         * At the end of this loop we bump the esp register to
+         * At the end of this loop we bump the ip register to
          * process the next instruction.
          *
-         * This label exists so the esp register may be set, and
+         * This label exists so the ip register may be set, and
          * that process skipped.
          *
          * (This is used for the JUMP* instructions.)
@@ -318,8 +326,8 @@ void svm_run(svm_t * cpup)
 
 
         if (getenv("DEBUG") != NULL)
-            printf("%04x - Parsing OpCode: %d [Hex:%02x]\n", cpup->esp,
-                   cpup->code[cpup->esp], cpup->code[cpup->esp]);
+            printf("%04x - Parsing OpCode: %d [Hex:%02x]\n", cpup->ip,
+                   cpup->code[cpup->ip], cpup->code[cpup->ip]);
 
 
         /**
@@ -328,7 +336,7 @@ void svm_run(svm_t * cpup)
          * for decoding & executing our instructions.
          *
          */
-        switch (cpup->code[cpup->esp])
+        switch (cpup->code[cpup->ip])
         {
         case NOP_OP:
             {
@@ -343,10 +351,8 @@ void svm_run(svm_t * cpup)
 
         case INT_PRINT:
             {
-                cpup->esp++;
-
                 /* get the register number to print */
-                unsigned int reg = cpup->code[cpup->esp];
+                unsigned int reg = READ_BYTE();
                 BOUNDS_TEST_REGISTER(cpup, reg);
 
                 if (getenv("DEBUG") != NULL)
@@ -361,10 +367,8 @@ void svm_run(svm_t * cpup)
 
         case STRING_PRINT:
             {
-                cpup->esp++;
-
                 /* get the reg number to print */
-                unsigned int reg = cpup->code[cpup->esp];
+                unsigned int reg = READ_BYTE();
                 BOUNDS_TEST_REGISTER(cpup, reg);
 
                 if (getenv("DEBUG") != NULL)
@@ -381,10 +385,9 @@ void svm_run(svm_t * cpup)
 
         case STRING_SYSTEM:
             {
-                cpup->esp++;
 
                 /* get the reg */
-                unsigned int reg = cpup->code[cpup->esp];
+                unsigned int reg = READ_BYTE();
                 BOUNDS_TEST_REGISTER(cpup, reg);
 
                 if (getenv("DEBUG") != NULL)
@@ -397,18 +400,21 @@ void svm_run(svm_t * cpup)
 
         case JUMP_TO:
             {
-                cpup->esp++;
+                /**
+                 * Read the two bytes which will build up the destination
+                 */
+                unsigned int off1 = READ_BYTE();
+                unsigned int off2 = READ_BYTE();
 
-                short off1 = cpup->code[cpup->esp];
-                cpup->esp++;
-                short off2 = cpup->code[cpup->esp];
-
+                /**
+                 * Convert to the offset in our code-segment.
+                 */
                 int offset = BYTES_TO_ADDR(off1, off2);
 
                 if (getenv("DEBUG") != NULL)
                     printf("JUMP_TO(Offset:%d [Hex:%04X]\n", offset, offset);
 
-                cpup->esp = offset;
+                cpup->ip = offset;
                 goto restart;
                 break;
             }
@@ -416,12 +422,15 @@ void svm_run(svm_t * cpup)
 
         case JUMP_Z:
             {
-                cpup->esp++;
+                /**
+                 * Read the two bytes which will build up the destination
+                 */
+                unsigned int off1 = READ_BYTE();
+                unsigned int off2 = READ_BYTE();
 
-                short off1 = cpup->code[cpup->esp];
-                cpup->esp++;
-                short off2 = cpup->code[cpup->esp];
-
+                /**
+                 * Convert to the offset in our code-segment.
+                 */
                 int offset = BYTES_TO_ADDR(off1, off2);
 
                 if (getenv("DEBUG") != NULL)
@@ -429,7 +438,7 @@ void svm_run(svm_t * cpup)
 
                 if (cpup->flags.z)
                 {
-                    cpup->esp = offset;
+                    cpup->ip = offset;
                     goto restart;
                 }
                 break;
@@ -437,12 +446,15 @@ void svm_run(svm_t * cpup)
 
         case JUMP_NZ:
             {
-                cpup->esp++;
+                /**
+                 * Read the two bytes which will build up the destination
+                 */
+                unsigned int off1 = READ_BYTE();
+                unsigned int off2 = READ_BYTE();
 
-                short off1 = cpup->code[cpup->esp];
-                cpup->esp++;
-                short off2 = cpup->code[cpup->esp];
-
+                /**
+                 * Convert to the offset in our code-segment.
+                 */
                 int offset = BYTES_TO_ADDR(off1, off2);
 
                 if (getenv("DEBUG") != NULL)
@@ -450,7 +462,7 @@ void svm_run(svm_t * cpup)
 
                 if (!cpup->flags.z)
                 {
-                    cpup->esp = offset;
+                    cpup->ip = offset;
                     goto restart;
                 }
                 break;
@@ -458,19 +470,13 @@ void svm_run(svm_t * cpup)
 
         case INT_STORE:
             {
-                /* store an int in a register */
-                cpup->esp++;
-
-                /* get the reg */
-                unsigned int reg = cpup->code[cpup->esp];
+                /* get the register number to store in */
+                unsigned int reg = READ_BYTE();
                 BOUNDS_TEST_REGISTER(cpup, reg);
 
                 /* get the value */
-                cpup->esp++;
-                unsigned int val1 = cpup->code[cpup->esp];
-                cpup->esp++;
-                unsigned int val2 = cpup->code[cpup->esp];
-
+                unsigned int val1 = READ_BYTE();
+                unsigned int val2 = READ_BYTE();
                 int value = BYTES_TO_ADDR(val1, val2);
 
                 if (getenv("DEBUG") != NULL)
@@ -489,11 +495,8 @@ void svm_run(svm_t * cpup)
 
         case INT_TOSTRING:
             {
-                /* convert an int-register to a string-register */
-                cpup->esp++;
-
-                /* get the reg */
-                unsigned int reg = cpup->code[cpup->esp];
+                /* get the register number to convert */
+                unsigned int reg = READ_BYTE();
                 BOUNDS_TEST_REGISTER(cpup, reg);
 
                 if (getenv("DEBUG") != NULL)
@@ -515,11 +518,8 @@ void svm_run(svm_t * cpup)
 
         case INC_OP:
             {
-                /* increment the contents of a register */
-                cpup->esp++;
-
-                /* get the reg */
-                unsigned int reg = cpup->code[cpup->esp];
+                /* get the register number to increment */
+                unsigned int reg = READ_BYTE();
                 BOUNDS_TEST_REGISTER(cpup, reg);
 
                 if (getenv("DEBUG") != NULL)
@@ -541,11 +541,8 @@ void svm_run(svm_t * cpup)
 
         case DEC_OP:
             {
-                /* increment the contents of a register */
-                cpup->esp++;
-
-                /* get the reg */
-                unsigned int reg = cpup->code[cpup->esp];
+                /* get the register number to decrement */
+                unsigned int reg = READ_BYTE();
                 BOUNDS_TEST_REGISTER(cpup, reg);
 
                 if (getenv("DEBUG") != NULL)
@@ -567,19 +564,17 @@ void svm_run(svm_t * cpup)
 
         case ADD_OP:
             {
-                cpup->esp++;
-
-                /* get the destination register. */
-                unsigned int reg = cpup->code[cpup->esp];
+                /* get the destination register */
+                unsigned int reg = READ_BYTE();
                 BOUNDS_TEST_REGISTER(cpup, reg);
 
-                cpup->esp++;
-                unsigned int src1 = cpup->code[cpup->esp];
-                BOUNDS_TEST_REGISTER(cpup, src1);
+                /* get the source register */
+                unsigned int src1 = READ_BYTE();
+                BOUNDS_TEST_REGISTER(cpup, reg);
 
-                cpup->esp++;
-                unsigned int src2 = cpup->code[cpup->esp];
-                BOUNDS_TEST_REGISTER(cpup, src2);
+                /* get the source register */
+                unsigned int src2 = READ_BYTE();
+                BOUNDS_TEST_REGISTER(cpup, reg);
 
                 if (getenv("DEBUG") != NULL)
                     printf("ADD_OP(Register:%d = Register:%d + Register:%d)\n", reg, src1,
@@ -616,19 +611,18 @@ void svm_run(svm_t * cpup)
 
         case XOR_OP:
             {
-                cpup->esp++;
-
-                /* get the destination register. */
-                unsigned int reg = cpup->code[cpup->esp];
+                /* get the destination register */
+                unsigned int reg = READ_BYTE();
                 BOUNDS_TEST_REGISTER(cpup, reg);
 
-                cpup->esp++;
-                unsigned int src1 = cpup->code[cpup->esp];
-                BOUNDS_TEST_REGISTER(cpup, src1);
+                /* get the source register */
+                unsigned int src1 = READ_BYTE();
+                BOUNDS_TEST_REGISTER(cpup, reg);
 
-                cpup->esp++;
-                unsigned int src2 = cpup->code[cpup->esp];
-                BOUNDS_TEST_REGISTER(cpup, src2);
+                /* get the source register */
+                unsigned int src2 = READ_BYTE();
+                BOUNDS_TEST_REGISTER(cpup, reg);
+
 
                 if (getenv("DEBUG") != NULL)
                     printf("XOR_OP(Register:%d = Register:%d ^ Register:%d)\n", reg, src1,
@@ -667,19 +661,17 @@ void svm_run(svm_t * cpup)
 
         case SUB_OP:
             {
-                cpup->esp++;
-
-                /* get the destination register. */
-                unsigned int reg = cpup->code[cpup->esp];
+                /* get the destination register */
+                unsigned int reg = READ_BYTE();
                 BOUNDS_TEST_REGISTER(cpup, reg);
 
-                cpup->esp++;
-                unsigned int src1 = cpup->code[cpup->esp];
-                BOUNDS_TEST_REGISTER(cpup, src1);
+                /* get the source register */
+                unsigned int src1 = READ_BYTE();
+                BOUNDS_TEST_REGISTER(cpup, reg);
 
-                cpup->esp++;
-                unsigned int src2 = cpup->code[cpup->esp];
-                BOUNDS_TEST_REGISTER(cpup, src2);
+                /* get the source register */
+                unsigned int src2 = READ_BYTE();
+                BOUNDS_TEST_REGISTER(cpup, reg);
 
                 if (getenv("DEBUG") != NULL)
                     printf("SUB_OP(Register:%d = Register:%d - Register:%d)\n", reg, src1,
@@ -712,19 +704,18 @@ void svm_run(svm_t * cpup)
 
         case MUL_OP:
             {
-                cpup->esp++;
-
-                /* get the destination register. */
-                unsigned int reg = cpup->code[cpup->esp];
+                /* get the destination register */
+                unsigned int reg = READ_BYTE();
                 BOUNDS_TEST_REGISTER(cpup, reg);
 
-                cpup->esp++;
-                unsigned int src1 = cpup->code[cpup->esp];
-                BOUNDS_TEST_REGISTER(cpup, src1);
+                /* get the source register */
+                unsigned int src1 = READ_BYTE();
+                BOUNDS_TEST_REGISTER(cpup, reg);
 
-                cpup->esp++;
-                unsigned int src2 = cpup->code[cpup->esp];
-                BOUNDS_TEST_REGISTER(cpup, src2);
+                /* get the source register */
+                unsigned int src2 = READ_BYTE();
+                BOUNDS_TEST_REGISTER(cpup, reg);
+
 
                 if (getenv("DEBUG") != NULL)
                     printf("MUL_OP(Register:%d = Register:%d * Register:%d)\n", reg, src1,
@@ -752,19 +743,17 @@ void svm_run(svm_t * cpup)
 
         case DIV_OP:
             {
-                cpup->esp++;
-
-                /* get the destination register. */
-                unsigned int reg = cpup->code[cpup->esp];
+                /* get the destination register */
+                unsigned int reg = READ_BYTE();
                 BOUNDS_TEST_REGISTER(cpup, reg);
 
-                cpup->esp++;
-                unsigned int src1 = cpup->code[cpup->esp];
-                BOUNDS_TEST_REGISTER(cpup, src1);
+                /* get the source register */
+                unsigned int src1 = READ_BYTE();
+                BOUNDS_TEST_REGISTER(cpup, reg);
 
-                cpup->esp++;
-                unsigned int src2 = cpup->code[cpup->esp];
-                BOUNDS_TEST_REGISTER(cpup, src2);
+                /* get the source register */
+                unsigned int src2 = READ_BYTE();
+                BOUNDS_TEST_REGISTER(cpup, reg);
 
                 if (getenv("DEBUG") != NULL)
                     printf("DIV_OP(Register:%d = Register:%d / Register:%d)\n", reg, src1,
@@ -792,58 +781,58 @@ void svm_run(svm_t * cpup)
 
         case STRING_STORE:
             {
-                /* store a string in a register */
-                cpup->esp++;
-
-                /* get the destination register. */
-                unsigned int reg = cpup->code[cpup->esp];
+                /* get the destination register */
+                unsigned int reg = READ_BYTE();
                 BOUNDS_TEST_REGISTER(cpup, reg);
 
-                cpup->esp++;
+                /* the string length - max 255 - FIXME */
+                unsigned int len = READ_BYTE();
 
-                /* get the length */
-                unsigned int len = cpup->code[cpup->esp];
-                cpup->esp++;
+                /* bump IP one more. */
+                cpup->ip += 1;
 
-            /**
-             * If we already have a string in the register delete it.
-             */
+                /**
+                 * If we already have a string in the register delete it.
+                 */
                 if ((cpup->registers[reg].type == STRING)
                     && (cpup->registers[reg].string))
                 {
                     free(cpup->registers[reg].string);
                 }
 
-            /**
-             * Store the new string and set the register type.
-             */
+                /**
+                 * Store the new string and set the register type.
+                 */
                 cpup->registers[reg].type = STRING;
                 cpup->registers[reg].string = malloc(len + 1);
                 memset(cpup->registers[reg].string, '\0', len + 1);
 
+                /**
+                 * Inefficient - but copes with embedded NULL.
+                 */
                 int i;
                 for (i = 0; i < (int) len; i++)
                 {
-                    cpup->registers[reg].string[i] = cpup->code[cpup->esp];
-                    cpup->esp++;
+                    cpup->registers[reg].string[i] = cpup->code[cpup->ip];
+                    cpup->ip++;
                 }
 
                 if (getenv("DEBUG") != NULL)
                     printf("STRING_STORE(Reg:%02x => \"%s\" [%02x bytes]\n", reg,
                            cpup->registers[reg].string, len);
 
-                cpup->esp--;
+                /**
+                 * Ugh.  Mess.  FIXME.
+                 */
+                cpup->ip--;
 
                 break;
             }
 
         case STRING_TOINT:
             {
-                /* convert an string-register to an int-register */
-                cpup->esp++;
-
-                /* get the reg */
-                unsigned int reg = cpup->code[cpup->esp];
+                /* get the destination register */
+                unsigned int reg = READ_BYTE();
                 BOUNDS_TEST_REGISTER(cpup, reg);
 
                 if (getenv("DEBUG") != NULL)
@@ -874,20 +863,17 @@ void svm_run(svm_t * cpup)
 
         case STRING_CONCAT:
             {
-                cpup->esp++;
-
-                /* get the destination register. */
-                unsigned int reg = cpup->code[cpup->esp];
+                /* get the destination register */
+                unsigned int reg = READ_BYTE();
                 BOUNDS_TEST_REGISTER(cpup, reg);
 
-                cpup->esp++;
-                unsigned int src1 = cpup->code[cpup->esp];
-                BOUNDS_TEST_REGISTER(cpup, src1);
+                /* get the source register */
+                unsigned int src1 = READ_BYTE();
+                BOUNDS_TEST_REGISTER(cpup, reg);
 
-                cpup->esp++;
-                unsigned int src2 = cpup->code[cpup->esp];
-                BOUNDS_TEST_REGISTER(cpup, src2);
-
+                /* get the source register */
+                unsigned int src2 = READ_BYTE();
+                BOUNDS_TEST_REGISTER(cpup, reg);
 
                 if (getenv("DEBUG") != NULL)
                     printf("STRING_CONCAT(Register:%d = Register:%d + Register:%d)\n",
@@ -930,12 +916,12 @@ void svm_run(svm_t * cpup)
 
         case LOAD_FROM_RAM:
             {
-                cpup->esp++;
-                unsigned int reg = cpup->code[cpup->esp];
+                /* get the destination register */
+                unsigned int reg = READ_BYTE();
                 BOUNDS_TEST_REGISTER(cpup, reg);
 
-                cpup->esp++;
-                unsigned int addr = cpup->code[cpup->esp];
+                /* get the address to read from the second register */
+                unsigned int addr = READ_BYTE();
                 BOUNDS_TEST_REGISTER(cpup, addr);
 
                 if (getenv("DEBUG") != NULL)
@@ -944,9 +930,9 @@ void svm_run(svm_t * cpup)
                          reg, addr);
 
                 /* get the address from the register */
-                int adr = get_int_reg(cpup, addr );
-                if ( adr < 0 || adr > 0xffff )
-                    svm_error_handler(cpup, "Reading from outside RAM" );
+                int adr = get_int_reg(cpup, addr);
+                if (adr < 0 || adr > 0xffff)
+                    svm_error_handler(cpup, "Reading from outside RAM");
 
                 /* Read the value from RAM */
                 int val = cpup->code[adr];
@@ -964,12 +950,12 @@ void svm_run(svm_t * cpup)
 
         case STORE_IN_RAM:
             {
-                cpup->esp++;
-                unsigned int reg = cpup->code[cpup->esp];
+                /* get the destination register */
+                unsigned int reg = READ_BYTE();
                 BOUNDS_TEST_REGISTER(cpup, reg);
 
-                cpup->esp++;
-                unsigned int addr = cpup->code[cpup->esp];
+                /* get the address to write to from the second register */
+                unsigned int addr = READ_BYTE();
                 BOUNDS_TEST_REGISTER(cpup, addr);
 
                 if (getenv("DEBUG") != NULL)
@@ -977,13 +963,13 @@ void svm_run(svm_t * cpup)
                            addr, reg);
 
                 /* Get the value we're to store. */
-                int val = get_int_reg(cpup,reg);
+                int val = get_int_reg(cpup, reg);
 
                 /* Get the address we're to store it in. */
-                int adr = get_int_reg(cpup,addr);
+                int adr = get_int_reg(cpup, addr);
 
-                if ( adr < 0 || adr > 0xffff )
-                    svm_error_handler(cpup, "Writing outside RAM" );
+                if (adr < 0 || adr > 0xffff)
+                    svm_error_handler(cpup, "Writing outside RAM");
 
                 /* do the necessary */
                 cpup->code[adr] = val;
@@ -993,15 +979,12 @@ void svm_run(svm_t * cpup)
 
         case CMP_REG:
             {
-                /**
-                 * Do two registers have the same value?
-                 */
-                cpup->esp++;
-                unsigned int reg1 = cpup->code[cpup->esp];
+                /* get the source register */
+                unsigned int reg1 = READ_BYTE();
                 BOUNDS_TEST_REGISTER(cpup, reg1);
 
-                cpup->esp++;
-                unsigned int reg2 = cpup->code[cpup->esp];
+                /* get the source register */
+                unsigned int reg2 = READ_BYTE();
                 BOUNDS_TEST_REGISTER(cpup, reg2);
 
                 if (getenv("DEBUG") != NULL)
@@ -1030,16 +1013,13 @@ void svm_run(svm_t * cpup)
 
         case CMP_IMMEDIATE:
             {
-                cpup->esp++;
-                unsigned int reg = cpup->code[cpup->esp];
+                /* get the source register */
+                unsigned int reg = READ_BYTE();
                 BOUNDS_TEST_REGISTER(cpup, reg);
 
-                /* get the value */
-                cpup->esp++;
-                unsigned int val1 = cpup->code[cpup->esp];
-                cpup->esp++;
-                unsigned int val2 = cpup->code[cpup->esp];
-
+                /* get the integer to compare with */
+                unsigned int val1 = READ_BYTE();
+                unsigned int val2 = READ_BYTE();
                 int val = BYTES_TO_ADDR(val1, val2);
 
                 if (getenv("DEBUG") != NULL)
@@ -1059,7 +1039,7 @@ void svm_run(svm_t * cpup)
 
         default:
             printf("UNKNOWN INSTRUCTION: %d [Hex: %2X]\n",
-                   cpup->code[cpup->esp], cpup->code[cpup->esp]);
+                   cpup->code[cpup->ip], cpup->code[cpup->ip]);
 
             unknown += 1;
 
@@ -1070,7 +1050,7 @@ void svm_run(svm_t * cpup)
             }
             break;
         }
-        cpup->esp++;
+        cpup->ip++;
 
         iterations++;
     }
