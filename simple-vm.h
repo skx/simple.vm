@@ -127,22 +127,72 @@ typedef struct flags {
 
 
 /**
- * The Simple Virtual Machine type, which contains:
+ * This is the signature for an implementation of a bytecode operation.
  *
- * 1.  An array of registers.
- * 2.  A set of virtual-flags.
- * 3.  An instruction pointer.
- * 4.  A set of code to execute - which has a size.
- * 5.  An error-handler to be called on (fatal) errors.
+ * Each operation will receive a pointer to the svm_t,
+ * referring to the virtual machine, however we cannot
+ * use that type here because we want the list of operations
+ * to be associated with the svm_t which has not yet been
+ * declared.
+ *
+ * (i.e.  We really want a forward declaration here, but we're C not C++.)
+ *
+ */
+typedef _Bool opcode_implementation(void *);
+
+
+
+/**
+ * The Simple Virtual Machine object.
+ *
+ * All operations relate to this structure, which is allocated
+ * via `svm_new` and freed with `svm_free`.
  *
  */
 typedef struct svm {
+    /**
+     * The registers that this virtual machine possesses
+     */
     reg_t registers[REGISTER_COUNT];
+
+    /**
+     * The flags the CPU contains.
+     */
     flag_t flags;
+
+    /**
+     * The instruction-pointer.
+     */
     unsigned int ip;
-    unsigned int size;
+
+    /**
+     * The code loaded in the machines RAM, and size of same.
+     */
     unsigned char *code;
+    unsigned int size;
+
+    /**
+     * The user may define a custom error-handler for when
+     * register type-errors occur, or there is a division-by-zero
+     * error.
+     *
+     * If set this will be stored here, if not a default implementation
+     * will be provided.
+     *
+     */
     void (*error_handler) (char *msg);
+
+    /**
+     * This is a lookup table which maps opcodes to the handlers
+     * for them.
+     */
+    opcode_implementation *opcodes[255];
+
+    /**
+     * State - Shouldn't really be here.
+     */
+    _Bool running;
+
 } svm_t;
 
 
