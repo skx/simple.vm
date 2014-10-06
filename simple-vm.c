@@ -72,10 +72,9 @@
 /**
  * Trivial helper to test registers are not out of bounds.
  */
-#define BOUNDS_TEST_REGISTER( r ) { if ( r >= REGISTER_COUNT ) \
+#define BOUNDS_TEST_REGISTER( c, r ) { if ( r >= REGISTER_COUNT )        \
                                     {  \
-                                        printf("Register out of bounds: 0 <= %d >= %d", r, REGISTER_COUNT ); \
-                                        exit(1); \
+                                        svm_error_handler( c, "Register out of bounds" ); \
                                     } \
                                   }
 
@@ -280,7 +279,7 @@ void svm_run(svm_t * cpup)
 
                 /* get the reg */
                 unsigned int reg = cpup->code[cpup->esp];
-                BOUNDS_TEST_REGISTER(reg);
+                BOUNDS_TEST_REGISTER(cpup, reg);
 
                 if (cpup->registers[reg].type == INTEGER)
                 {
@@ -302,7 +301,7 @@ void svm_run(svm_t * cpup)
 
                 /* get the reg */
                 unsigned int reg = cpup->code[cpup->esp];
-                BOUNDS_TEST_REGISTER(reg);
+                BOUNDS_TEST_REGISTER(cpup, reg);
 
                 if (cpup->registers[reg].type == STRING)
                 {
@@ -323,7 +322,7 @@ void svm_run(svm_t * cpup)
 
                 /* get the reg */
                 unsigned int reg = cpup->code[cpup->esp];
-                BOUNDS_TEST_REGISTER(reg);
+                BOUNDS_TEST_REGISTER(cpup, reg);
 
                 if (cpup->registers[reg].type == STRING)
                 {
@@ -410,7 +409,7 @@ void svm_run(svm_t * cpup)
 
                 /* get the reg */
                 unsigned int reg = cpup->code[cpup->esp];
-                BOUNDS_TEST_REGISTER(reg);
+                BOUNDS_TEST_REGISTER(cpup, reg);
 
                 /* get the value */
                 cpup->esp++;
@@ -441,7 +440,7 @@ void svm_run(svm_t * cpup)
 
                 /* get the reg */
                 unsigned int reg = cpup->code[cpup->esp];
-                BOUNDS_TEST_REGISTER(reg);
+                BOUNDS_TEST_REGISTER(cpup, reg);
 
                 int tmp = cpup->registers[reg].integer;
 
@@ -463,7 +462,7 @@ void svm_run(svm_t * cpup)
 
                 /* get the reg */
                 unsigned int reg = cpup->code[cpup->esp];
-                BOUNDS_TEST_REGISTER(reg);
+                BOUNDS_TEST_REGISTER(cpup, reg);
 
                 if (cpup->registers[reg].type != INTEGER)
                 {
@@ -488,7 +487,7 @@ void svm_run(svm_t * cpup)
 
                 /* get the reg */
                 unsigned int reg = cpup->code[cpup->esp];
-                BOUNDS_TEST_REGISTER(reg);
+                BOUNDS_TEST_REGISTER(cpup, reg);
 
 
                 if (cpup->registers[reg].type != INTEGER)
@@ -513,15 +512,15 @@ void svm_run(svm_t * cpup)
 
                 /* get the destination register. */
                 unsigned int reg = cpup->code[cpup->esp];
-                BOUNDS_TEST_REGISTER(reg);
+                BOUNDS_TEST_REGISTER(cpup, reg);
 
                 cpup->esp++;
                 unsigned int src1 = cpup->code[cpup->esp];
-                BOUNDS_TEST_REGISTER(src1);
+                BOUNDS_TEST_REGISTER(cpup, src1);
 
                 cpup->esp++;
                 unsigned int src2 = cpup->code[cpup->esp];
-                BOUNDS_TEST_REGISTER(src2);
+                BOUNDS_TEST_REGISTER(cpup, src2);
 
                 /* if the register stores a string .. free it */
                 if ((cpup->registers[reg].type == STRING)
@@ -561,15 +560,15 @@ void svm_run(svm_t * cpup)
 
                 /* get the destination register. */
                 unsigned int reg = cpup->code[cpup->esp];
-                BOUNDS_TEST_REGISTER(reg);
+                BOUNDS_TEST_REGISTER(cpup, reg);
 
                 cpup->esp++;
                 unsigned int src1 = cpup->code[cpup->esp];
-                BOUNDS_TEST_REGISTER(src1);
+                BOUNDS_TEST_REGISTER(cpup, src1);
 
                 cpup->esp++;
                 unsigned int src2 = cpup->code[cpup->esp];
-                BOUNDS_TEST_REGISTER(src2);
+                BOUNDS_TEST_REGISTER(cpup, src2);
 
                 /* if the register stores a string .. free it */
                 if ((cpup->registers[reg].type == STRING)
@@ -609,15 +608,15 @@ void svm_run(svm_t * cpup)
 
                 /* get the destination register. */
                 unsigned int reg = cpup->code[cpup->esp];
-                BOUNDS_TEST_REGISTER(reg);
+                BOUNDS_TEST_REGISTER(cpup, reg);
 
                 cpup->esp++;
                 unsigned int src1 = cpup->code[cpup->esp];
-                BOUNDS_TEST_REGISTER(src1);
+                BOUNDS_TEST_REGISTER(cpup, src1);
 
                 cpup->esp++;
                 unsigned int src2 = cpup->code[cpup->esp];
-                BOUNDS_TEST_REGISTER(src2);
+                BOUNDS_TEST_REGISTER(cpup, src2);
 
                 /* if the register stores a string .. free it */
                 if ((cpup->registers[reg].type == STRING)
@@ -654,15 +653,15 @@ void svm_run(svm_t * cpup)
 
                 /* get the destination register. */
                 unsigned int reg = cpup->code[cpup->esp];
-                BOUNDS_TEST_REGISTER(reg);
+                BOUNDS_TEST_REGISTER(cpup, reg);
 
                 cpup->esp++;
                 unsigned int src1 = cpup->code[cpup->esp];
-                BOUNDS_TEST_REGISTER(src1);
+                BOUNDS_TEST_REGISTER(cpup, src1);
 
                 cpup->esp++;
                 unsigned int src2 = cpup->code[cpup->esp];
-                BOUNDS_TEST_REGISTER(src2);
+                BOUNDS_TEST_REGISTER(cpup, src2);
 
                 /* if the register stores a string .. free it */
                 if ((cpup->registers[reg].type == STRING)
@@ -693,15 +692,15 @@ void svm_run(svm_t * cpup)
 
                 /* get the destination register. */
                 unsigned int reg = cpup->code[cpup->esp];
-                BOUNDS_TEST_REGISTER(reg);
+                BOUNDS_TEST_REGISTER(cpup, reg);
 
                 cpup->esp++;
                 unsigned int src1 = cpup->code[cpup->esp];
-                BOUNDS_TEST_REGISTER(src1);
+                BOUNDS_TEST_REGISTER(cpup, src1);
 
                 cpup->esp++;
                 unsigned int src2 = cpup->code[cpup->esp];
-                BOUNDS_TEST_REGISTER(src2);
+                BOUNDS_TEST_REGISTER(cpup, src2);
 
 
                 /* if the register stores a string .. free it */
@@ -734,7 +733,7 @@ void svm_run(svm_t * cpup)
 
                 /* get the destination register. */
                 unsigned int reg = cpup->code[cpup->esp];
-                BOUNDS_TEST_REGISTER(reg);
+                BOUNDS_TEST_REGISTER(cpup, reg);
 
                 cpup->esp++;
 
@@ -781,7 +780,7 @@ void svm_run(svm_t * cpup)
 
                 /* get the reg */
                 unsigned int reg = cpup->code[cpup->esp];
-                BOUNDS_TEST_REGISTER(reg);
+                BOUNDS_TEST_REGISTER(cpup, reg);
 
 
                 if (cpup->registers[reg].type != STRING)
@@ -815,15 +814,15 @@ void svm_run(svm_t * cpup)
 
                 /* get the destination register. */
                 unsigned int reg = cpup->code[cpup->esp];
-                BOUNDS_TEST_REGISTER(reg);
+                BOUNDS_TEST_REGISTER(cpup, reg);
 
                 cpup->esp++;
                 unsigned int src1 = cpup->code[cpup->esp];
-                BOUNDS_TEST_REGISTER(src1);
+                BOUNDS_TEST_REGISTER(cpup, src1);
 
                 cpup->esp++;
                 unsigned int src2 = cpup->code[cpup->esp];
-                BOUNDS_TEST_REGISTER(src2);
+                BOUNDS_TEST_REGISTER(cpup, src2);
 
 
                 /*
@@ -872,11 +871,11 @@ void svm_run(svm_t * cpup)
             {
                 cpup->esp++;
                 unsigned int reg = cpup->code[cpup->esp];
-                BOUNDS_TEST_REGISTER(reg);
+                BOUNDS_TEST_REGISTER(cpup, reg);
 
                 cpup->esp++;
                 unsigned int addr = cpup->code[cpup->esp];
-                BOUNDS_TEST_REGISTER(addr);
+                BOUNDS_TEST_REGISTER(cpup, addr);
 
                 // Read the value from the RAM
                 int val = cpup->code[cpup->registers[addr].integer];
@@ -895,11 +894,11 @@ void svm_run(svm_t * cpup)
             {
                 cpup->esp++;
                 unsigned int reg = cpup->code[cpup->esp];
-                BOUNDS_TEST_REGISTER(reg);
+                BOUNDS_TEST_REGISTER(cpup, reg);
 
                 cpup->esp++;
                 unsigned int addr = cpup->code[cpup->esp];
-                BOUNDS_TEST_REGISTER(addr);
+                BOUNDS_TEST_REGISTER(cpup, addr);
 
                 // If the register contains a number then we're golden
                 if (cpup->registers[addr].type == INTEGER)
@@ -923,11 +922,11 @@ void svm_run(svm_t * cpup)
                  */
                 cpup->esp++;
                 unsigned int reg1 = cpup->code[cpup->esp];
-                BOUNDS_TEST_REGISTER(reg1);
+                BOUNDS_TEST_REGISTER(cpup, reg1);
 
                 cpup->esp++;
                 unsigned int reg2 = cpup->code[cpup->esp];
-                BOUNDS_TEST_REGISTER(reg2);
+                BOUNDS_TEST_REGISTER(cpup, reg2);
 
                 cpup->flags.z = false;
 
@@ -954,7 +953,7 @@ void svm_run(svm_t * cpup)
             {
                 cpup->esp++;
                 unsigned int reg = cpup->code[cpup->esp];
-                BOUNDS_TEST_REGISTER(reg);
+                BOUNDS_TEST_REGISTER(cpup, reg);
 
                 /* get the value */
                 cpup->esp++;
