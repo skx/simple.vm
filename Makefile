@@ -8,7 +8,7 @@
 #
 CC=gcc
 LINKER=$(CC) -o
-CFLAGS+=-pedantic -std=c11 -Wall -Wextra -ggdb
+CFLAGS+=-pedantic -std=c11 -Wall -Wextra -O2 -funroll-loops
 
 
 
