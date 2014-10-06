@@ -81,8 +81,7 @@
 
 
 /**
- * Helper to convert a two-byte value to an integer in the range
- * 0x0000-0xffff
+ * Helper to convert a two-byte value to an integer in the range 0x0000-0xffff
  */
 #define BYTES_TO_ADDR(one,two) (one + ( 256 * two ))
 
@@ -92,45 +91,55 @@
 
 /**
  * This function is called if there is an error in handling
- * some bytecode, or some other part of the system.
+ * a bytecode program - such as a mismatched type, or division by zero.
  */
 void svm_error_handler(svm_t * cpup, char *msg)
 {
+    /**
+     * If the user has registered an error-handler use that instead
+     * of this function.
+     */
     if (cpup->error_handler)
     {
         (*cpup->error_handler) (msg);
-    } else
-    {
-        fprintf(stderr, "%s\n", msg);
-        exit(1);
     }
+
+    /**
+     * No error-handler defined, or one was defined which didn't
+     * terminate the program.
+     *
+     * NOTE: Failing to terminate an error-handler will result in undefined
+     * results.
+     */
+    fprintf(stderr, "%s\n", msg);
+    exit(1);
 }
 
 
 
 
 /**
- * Helper to return the string content of a register.
+ * Helper to return the string-content of a register.
  */
 char *get_string_reg(svm_t * cpu, int reg)
 {
     if (cpu->registers[reg].type == STRING)
         return (cpu->registers[reg].string);
-    else
-        svm_error_handler(cpu, "The register deesn't contain a string");
+
+    svm_error_handler(cpu, "The register deesn't contain a string");
     return NULL;
 }
 
 
 /**
- * Helper to return the integer content of a register.
+ * Helper to return the integer-content of a register.
  */
 int get_int_reg(svm_t * cpu, int reg)
 {
     if (cpu->registers[reg].type == INTEGER)
         return (cpu->registers[reg].integer);
-    else
-        svm_error_handler(cpu, "The register doesn't contain an integer");
+
+    svm_error_handler(cpu, "The register doesn't contain an integer");
     return 0;
 }
 
@@ -245,29 +254,37 @@ void svm_free(svm_t * cpup)
 
 /**
  *  Main virtual machine execution loop
+ *
+ *  This function will walk through the code passed to the constructor
+ * and attempt to execute each bytecode instruction.
+ *
+ *  If 20+ instructions are fond which can't be executed then the function
+ * will abort - otherwise it will keep going until an EXIT instruction is
+ * encountered, or the end of the code-block is reached.
+ *
  */
 void svm_run(svm_t * cpup)
 {
     /**
-     * How many instructions this run handled.
+     * How many instructions have we handled?
      */
     int iterations = 0;
 
 
     /**
-     * How many unrecognized instructions.
+     * How many unrecognized instructions have we hit?
      */
     int unknown = 0;
 
 
     /**
-     * Are we running?
+     * Are we still running?
      */
     int run = 1;
 
 
     /**
-     * If this is called without a valid CPU then we should abort.
+     * If we're called without a valid CPU then we should abort.
      */
     if (!cpup)
         return;
@@ -281,19 +298,36 @@ void svm_run(svm_t * cpup)
 
     /**
      * Run continuously - unless we walk off the end of our
-     * allocated code, or an exit instruction causes our run
+     * allocated code, or an EXIT instruction causes our run
      * flag to be set to zero.
      */
     while (run && (cpup->esp < cpup->size))
     {
 
+        /**
+         * At the end of this loop we bump the esp register to
+         * process the next instruction.
+         *
+         * This label exists so the esp register may be set, and
+         * that process skipped.
+         *
+         * (This is used for the JUMP* instructions.)
+         *
+         */
       restart:
+
 
         if (getenv("DEBUG") != NULL)
             printf("%04x - Parsing OpCode: %d [Hex:%02x]\n", cpup->esp,
                    cpup->code[cpup->esp], cpup->code[cpup->esp]);
 
 
+        /**
+         *
+         * Like most toy virtual machines we use a giant switch-statement
+         * for decoding & executing our instructions.
+         *
+         */
         switch (cpup->code[cpup->esp])
         {
         case NOP_OP:
@@ -302,10 +336,11 @@ void svm_run(svm_t * cpup)
                     printf("NOP\n");
 
                 /**
-                 * Nothing to do :)
+                 * Nothing to do.  And we've done it.
                  */
                 break;
             }
+
         case INT_PRINT:
             {
                 cpup->esp++;
@@ -316,7 +351,6 @@ void svm_run(svm_t * cpup)
 
                 if (getenv("DEBUG") != NULL)
                     printf("INT_PRINT(Register %d)\n", reg);
-
 
                 /* get the register contents. */
                 int val = get_int_reg(cpup, reg);
@@ -380,7 +414,6 @@ void svm_run(svm_t * cpup)
             }
 
 
-
         case JUMP_Z:
             {
                 cpup->esp++;
@@ -402,7 +435,6 @@ void svm_run(svm_t * cpup)
                 break;
             }
 
-
         case JUMP_NZ:
             {
                 cpup->esp++;
@@ -423,8 +455,6 @@ void svm_run(svm_t * cpup)
                 }
                 break;
             }
-
-
 
         case INT_STORE:
             {
@@ -508,6 +538,7 @@ void svm_run(svm_t * cpup)
 
                 break;
             }
+
         case DEC_OP:
             {
                 /* increment the contents of a register */
@@ -533,6 +564,7 @@ void svm_run(svm_t * cpup)
 
                 break;
             }
+
         case ADD_OP:
             {
                 cpup->esp++;
@@ -924,6 +956,7 @@ void svm_run(svm_t * cpup)
 
                 break;
             }
+
         case STORE_IN_RAM:
             {
                 cpup->esp++;
