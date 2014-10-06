@@ -35,7 +35,7 @@
 #define INT_STORE     0x01
 #define INT_PRINT     0x02
 #define INT_TOSTRING  0x03
-
+#define INT_RANDOM    0x04
 
 /**
  * Jump things.
@@ -93,6 +93,7 @@ _Bool op_exit(void *in);
 _Bool op_int_store(void *in);
 _Bool op_int_print(void *in);
 _Bool op_int_tostring(void *in);
+_Bool op_int_random(void *in);
 
 _Bool op_string_store(void *in);
 _Bool op_string_print(void *in);

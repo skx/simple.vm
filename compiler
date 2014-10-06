@@ -40,6 +40,7 @@ use constant EXIT => 0x00;
 use constant INT_STORE    => 0x01;
 use constant INT_PRINT    => 0x02;
 use constant INT_TOSTRING => 0x03;
+use constant INT_RANDOM   => 0x04;
 
 #
 #  Jumps
@@ -335,6 +336,14 @@ while ( my $file = shift )
             my $reg = $1;
 
             print $out chr INT_TOSTRING;
+            print $out chr $reg;
+            $offset += 2;
+        }
+        elsif ( $line =~ /^\s*random\s+#([0-9]+)/ )
+        {
+            my $reg = $1;
+
+            print $out chr INT_RANDOM;
             print $out chr $reg;
             $offset += 2;
         }

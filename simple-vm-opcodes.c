@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 #include "simple-vm.h"
 #include "simple-vm-opcodes.h"
@@ -191,6 +192,33 @@ _Bool op_int_tostring(void *in)
     /* store the string-value */
     memset(svm->registers[reg].string, '\0', 10);
     sprintf(svm->registers[reg].string, "%d", cur);
+
+    return (false);
+}
+
+_Bool op_int_random(void *in)
+{
+    svm_t *svm = (svm_t *) in;
+
+    /* get the register to save the output to */
+    unsigned int reg = READ_BYTE();
+    BOUNDS_TEST_REGISTER(reg);
+
+    if (getenv("DEBUG") != NULL)
+        printf("INT_RANDOM(Register %d)\n", reg);
+
+
+    /**
+     * If we already have a string in the register delete it.
+     */
+    if ((svm->registers[reg].type == STRING) && (svm->registers[reg].string))
+    {
+        free(svm->registers[reg].string);
+    }
+
+    /* set the value. */
+    svm->registers[reg].type = INTEGER;
+    svm->registers[reg].integer = rand() % 0xFFFF;
 
     return (false);
 }
@@ -839,6 +867,10 @@ _Bool op_store_in_ram(void *in)
  */
 void opcode_init(svm_t * svm)
 {
+    /**
+     * Initialize the random see for INT_RANDOM()
+     */
+    srand(time(NULL));
 
     /**
      * All instructions will default to unknown.
@@ -856,6 +888,7 @@ void opcode_init(svm_t * svm)
     svm->opcodes[INT_STORE] = op_int_store;
     svm->opcodes[INT_PRINT] = op_int_print;
     svm->opcodes[INT_TOSTRING] = op_int_tostring;
+    svm->opcodes[INT_RANDOM] = op_int_random;
 
     // strings
     svm->opcodes[STRING_STORE] = op_string_store;

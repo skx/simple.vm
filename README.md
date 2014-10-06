@@ -109,6 +109,7 @@ The following are examples of all instructions:
 
     load #1, #4       # Load register 1 with the contents of the address in #4.
     store #1, #4      # Load the address stored in register4 with the contents of reg1.
+    random #2         # Store a random integer in register #2.
 
 
 
