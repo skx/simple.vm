@@ -943,8 +943,13 @@ void svm_run(svm_t * cpup)
                         ("LOAD_FROM_RAM(Register:%d will contain contents of address %04X)\n",
                          reg, addr);
 
-                // Read the value from the RAM
-                int val = cpup->code[cpup->registers[addr].integer];
+                /* get the address from the register */
+                int adr = get_int_reg(cpup, addr );
+                if ( adr < 0 || adr > 0xffff )
+                    svm_error_handler(cpup, "Reading from outside RAM" );
+
+                /* Read the value from RAM */
+                int val = cpup->code[adr];
 
                 /* if the destination currently contains a string .. free it */
                 if ((cpup->registers[reg].type == STRING)
@@ -971,18 +976,17 @@ void svm_run(svm_t * cpup)
                     printf("STORE_IN_RAM(Address %04X set to contents of register %d)\n",
                            addr, reg);
 
+                /* Get the value we're to store. */
+                int val = get_int_reg(cpup,reg);
 
-                // If the register contains a number then we're golden
-                if (cpup->registers[addr].type == INTEGER)
-                {
-                    int val = cpup->registers[reg].integer;
-                    int addr = cpup->registers[addr].integer;
+                /* Get the address we're to store it in. */
+                int adr = get_int_reg(cpup,addr);
 
-                    cpup->code[addr] = val;
-                } else
-                {
-                    svm_error_handler(cpup, "Tried to store a string in RAM");
-                }
+                if ( adr < 0 || adr > 0xffff )
+                    svm_error_handler(cpup, "Writing outside RAM" );
+
+                /* do the necessary */
+                cpup->code[adr] = val;
 
                 break;
             }
