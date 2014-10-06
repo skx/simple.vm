@@ -218,6 +218,14 @@ void svm_set_error_handler(svm_t * cpup, void (*fp) (char *msg));
 
 
 /**
+ * This function is called if there is an error in handling
+ * a bytecode program - such as a mismatched type, or division by zero.
+ *
+ */
+void svm_default_error_handler(svm_t * cpup, char *msg);
+
+
+/**
  * Dump the virtual machine registers.
  */
 void svm_dump_registers(svm_t * cpup);

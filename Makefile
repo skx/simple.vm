@@ -12,23 +12,23 @@ CFLAGS+=-pedantic -std=c11 -Wall -Wextra -O2 -funroll-loops
 
 
 
+#
+#  The default targets
+#
+all: simple-vm embedded
 
-SOURCES := $(wildcard *.c)
-OBJECTS := $(SOURCES:%.c=%.o)
-
-
-
-all: simple-vm
-
-simple-vm: $(OBJECTS)
-	$(LINKER) $@  $(OBJECTS) $(CFLAGS)
+#
+#  The sample driver.
+#
+simple-vm: main.o simple-vm.o simple-vm-opcodes.o
+	$(LINKER) $@  $(OBJECTS) $(CFLAGS) main.o simple-vm.o simple-vm-opcodes.o
 
 
 #
 #  Remove our compiled machine, and the sample programs.
 #
 clean:
-	@rm simple-vm *.raw *.o || true
+	@rm simple-vm embedded *.raw *.o || true
 
 
 
