@@ -157,7 +157,18 @@ while ( my $file = shift )
         if ( $line =~ /^\s*:(.*)/ )
         {
             my $name = $1;
-            $LABELS{ $name } = $offset;
+
+            # Ensure labels are unique.
+            if ( $LABELS{ $name } )
+            {
+                print "WARNING: Label name '$name' defined multiple times!\n";
+                print "         Picking first occurrence.\n";
+                print "         This is probably your bug.\n";
+            }
+            else
+            {
+                $LABELS{ $name } = $offset;
+            }
 
             # so we found a label - store the offset of the code in our array.
         }
