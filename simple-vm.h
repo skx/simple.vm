@@ -36,69 +36,6 @@
 #endif
 
 
-/***
- * Our "opcodes".
- */
-#define OPCODE_EXIT   0x00
-
-
-/**
- * Integer things.
- */
-#define INT_STORE     0x01
-#define INT_PRINT     0x02
-#define INT_TOSTRING  0x03
-
-
-/**
- * Jump things.
- */
-#define JUMP_TO       0x10
-#define JUMP_Z        0x11
-#define JUMP_NZ       0x12
-
-
-/**
- * Math things.
- */
-#define XOR_OP 0x20
-#define ADD_OP 0x21
-#define SUB_OP 0x22
-#define MUL_OP 0x23
-#define DIV_OP 0x24
-#define INC_OP 0x25
-#define DEC_OP 0x26
-
-/**
- * String things.
- */
-#define STRING_STORE   0x30
-#define STRING_PRINT   0x31
-#define STRING_CONCAT  0x32
-#define STRING_SYSTEM  0x33
-#define STRING_TOINT   0x34
-
-
-/**
- * Comparisons
- */
-#define CMP_REG       0x40
-#define CMP_IMMEDIATE 0x41
-
-
-/**
- * Misc
- */
-#define NOP_OP  0x50
-
-
-/**
- * RAM things.
- */
-#define LOAD_FROM_RAM 0x60
-#define STORE_IN_RAM  0x61
-
-
 
 /**
  * A single register, which may be used to store a string or an integer.
