@@ -95,11 +95,9 @@ int get_int_reg(svm_t * cpu, int reg)
 /**
  ** Start implementation of virtual machine opcodes.
  **
- ** These are not exported outside this compilation-unit, so they
- ** must be defined before they can be referred to in the `svm_new`
- ** function.
- **
  **/
+
+
 _Bool op_unknown(void *in)
 {
     svm_t *svm = (svm_t *) in;
@@ -832,13 +830,13 @@ _Bool op_store_in_ram(void *in)
 /**
  ** End implementation of virtual machine opcodes.
  **
- ** These are not exported outside this compilation-unit, so they
- ** must be defined before they can be referred to in the `svm_new`
- ** function.
- **
  **/
 
 
+
+/**
+ * Map the opcodes to the handlers.
+ */
 void opcode_init(svm_t * svm)
 {
 
@@ -850,26 +848,32 @@ void opcode_init(svm_t * svm)
         svm->opcodes[i] = op_unknown;
     }
 
+    // misc
     svm->opcodes[OPCODE_EXIT] = op_exit;
     svm->opcodes[NOP_OP] = op_nop;
 
+    // ints
     svm->opcodes[INT_STORE] = op_int_store;
     svm->opcodes[INT_PRINT] = op_int_print;
     svm->opcodes[INT_TOSTRING] = op_int_tostring;
 
+    // strings
     svm->opcodes[STRING_STORE] = op_string_store;
     svm->opcodes[STRING_PRINT] = op_string_print;
     svm->opcodes[STRING_CONCAT] = op_string_concat;
     svm->opcodes[STRING_SYSTEM] = op_string_system;
     svm->opcodes[STRING_TOINT] = op_string_toint;
 
+    // jumps
     svm->opcodes[JUMP_TO] = op_jump_to;
     svm->opcodes[JUMP_NZ] = op_jump_nz;
     svm->opcodes[JUMP_Z] = op_jump_z;
 
+    // RAM
     svm->opcodes[LOAD_FROM_RAM] = op_load_from_ram;
     svm->opcodes[STORE_IN_RAM] = op_store_in_ram;
 
+    // math
     svm->opcodes[ADD_OP] = op_add;
     svm->opcodes[SUB_OP] = op_sub;
     svm->opcodes[MUL_OP] = op_mul;
@@ -878,6 +882,7 @@ void opcode_init(svm_t * svm)
     svm->opcodes[INC_OP] = op_inc;
     svm->opcodes[DEC_OP] = op_dec;
 
+    // comparisons
     svm->opcodes[CMP_REG] = op_cmp_reg;
     svm->opcodes[CMP_IMMEDIATE] = op_cmp_immediate;
 }
