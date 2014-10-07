@@ -283,7 +283,8 @@ _Bool op_string_store(struct svm * svm)
     svm->registers[reg].type = STRING;
     svm->registers[reg].string = str;
 
-    return( false );
+    /* We've tweaked the IP by jumping over the inline-string. */
+    return (true);
 }
 
 _Bool op_string_print(struct svm * svm)
@@ -795,7 +796,8 @@ _Bool op_cmp_string(struct svm * svm)
     else
         svm->flags.z = false;
 
-    return( false );
+    /* We've tweaked the IP by jumping over the inline-string. */
+    return (true);
 }
 
 _Bool op_load_from_ram(struct svm * svm)
