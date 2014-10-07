@@ -123,7 +123,7 @@ svm_t *svm_new(unsigned char *code, unsigned int size)
     cpun->code = code;
 
     /**
-     * Explicitly zero each regiester and set to be a number.
+     * Explicitly zero each register and set to be a number.
      */
     for (i = 0; i < REGISTER_COUNT; i++)
     {
