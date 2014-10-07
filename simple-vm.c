@@ -107,7 +107,7 @@ svm_t *svm_new(unsigned char *code, unsigned int size)
     svm_t *cpun;
     int i;
 
-    if (!code || !size)
+    if (!code || !size || ( size > 0xFFFF ))
         return NULL;
 
     cpun = malloc(sizeof(struct svm));
