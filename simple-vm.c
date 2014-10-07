@@ -107,20 +107,44 @@ svm_t *svm_new(unsigned char *code, unsigned int size)
     svm_t *cpun;
     int i;
 
-    if (!code || !size || ( size > 0xFFFF ))
+    if (!code || !size || (size > 0xFFFF))
         return NULL;
 
+    /**
+     * Allocate the CPU.
+     */
     cpun = malloc(sizeof(struct svm));
     if (!cpun)
         return NULL;
-
     memset(cpun, '\0', sizeof(struct svm));
+
+    /**
+     * Allocate 64k for the program.
+     */
+    cpun->code = malloc(0xFFFF);
+    if (cpun->code == NULL)
+    {
+        free(cpun);
+        return NULL;
+    }
 
     cpun->error_handler = NULL;
     cpun->ip = 0;
     cpun->running = true;
     cpun->size = size;
-    cpun->code = code;
+
+
+    /**
+     * Zero the RAM we've allocated, and then copy the user's program to
+     * the start of it.
+     *
+     * This means there is a full 64k address-space and the user can
+     * have fun writing self-modifying code, & etc.
+     *
+     */
+    memset(cpun->code, '\0', 0xFFFF);
+    memcpy(cpun->code, code, size);
+
 
     /**
      * Explicitly zero each register and set to be a number.
