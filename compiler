@@ -244,6 +244,22 @@ while ( my $file = shift )
             print $out chr $reg;
             $offset += 2;
         }
+        elsif ( $line =~ /^\s*goto\s+0x([0-9a-fA-F]+)/ )
+        {
+
+            # jump to absolute hex-address.
+            my $addr = $1;
+
+            $addr = hex($addr);
+            my $a1 = $addr % 256;
+            my $a2 = ( $addr - $a1 ) / 256;
+
+            print $out chr JUMP_TO;
+            print $out chr $a1;
+            print $out chr $a2;
+
+            $offset += 3;    # jump + val1 + val2
+        }
         elsif ( $line =~ /^\s*goto\s+([^ ]+)/ )
         {
             my $label = $1;
