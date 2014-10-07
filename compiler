@@ -204,6 +204,9 @@ while ( my $file = shift )
             my $reg = $1;
             my $str = $2;
 
+            # expand newlines, etc.
+            $str =~ s/(\\n|\\t)/"qq{$1}"/gee;
+
             my $len = length($str);
 
             my $len1 = $len % 256;
