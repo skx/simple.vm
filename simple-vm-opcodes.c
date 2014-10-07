@@ -62,7 +62,7 @@
 /**
  * Helper to return the string-content of a register.
  *
- * NOTE: This is not exported outside this compilation-unit.
+ * NOTE: This function is not exported outside this compilation-unit.
  */
 char *get_string_reg(svm_t * cpu, int reg)
 {
@@ -77,7 +77,7 @@ char *get_string_reg(svm_t * cpu, int reg)
 /**
  * Helper to return the integer-content of a register.
  *
- * NOTE: This is not exported outside this compilation-unit.
+ * NOTE: This function is not exported outside this compilation-unit.
  */
 int get_int_reg(svm_t * cpu, int reg)
 {
@@ -89,8 +89,56 @@ int get_int_reg(svm_t * cpu, int reg)
 }
 
 
+/**
+ * Strings are stored inline in the program-RAM.
+ *
+ * An example script might contain something like:
+ *
+ *   store #1, "Steve Kemp"
+ *
+ * This is encoded as:
+ *
+ *   OP_STRING_STORE, REG1, LEN1, LEN2, "String data", ...
+ *
+ * Here we assume the IP is pointing to len1 and we read the length, then
+ * the string, and bump the IP as we go.
+ *
+ * The end result should be we've updated the IP to point past the end
+ * of the string, and we've copied it into newly allocated RAM.
+ *
+ * NOTE: This function is not exported outside this compilation-unit.
+ */
+char *string_from_stack(svm_t * svm)
+{
+    /* the string length */
+    unsigned int len1 = READ_BYTE();
+    unsigned int len2 = READ_BYTE();
 
+    /* build up the length 0-64k */
+    int len = BYTES_TO_ADDR(len1, len2);
 
+    /* bump IP one more to point to the start of the string-data. */
+    svm->ip += 1;
+
+    /* allocate enough RAM to contain the string. */
+    char *tmp = (char *) malloc(len + 1);
+    if (tmp == NULL)
+        svm_default_error_handler(svm, "RAM allocation failure.");
+
+    /**
+     * Zero the allocated memory, and copy the string-contents over.
+     *
+     * The copy is inefficient - but copes with embedded NULL.
+     */
+    memset(tmp, '\0', len + 1);
+    for (int i = 0; i < (int) len; i++)
+    {
+        tmp[i] = svm->code[svm->ip];
+        svm->ip++;
+    }
+
+    return tmp;
+}
 
 
 /**
@@ -218,11 +266,8 @@ _Bool op_string_store(struct svm * svm)
     unsigned int reg = READ_BYTE();
     BOUNDS_TEST_REGISTER(reg);
 
-    /* the string length - max 255 - FIXME */
-    unsigned int len = READ_BYTE();
-
-    /* bump IP one more. */
-    svm->ip += 1;
+    /* get the string to store */
+    char *str = string_from_stack(svm);
 
     /**
      * If we already have a string in the register delete it.
@@ -233,28 +278,12 @@ _Bool op_string_store(struct svm * svm)
     }
 
     /**
-     * Store the new string and set the register type.
+     * Now store the new string.
      */
     svm->registers[reg].type = STRING;
-    svm->registers[reg].string = malloc(len + 1);
-    memset(svm->registers[reg].string, '\0', len + 1);
+    svm->registers[reg].string = str;
 
-    /**
-     * Inefficient - but copes with embedded NULL.
-     */
-    int i;
-    for (i = 0; i < (int) len; i++)
-    {
-        svm->registers[reg].string[i] = svm->code[svm->ip];
-        svm->ip++;
-    }
-
-    if (getenv("DEBUG") != NULL)
-        printf("STRING_STORE(Reg:%02x => \"%s\" [%02x bytes]\n", reg,
-               svm->registers[reg].string, len);
-
-    svm->ip--;
-    return (false);
+    return( false );
 }
 
 _Bool op_string_print(struct svm * svm)
@@ -751,33 +780,22 @@ _Bool op_cmp_string(struct svm * svm)
     unsigned int reg = READ_BYTE();
     BOUNDS_TEST_REGISTER(reg);
 
-    /* Now we get the string to compare against. */
-    /* the string length - max 255 - FIXME */
-    unsigned int len = READ_BYTE();
+    /* Now we get the string to compare against from the stack */
+    char *str = string_from_stack(svm);
 
-    /* get the string content */
+    /* get the string content from the register */
     char *cur = get_string_reg(svm, reg);
-    svm->ip += 1;
 
     if (getenv("DEBUG") != NULL)
-        printf("Comparing contents of register: %d - with string '%s' [length %d]\n", reg,
-               cur, len);
-
+        printf("Comparing register-%d ('%s') - with string '%s'\n", reg, cur, str);
 
     /* compare */
-    if (strncmp(cur, (char *) svm->code + svm->ip, len) == 0)
-    {
+    if (strcmp(cur, str) == 0)
         svm->flags.z = true;
-    } else
-    {
+    else
         svm->flags.z = false;
-    }
 
-    /* IP bump */
-    svm->ip += len;
-
-    /* We've tweaked the IP by jumping over the inline-string. */
-    return (true);
+    return( false );
 }
 
 _Bool op_load_from_ram(struct svm * svm)
