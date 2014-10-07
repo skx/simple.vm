@@ -273,7 +273,7 @@ void svm_run(svm_t * cpup)
      * allocated code, or an EXIT instruction causes our run
      * flag to be set to zero.
      */
-    while ((cpup->running == true) && (cpup->ip < cpup->size))
+    while (cpup->running == true)
     {
         if (!cpup->running)
             break;
