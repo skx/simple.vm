@@ -12,27 +12,27 @@
 #
 
         store #1, 3
-        store #0, "Stored in register #1 -> 3"
+        store #0, "Stored in register #1 -> 3\n"
         print_str #0
 
 
         dec #1
-        store #0, "Decremented contents of register #1 -> 2"
-        print_str #0
-        jmpz empty
-
-        dec #1
-        store #0, "Decremented contents of register #1 -> 1"
+        store #0, "Decremented contents of register #1 -> 2\n"
         print_str #0
         jmpz empty
 
         dec #1
-        store #0, "Decremented contents of register #1 -> 0"
+        store #0, "Decremented contents of register #1 -> 1\n"
         print_str #0
         jmpz empty
 
         dec #1
-        store #0, "Decremented contents of register #1 -> -1 [not reached]"
+        store #0, "Decremented contents of register #1 -> 0\n"
+        print_str #0
+        jmpz empty
+
+        dec #1
+        store #0, "Decremented contents of register #1 -> -1 [not reached]\n"
         print_str #0
         jmpz empty
 

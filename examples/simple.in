@@ -1,5 +1,5 @@
 
 :start
-        store #1, "I like loops"
+        store #1, "I like loops\n"
         print_str #1
         goto start

@@ -15,3 +15,7 @@
         store #2, 20
         add #0, #1, #2
         print_int #0
+
+        # add newline to the output
+        store #1, "\n"
+        print_str #1

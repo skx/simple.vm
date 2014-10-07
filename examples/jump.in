@@ -13,7 +13,7 @@
 #
 #
 
-        store #1, "Steve Kemp"
+        store #1, "Steve Kemp\n"
         print_str #1
         goto number
 
@@ -22,12 +22,17 @@
         exit
 
 :kirsi
-        store #1, "Kirsi Kemp"
+        store #1, "Kirsi Kemp\n"
         print_str #1
         exit
 
 :number
         store #1, 32
         print_int #1
+
+        # add newline to the output
+        store #1, "\n"
+        print_str #1
+
         goto kirsi
 

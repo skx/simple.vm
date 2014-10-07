@@ -12,10 +12,10 @@
 #
 #
 
-        store #1, "Counting from ten to zero"
+        store #1, "Counting from ten to zero\n"
         print_str #1
 
-        store #1, 10
+        store #1, 11
         store #2, 1
 :repeat
 
@@ -23,8 +23,11 @@
         # This means "reg1 = reg1 - reg2"
         #
         sub #1, #1, #2
-
         print_int #1
+
+        # add newline to the output
+        store #5, "\n"
+        print_str #5
 
         #
         # This jump only occur if the zero-flag is set.
@@ -32,7 +35,7 @@
         jmpnz repeat
 
 
-        store #1, "Done"
+        store #1, "Done\n"
         print_str #1
 
         exit

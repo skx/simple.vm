@@ -24,11 +24,11 @@
         exit
 
 :twenty_eq_twenty
-        store #0, "20 == 20 - OK!"
+        store #0, "20 == 20 - OK!\n"
         print_str #0
         exit
 
 :twenty_eq_thirty
-        store #0, "20 == 30 - Bug!"
+        store #0, "20 == 30 - Bug!\n"
         print_str #0
         exit

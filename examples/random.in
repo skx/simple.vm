@@ -11,7 +11,7 @@
 #
 #
 
-        store #1, "Generating ten random integers"
+        store #1, "Generating ten random integers\n"
         print_str #1
 
         store #1, 10
@@ -23,8 +23,13 @@
         #
         sub #1, #1, #2
 
+        # output the random number
         random #5
         print_int #5
+
+        # add newline to the output
+        store #5, "\n"
+        print_str #5
 
         #
         # This jump only occur if the zero-flag is set.
@@ -32,7 +37,7 @@
         jmpnz repeat
 
 
-        store #1, "Done"
+        store #1, "Done\n"
         print_str #1
 
         exit

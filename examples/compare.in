@@ -15,12 +15,12 @@
         cmp #1, 44
         jmpz equal
 
-        store #1, "Inequal"
+        store #1, "Inequal\n"
         print_str #1
         exit
 
 :equal
-        store #1, "EQUAL"
+        store #1, "EQUAL\n"
         print_str #1
 
 
@@ -28,7 +28,7 @@
         cmp #1, "Kemp"
         jmpnz str1
 
-        store #1, "Eek string 1 compare failed - BUG?"
+        store #1, "Eek string 1 compare failed - BUG?\n"
         print_str #1
         exit
 
@@ -37,12 +37,12 @@
         cmp #1, "Steve"
         jmpz str2
 
-        store #1, "Eek string 2 compare failed - BUG?"
+        store #1, "Eek string 2 compare failed - BUG?\n"
         print_str #1
         exit
 
 
 :str2
-        store #1, "String comparisions OK"
+        store #1, "String comparisions OK\n"
         print_str #1
         exit

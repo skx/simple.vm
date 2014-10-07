@@ -29,6 +29,10 @@
         concat #3, #3, #4
         print_str #3
 
+        # add newline to the output
+        store #5, "\n"
+        print_str #5
+
         #
         # This jump only occur if the zero-flag is set.
         #
