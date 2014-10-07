@@ -14,7 +14,7 @@
         #
         #  Bytes to show
         #
-        store #1, 27
+        store #1, 49
         store #2, 1
 
         #
@@ -23,6 +23,12 @@
         store #3, 0
 
 :repeat
+        #
+        #  Print a prefix for the bytes.
+        #
+        store #5, "0x"
+        print_str #5
+
         #
         #  Get the contents of the byte and show it
         #
@@ -35,9 +41,20 @@
         inc #3
 
         #
+        #  Show some spacing.
+        #
+        store #5, " "
+        print_str #5
+
+        #
         #  Loop until we're done.
         #
         sub #1, #1, #2
         jmpnz repeat
 
+        #
+        #  Terminate with a newline.
+        #
+        store #1, "\n"
+        print_str #1
         exit
