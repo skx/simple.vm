@@ -203,14 +203,21 @@ while ( my $file = shift )
         {
             my $reg = $1;
             my $str = $2;
+
             my $len = length($str);
+
+            my $len1 = $len % 256;
+            my $len2 = ( $len - $len1 ) / 256;
 
             print $out chr STRING_STORE;
             print $out chr $reg;
-            print $out chr $len;
+            print $out chr $len1;
+            print $out chr $len2;
+
+
             print $out $str;
 
-            $offset += 3;              # store + reg + len
+            $offset += 4;              # store + reg + len
             $offset += length($str);
         }
         elsif ( $line =~ /^\s*print_int\s?#(.*)/ )
@@ -399,12 +406,17 @@ while ( my $file = shift )
             my $str = $2;
             my $len = length($str);
 
+            my $len1 = $len % 256;
+            my $len2 = ( $len - $len1 ) / 256;
+
             print $out chr CMP_STRING;
             print $out chr $reg;
-            print $out chr $len;
+            print $out chr $len1;
+            print $out chr $len2;
+
             print $out $str;
 
-            $offset += 3;              # cmp + reg + len
+            $offset += 4;              # cmp + reg + len
             $offset += length($str);
         }
         elsif ( $line =~ /^\s*load\s+#([0-9]+)\s*,\s*#([0-9]+)/ )
