@@ -1,3 +1,10 @@
+
+* Git Repository:
+    * http://github.com/skx/simple.vm
+* Git mirror:
+    * http://git.steve.org.uk/skx/simple.vm
+
+
 simple.vm
 ---------
 
@@ -43,8 +50,7 @@ After compilation is complete all the targets should have been discovered and th
 Embedding
 ---------
 
-This virtual machine is designed primarily as a learning experience, but
-it is built with the idea of embedding in mind.
+This virtual machine is designed primarily as a learning experience, but it is built with the idea of embedding in mind.
 
 The standard driver, which will read opcodes from a file and interpret them, is less than 20k in size.
 
@@ -76,8 +82,8 @@ The instructions are pretty basic, as this is just a toy, but adding new ones is
 
 The following are examples of all instructions:
 
-:test
-:labe-fsd32_ff  f fl
+    :test
+    :label
     goto  label       # Jump to the given label
     jmpnz label       # Jump to label if Zero-Flag is not set
     jmpz  label       # Jump to label if Zero-Flag is set
