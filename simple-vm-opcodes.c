@@ -206,7 +206,12 @@ _Bool op_int_print(struct svm * svm)
 
     /* get the register contents. */
     int val = get_int_reg(svm, reg);
-    printf("[stdout] Register R%02d => %d [Hex:%04x]\n", reg, val, val);
+
+    if ( getenv("DEBUG") != NULL )
+        printf("[STDOUT] Register R%02d => %d [Hex:%04x]\n", reg, val, val);
+    else
+        printf("%02X", val);
+
 
     return (false);
 }
@@ -300,7 +305,10 @@ _Bool op_string_print(struct svm * svm)
     char *str = get_string_reg(svm, reg);
 
     /* print */
-    printf("[stdout] register R%02d => %s\n", reg, str);
+    if ( getenv("DEBUG") != NULL )
+        printf("[stdout] register R%02d => %s\n", reg, str);
+    else
+        printf("%s",str);
 
     return (false);
 }
