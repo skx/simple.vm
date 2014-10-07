@@ -89,39 +89,39 @@
 
 
 
-_Bool op_exit(void *in);
+_Bool op_exit(struct svm *in);
 
-_Bool op_int_store(void *in);
-_Bool op_int_print(void *in);
-_Bool op_int_tostring(void *in);
-_Bool op_int_random(void *in);
+_Bool op_int_store(struct svm *in);
+_Bool op_int_print(struct svm *in);
+_Bool op_int_tostring(struct svm *in);
+_Bool op_int_random(struct svm *in);
 
-_Bool op_string_store(void *in);
-_Bool op_string_print(void *in);
-_Bool op_string_concat(void *in);
-_Bool op_string_system(void *in);
-_Bool op_string_toint(void *in);
+_Bool op_string_store(struct svm *in);
+_Bool op_string_print(struct svm *in);
+_Bool op_string_concat(struct svm *in);
+_Bool op_string_system(struct svm *in);
+_Bool op_string_toint(struct svm *in);
 
-_Bool op_jump_to(void *in);
-_Bool op_jump_z(void *in);
-_Bool op_jump_nz(void *in);
+_Bool op_jump_to(struct svm *in);
+_Bool op_jump_z(struct svm *in);
+_Bool op_jump_nz(struct svm *in);
 
-_Bool op_xor(void *in);
-_Bool op_add(void *in);
-_Bool op_sub(void *in);
-_Bool op_mul(void *in);
-_Bool op_div(void *in);
-_Bool op_inc(void *in);
-_Bool op_dec(void *in);
+_Bool op_xor(struct svm *in);
+_Bool op_add(struct svm *in);
+_Bool op_sub(struct svm *in);
+_Bool op_mul(struct svm *in);
+_Bool op_div(struct svm *in);
+_Bool op_inc(struct svm *in);
+_Bool op_dec(struct svm *in);
 
-_Bool op_cmp_reg(void *in);
-_Bool op_cmp_immediate(void *in);
-_Bool op_cmp_string(void *in);
+_Bool op_cmp_reg(struct svm *in);
+_Bool op_cmp_immediate(struct svm *in);
+_Bool op_cmp_string(struct svm *in);
 
-_Bool op_nop(void *in);
+_Bool op_nop(struct svm *in);
 
-_Bool op_load_from_ram(void *in);
-_Bool op_store_in_ram(void *in);
+_Bool op_load_from_ram(struct svm *in);
+_Bool op_store_in_ram(struct svm *in);
 
 
 
@@ -129,6 +129,6 @@ _Bool op_store_in_ram(void *in);
 /**
  * Initialization function.
  */
-void opcode_init(svm_t * cpu);
+void opcode_init(struct svm *cpu);
 
 #endif                          /* SIMPLE_VM_OPCODES_H */

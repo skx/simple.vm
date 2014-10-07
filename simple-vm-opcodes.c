@@ -99,25 +99,21 @@ int get_int_reg(svm_t * cpu, int reg)
  **/
 
 
-_Bool op_unknown(void *in)
+_Bool op_unknown(svm_t * svm)
 {
-    svm_t *svm = (svm_t *) in;
-
     int instruction = svm->code[svm->ip];
     printf("%04X - op_unknown(%02X)\n", svm->ip, instruction);
     return false;
 }
 
-_Bool op_exit(void *in)
+_Bool op_exit(struct svm * svm)
 {
-    svm_t *svm = (svm_t *) in;
     svm->running = false;
     return false;
 }
 
-_Bool op_nop(void *in)
+_Bool op_nop(struct svm * svm)
 {
-    svm_t *svm = (svm_t *) in;
     (void) svm;
 
     if (getenv("DEBUG") != NULL)
@@ -126,10 +122,8 @@ _Bool op_nop(void *in)
 }
 
 
-_Bool op_int_store(void *in)
+_Bool op_int_store(struct svm * svm)
 {
-    svm_t *svm = (svm_t *) in;
-
     /* get the register number to store in */
     unsigned int reg = READ_BYTE();
     BOUNDS_TEST_REGISTER(reg);
@@ -153,10 +147,8 @@ _Bool op_int_store(void *in)
 }
 
 
-_Bool op_int_print(void *in)
+_Bool op_int_print(struct svm * svm)
 {
-    svm_t *svm = (svm_t *) in;
-
     /* get the register number to print */
     unsigned int reg = READ_BYTE();
     BOUNDS_TEST_REGISTER(reg);
@@ -171,10 +163,8 @@ _Bool op_int_print(void *in)
     return (false);
 }
 
-_Bool op_int_tostring(void *in)
+_Bool op_int_tostring(struct svm * svm)
 {
-    svm_t *svm = (svm_t *) in;
-
     /* get the register number to convert */
     unsigned int reg = READ_BYTE();
     BOUNDS_TEST_REGISTER(reg);
@@ -196,10 +186,8 @@ _Bool op_int_tostring(void *in)
     return (false);
 }
 
-_Bool op_int_random(void *in)
+_Bool op_int_random(struct svm * svm)
 {
-    svm_t *svm = (svm_t *) in;
-
     /* get the register to save the output to */
     unsigned int reg = READ_BYTE();
     BOUNDS_TEST_REGISTER(reg);
@@ -224,10 +212,8 @@ _Bool op_int_random(void *in)
 }
 
 
-_Bool op_string_store(void *in)
+_Bool op_string_store(struct svm * svm)
 {
-    svm_t *svm = (svm_t *) in;
-
     /* get the destination register */
     unsigned int reg = READ_BYTE();
     BOUNDS_TEST_REGISTER(reg);
@@ -271,10 +257,8 @@ _Bool op_string_store(void *in)
     return (false);
 }
 
-_Bool op_string_print(void *in)
+_Bool op_string_print(struct svm * svm)
 {
-    svm_t *svm = (svm_t *) in;
-
     /* get the reg number to print */
     unsigned int reg = READ_BYTE();
     BOUNDS_TEST_REGISTER(reg);
@@ -291,10 +275,8 @@ _Bool op_string_print(void *in)
     return (false);
 }
 
-_Bool op_string_concat(void *in)
+_Bool op_string_concat(struct svm * svm)
 {
-    svm_t *svm = (svm_t *) in;
-
     /* get the destination register */
     unsigned int reg = READ_BYTE();
     BOUNDS_TEST_REGISTER(reg);
@@ -344,10 +326,8 @@ _Bool op_string_concat(void *in)
     return (false);
 }
 
-_Bool op_string_system(void *in)
+_Bool op_string_system(struct svm * svm)
 {
-    svm_t *svm = (svm_t *) in;
-
     /* get the reg */
     unsigned int reg = READ_BYTE();
     BOUNDS_TEST_REGISTER(reg);
@@ -361,10 +341,8 @@ _Bool op_string_system(void *in)
     return (false);
 }
 
-_Bool op_string_toint(void *in)
+_Bool op_string_toint(struct svm * svm)
 {
-    svm_t *svm = (svm_t *) in;
-
     /* get the destination register */
     unsigned int reg = READ_BYTE();
     BOUNDS_TEST_REGISTER(reg);
@@ -387,10 +365,8 @@ _Bool op_string_toint(void *in)
 }
 
 
-_Bool op_jump_to(void *in)
+_Bool op_jump_to(struct svm * svm)
 {
-    svm_t *svm = (svm_t *) in;
-
     /**
      * Read the two bytes which will build up the destination
      */
@@ -409,10 +385,8 @@ _Bool op_jump_to(void *in)
     return (true);
 }
 
-_Bool op_jump_z(void *in)
+_Bool op_jump_z(struct svm * svm)
 {
-    svm_t *svm = (svm_t *) in;
-
     /**
      * Read the two bytes which will build up the destination
      */
@@ -436,10 +410,8 @@ _Bool op_jump_z(void *in)
     return (false);
 }
 
-_Bool op_jump_nz(void *in)
+_Bool op_jump_nz(struct svm * svm)
 {
-    svm_t *svm = (svm_t *) in;
-
     /**
      * Read the two bytes which will build up the destination
      */
@@ -463,10 +435,8 @@ _Bool op_jump_nz(void *in)
     return false;
 }
 
-_Bool op_xor(void *in)
+_Bool op_xor(struct svm * svm)
 {
-    svm_t *svm = (svm_t *) in;
-
     /* get the destination register */
     unsigned int reg = READ_BYTE();
     BOUNDS_TEST_REGISTER(reg);
@@ -512,10 +482,8 @@ _Bool op_xor(void *in)
     return (false);
 }
 
-_Bool op_add(void *in)
+_Bool op_add(struct svm * svm)
 {
-    svm_t *svm = (svm_t *) in;
-
     /* get the destination register */
     unsigned int reg = READ_BYTE();
     BOUNDS_TEST_REGISTER(reg);
@@ -559,10 +527,8 @@ _Bool op_add(void *in)
     return (false);
 }
 
-_Bool op_sub(void *in)
+_Bool op_sub(struct svm * svm)
 {
-    svm_t *svm = (svm_t *) in;
-
     /* get the destination register */
     unsigned int reg = READ_BYTE();
     BOUNDS_TEST_REGISTER(reg);
@@ -602,10 +568,8 @@ _Bool op_sub(void *in)
     return (false);
 }
 
-_Bool op_mul(void *in)
+_Bool op_mul(struct svm * svm)
 {
-    svm_t *svm = (svm_t *) in;
-
     /* get the destination register */
     unsigned int reg = READ_BYTE();
     BOUNDS_TEST_REGISTER(reg);
@@ -641,10 +605,8 @@ _Bool op_mul(void *in)
     return (false);
 }
 
-_Bool op_div(void *in)
+_Bool op_div(struct svm * svm)
 {
-    svm_t *svm = (svm_t *) in;
-
     /* get the destination register */
     unsigned int reg = READ_BYTE();
     BOUNDS_TEST_REGISTER(reg);
@@ -683,10 +645,8 @@ _Bool op_div(void *in)
     return (false);
 }
 
-_Bool op_inc(void *in)
+_Bool op_inc(struct svm * svm)
 {
-    svm_t *svm = (svm_t *) in;
-
     /* get the register number to increment */
     unsigned int reg = READ_BYTE();
     BOUNDS_TEST_REGISTER(reg);
@@ -707,10 +667,8 @@ _Bool op_inc(void *in)
     return (false);
 }
 
-_Bool op_dec(void *in)
+_Bool op_dec(struct svm * svm)
 {
-    svm_t *svm = (svm_t *) in;
-
     /* get the register number to decrement */
     unsigned int reg = READ_BYTE();
     BOUNDS_TEST_REGISTER(reg);
@@ -732,10 +690,8 @@ _Bool op_dec(void *in)
     return (false);
 }
 
-_Bool op_cmp_reg(void *in)
+_Bool op_cmp_reg(struct svm * svm)
 {
-    svm_t *svm = (svm_t *) in;
-
     /* get the source register */
     unsigned int reg1 = READ_BYTE();
     BOUNDS_TEST_REGISTER(reg1);
@@ -765,10 +721,8 @@ _Bool op_cmp_reg(void *in)
     return (false);
 }
 
-_Bool op_cmp_immediate(void *in)
+_Bool op_cmp_immediate(struct svm * svm)
 {
-    svm_t *svm = (svm_t *) in;
-
     /* get the source register */
     unsigned int reg = READ_BYTE();
     BOUNDS_TEST_REGISTER(reg);
@@ -791,10 +745,8 @@ _Bool op_cmp_immediate(void *in)
     return (false);
 }
 
-_Bool op_cmp_string(void *in)
+_Bool op_cmp_string(struct svm * svm)
 {
-    svm_t *svm = (svm_t *) in;
-
     /* get the source register */
     unsigned int reg = READ_BYTE();
     BOUNDS_TEST_REGISTER(reg);
@@ -828,10 +780,8 @@ _Bool op_cmp_string(void *in)
     return (true);
 }
 
-_Bool op_load_from_ram(void *in)
+_Bool op_load_from_ram(struct svm * svm)
 {
-    svm_t *svm = (svm_t *) in;
-
     /* get the destination register */
     unsigned int reg = READ_BYTE();
     BOUNDS_TEST_REGISTER(reg);
@@ -862,10 +812,8 @@ _Bool op_load_from_ram(void *in)
     return (false);
 }
 
-_Bool op_store_in_ram(void *in)
+_Bool op_store_in_ram(struct svm * svm)
 {
-    svm_t *svm = (svm_t *) in;
-
     /* get the destination register */
     unsigned int reg = READ_BYTE();
     BOUNDS_TEST_REGISTER(reg);

@@ -67,15 +67,12 @@ typedef struct flags {
  * This is the signature for an implementation of a bytecode operation.
  *
  * Each operation will receive a pointer to the svm_t,
- * referring to the virtual machine, however we cannot
- * use that type here because we want the list of operations
- * to be associated with the svm_t which has not yet been
- * declared.
+ * referring to the virtual machine.
  *
- * (i.e.  We really want a forward declaration here, but we're C not C++.)
- *
+ * Note: Forward-declare the struct so we can use it.
  */
-typedef _Bool opcode_implementation(void *);
+struct svm;
+typedef _Bool opcode_implementation(struct svm *in);
 
 
 

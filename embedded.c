@@ -51,12 +51,10 @@ unsigned char bytecode[] = {
 /**
  * The handler for the custom opcode
  */
-_Bool op_custom(void *in)
+_Bool op_custom(struct svm *svm)
 {
-    svm_t *cpup = (svm_t *) in;
-
     printf("Custom Handling Here\n");
-    printf("\tOur bytecode is %d bytes long\n", cpup->size);
+    printf("\tOur bytecode is %d bytes long\n", svm->size);
 
     /**
      * This function *MUST* return false, because it didn't change the
