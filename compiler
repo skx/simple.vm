@@ -60,6 +60,7 @@ use constant MUL_OP => 0x23;
 use constant DIV_OP => 0x24;
 use constant INC_OP => 0x25;
 use constant DEC_OP => 0x26;
+use constant AND_OP => 0x27;
 
 
 #
@@ -321,7 +322,7 @@ while ( my $file = shift )
                   } );
         }
         elsif ( $line =~
-            /^\s*(add|sub|mul|div|xor|concat)\s+#([0-9]+)\s*,\s*#([0-9]+)\s*,\s*#([0-9]+)/
+            /^\s*(add|and|sub|mul|div|xor|concat)\s+#([0-9]+)\s*,\s*#([0-9]+)\s*,\s*#([0-9]+)/
           )
         {
 
@@ -331,6 +332,7 @@ while ( my $file = shift )
             #   OPERATION Result-Register, SrcReg1, SrcReg2
             #
             my %maths = ( add    => ADD_OP,
+                          and    => AND_OP,
                           sub    => SUB_OP,
                           mul    => MUL_OP,
                           div    => DIV_OP,

@@ -207,7 +207,7 @@ _Bool op_int_print(struct svm * svm)
     /* get the register contents. */
     int val = get_int_reg(svm, reg);
 
-    if ( getenv("DEBUG") != NULL )
+    if (getenv("DEBUG") != NULL)
         printf("[STDOUT] Register R%02d => %d [Hex:%04x]\n", reg, val, val);
     else
         printf("%02X", val);
@@ -305,10 +305,10 @@ _Bool op_string_print(struct svm * svm)
     char *str = get_string_reg(svm, reg);
 
     /* print */
-    if ( getenv("DEBUG") != NULL )
+    if (getenv("DEBUG") != NULL)
         printf("[stdout] register R%02d => %s\n", reg, str);
     else
-        printf("%s",str);
+        printf("%s", str);
 
     return (false);
 }
@@ -555,6 +555,51 @@ _Bool op_add(struct svm * svm)
 
     /**
      * Overflow?!
+     */
+    if (svm->registers[reg].integer == 0)
+        svm->flags.z = true;
+    else
+        svm->flags.z = false;
+
+
+    return (false);
+}
+
+_Bool op_and(struct svm * svm)
+{
+    /* get the destination register */
+    unsigned int reg = READ_BYTE();
+    BOUNDS_TEST_REGISTER(reg);
+
+    /* get the source register */
+    unsigned int src1 = READ_BYTE();
+    BOUNDS_TEST_REGISTER(reg);
+
+    /* get the source register */
+    unsigned int src2 = READ_BYTE();
+    BOUNDS_TEST_REGISTER(reg);
+
+    if (getenv("DEBUG") != NULL)
+        printf("AND_OP(Register:%d = Register:%d + Register:%d)\n", reg, src1, src2);
+
+    /* if the result-register stores a string .. free it */
+    if ((svm->registers[reg].type == STRING) && (svm->registers[reg].string))
+        free(svm->registers[reg].string);
+
+    /*
+     * Ensure both source registers have integer values.
+     */
+    int val1 = get_int_reg(svm, src1);
+    int val2 = get_int_reg(svm, src2);
+
+    /**
+     * Store the result.
+     */
+    svm->registers[reg].integer = val1 & val2;
+    svm->registers[reg].type = INTEGER;
+
+    /**
+     * Flag-handling
      */
     if (svm->registers[reg].integer == 0)
         svm->flags.z = true;
@@ -921,6 +966,7 @@ void opcode_init(svm_t * svm)
 
     // math
     svm->opcodes[ADD_OP] = op_add;
+    svm->opcodes[AND_OP] = op_and;
     svm->opcodes[SUB_OP] = op_sub;
     svm->opcodes[MUL_OP] = op_mul;
     svm->opcodes[DIV_OP] = op_div;
