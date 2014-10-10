@@ -72,7 +72,7 @@ Instructions
 There are several instruction-types implemented:
 
 * Storing string/int values into a given register.
-* Mathematical operations: add, sub, multiply, divide, incr, dec, & xor.
+* Mathematical operations: add, and, sub, multiply, divide, incr, dec, or, & xor.
 * Output the contents of a given register. (string/int).
 * Jumping instructions.
 * Comparison of register contents.
