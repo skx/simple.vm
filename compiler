@@ -61,6 +61,7 @@ use constant DIV_OP => 0x24;
 use constant INC_OP => 0x25;
 use constant DEC_OP => 0x26;
 use constant AND_OP => 0x27;
+use constant OR_OP  => 0x28;
 
 
 #
@@ -322,7 +323,7 @@ while ( my $file = shift )
                   } );
         }
         elsif ( $line =~
-            /^\s*(add|and|sub|mul|div|xor|concat)\s+#([0-9]+)\s*,\s*#([0-9]+)\s*,\s*#([0-9]+)/
+            /^\s*(add|and|sub|mul|div|or|xor|concat)\s+#([0-9]+)\s*,\s*#([0-9]+)\s*,\s*#([0-9]+)/
           )
         {
 

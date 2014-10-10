@@ -56,6 +56,7 @@
 #define INC_OP 0x25
 #define DEC_OP 0x26
 #define AND_OP 0x27
+#define OR_OP  0x28
 
 /**
  * String things.
@@ -108,6 +109,7 @@ _Bool op_jump_z(struct svm *in);
 _Bool op_jump_nz(struct svm *in);
 
 _Bool op_xor(struct svm *in);
+_Bool op_or(struct svm *in);
 _Bool op_add(struct svm *in);
 _Bool op_and(struct svm *in);
 _Bool op_sub(struct svm *in);
