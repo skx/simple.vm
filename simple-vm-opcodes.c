@@ -52,6 +52,59 @@
 
 
 
+/**
+ * This is a macro definition for a "math" operation.
+ *
+ * It's a little longer than I'd usually use for a macro, but it saves
+ * all the typing and redundency defining: add, sub, div, mod, xor, or.
+ *
+ */
+#define MATH_OPERATION(function,operator)  _Bool function(struct svm * svm) \
+{ \
+    /* get the destination register */ \
+    unsigned int reg = READ_BYTE(); \
+    BOUNDS_TEST_REGISTER(reg); \
+\
+    /* get the source register */ \
+    unsigned int src1 = READ_BYTE(); \
+    BOUNDS_TEST_REGISTER(reg); \
+\
+    /* get the source register */\
+    unsigned int src2 = READ_BYTE();\
+    BOUNDS_TEST_REGISTER(reg);\
+\
+    if (getenv("DEBUG") != NULL)\
+        printf( #function "(Register:%d = Register:%d " #operator " Register:%d)\n", reg, src1, src2); \
+\
+    /* if the result-register stores a string .. free it */\
+    if ((svm->registers[reg].type == STRING) && (svm->registers[reg].string))\
+        free(svm->registers[reg].string);\
+\
+    /* \
+     * Ensure both source registers have integer values.\
+     */\
+    int val1 = get_int_reg(svm, src1);\
+    int val2 = get_int_reg(svm, src2);\
+\
+    /** \
+     * Store the result.\
+     */\
+    svm->registers[reg].integer = val1 operator val2; \
+    svm->registers[reg].type = INTEGER; \
+\
+    /**\
+     * Zero result? \
+     */\
+    if (svm->registers[reg].integer == 0)\
+        svm->flags.z = true;\
+        else\
+        svm->flags.z = false;\
+\
+\
+    return (false); \
+}
+
+
 
 
 
@@ -473,308 +526,11 @@ _Bool op_jump_nz(struct svm * svm)
     return false;
 }
 
-_Bool op_xor(struct svm * svm)
-{
-    /* get the destination register */
-    unsigned int reg = READ_BYTE();
-    BOUNDS_TEST_REGISTER(reg);
 
-    /* get the source register */
-    unsigned int src1 = READ_BYTE();
-    BOUNDS_TEST_REGISTER(reg);
-
-    /* get the source register */
-    unsigned int src2 = READ_BYTE();
-    BOUNDS_TEST_REGISTER(reg);
-
-
-    if (getenv("DEBUG") != NULL)
-        printf("XOR_OP(Register:%d = Register:%d ^ Register:%d)\n", reg, src1, src2);
-
-
-    /* if the result-register stores a string .. free it */
-    if ((svm->registers[reg].type == STRING) && (svm->registers[reg].string))
-        free(svm->registers[reg].string);
-
-    /*
-     * Ensure both source registers have integer values.
-     */
-    int val1 = get_int_reg(svm, src1);
-    int val2 = get_int_reg(svm, src2);
-
-    /**
-     * Store the result.
-     */
-    svm->registers[reg].integer = val1 ^ val2;
-    svm->registers[reg].type = INTEGER;
-    svm->registers[reg].type = INTEGER;
-
-    /**
-     * Zero?
-     */
-    if (svm->registers[reg].integer == 0)
-        svm->flags.z = true;
-    else
-        svm->flags.z = false;
-
-    return (false);
-}
-
-_Bool op_or(struct svm * svm)
-{
-    /* get the destination register */
-    unsigned int reg = READ_BYTE();
-    BOUNDS_TEST_REGISTER(reg);
-
-    /* get the source register */
-    unsigned int src1 = READ_BYTE();
-    BOUNDS_TEST_REGISTER(reg);
-
-    /* get the source register */
-    unsigned int src2 = READ_BYTE();
-    BOUNDS_TEST_REGISTER(reg);
-
-
-    if (getenv("DEBUG") != NULL)
-        printf("OR_OP(Register:%d = Register:%d ^ Register:%d)\n", reg, src1, src2);
-
-
-    /* if the result-register stores a string .. free it */
-    if ((svm->registers[reg].type == STRING) && (svm->registers[reg].string))
-        free(svm->registers[reg].string);
-
-    /*
-     * Ensure both source registers have integer values.
-     */
-    int val1 = get_int_reg(svm, src1);
-    int val2 = get_int_reg(svm, src2);
-
-    /**
-     * Store the result.
-     */
-    svm->registers[reg].integer = val1 | val2;
-    svm->registers[reg].type = INTEGER;
-    svm->registers[reg].type = INTEGER;
-
-    /**
-     * Zero?
-     */
-    if (svm->registers[reg].integer == 0)
-        svm->flags.z = true;
-    else
-        svm->flags.z = false;
-
-    return (false);
-}
-
-_Bool op_add(struct svm * svm)
-{
-    /* get the destination register */
-    unsigned int reg = READ_BYTE();
-    BOUNDS_TEST_REGISTER(reg);
-
-    /* get the source register */
-    unsigned int src1 = READ_BYTE();
-    BOUNDS_TEST_REGISTER(reg);
-
-    /* get the source register */
-    unsigned int src2 = READ_BYTE();
-    BOUNDS_TEST_REGISTER(reg);
-
-    if (getenv("DEBUG") != NULL)
-        printf("ADD_OP(Register:%d = Register:%d + Register:%d)\n", reg, src1, src2);
-
-    /* if the result-register stores a string .. free it */
-    if ((svm->registers[reg].type == STRING) && (svm->registers[reg].string))
-        free(svm->registers[reg].string);
-
-    /*
-     * Ensure both source registers have integer values.
-     */
-    int val1 = get_int_reg(svm, src1);
-    int val2 = get_int_reg(svm, src2);
-
-    /**
-     * Store the result.
-     */
-    svm->registers[reg].integer = val1 + val2;
-    svm->registers[reg].type = INTEGER;
-
-    /**
-     * Overflow?!
-     */
-    if (svm->registers[reg].integer == 0)
-        svm->flags.z = true;
-    else
-        svm->flags.z = false;
-
-
-    return (false);
-}
-
-_Bool op_and(struct svm * svm)
-{
-    /* get the destination register */
-    unsigned int reg = READ_BYTE();
-    BOUNDS_TEST_REGISTER(reg);
-
-    /* get the source register */
-    unsigned int src1 = READ_BYTE();
-    BOUNDS_TEST_REGISTER(reg);
-
-    /* get the source register */
-    unsigned int src2 = READ_BYTE();
-    BOUNDS_TEST_REGISTER(reg);
-
-    if (getenv("DEBUG") != NULL)
-        printf("AND_OP(Register:%d = Register:%d + Register:%d)\n", reg, src1, src2);
-
-    /* if the result-register stores a string .. free it */
-    if ((svm->registers[reg].type == STRING) && (svm->registers[reg].string))
-        free(svm->registers[reg].string);
-
-    /*
-     * Ensure both source registers have integer values.
-     */
-    int val1 = get_int_reg(svm, src1);
-    int val2 = get_int_reg(svm, src2);
-
-    /**
-     * Store the result.
-     */
-    svm->registers[reg].integer = val1 & val2;
-    svm->registers[reg].type = INTEGER;
-
-    /**
-     * Flag-handling
-     */
-    if (svm->registers[reg].integer == 0)
-        svm->flags.z = true;
-    else
-        svm->flags.z = false;
-
-
-    return (false);
-}
-
-_Bool op_sub(struct svm * svm)
-{
-    /* get the destination register */
-    unsigned int reg = READ_BYTE();
-    BOUNDS_TEST_REGISTER(reg);
-
-    /* get the source register */
-    unsigned int src1 = READ_BYTE();
-    BOUNDS_TEST_REGISTER(reg);
-
-    /* get the source register */
-    unsigned int src2 = READ_BYTE();
-    BOUNDS_TEST_REGISTER(reg);
-
-    if (getenv("DEBUG") != NULL)
-        printf("SUB_OP(Register:%d = Register:%d - Register:%d)\n", reg, src1, src2);
-
-    /* if the result-register stores a string .. free it */
-    if ((svm->registers[reg].type == STRING) && (svm->registers[reg].string))
-        free(svm->registers[reg].string);
-
-    /*
-     * Ensure both source registers have integer values.
-     */
-    int val1 = get_int_reg(svm, src1);
-    int val2 = get_int_reg(svm, src2);
-
-    /**
-     * Store the result.
-     */
-    svm->registers[reg].integer = val1 - val2;
-    svm->registers[reg].type = INTEGER;
-
-    if (svm->registers[reg].integer == 0)
-        svm->flags.z = true;
-    else
-        svm->flags.z = false;
-
-    return (false);
-}
-
-_Bool op_mul(struct svm * svm)
-{
-    /* get the destination register */
-    unsigned int reg = READ_BYTE();
-    BOUNDS_TEST_REGISTER(reg);
-
-    /* get the source register */
-    unsigned int src1 = READ_BYTE();
-    BOUNDS_TEST_REGISTER(reg);
-
-    /* get the source register */
-    unsigned int src2 = READ_BYTE();
-    BOUNDS_TEST_REGISTER(reg);
-
-
-    if (getenv("DEBUG") != NULL)
-        printf("MUL_OP(Register:%d = Register:%d * Register:%d)\n", reg, src1, src2);
-
-    /* if the result-register stores a string .. free it */
-    if ((svm->registers[reg].type == STRING) && (svm->registers[reg].string))
-        free(svm->registers[reg].string);
-
-    /*
-     * Ensure both source registers have integer values.
-     */
-    int val1 = get_int_reg(svm, src1);
-    int val2 = get_int_reg(svm, src2);
-
-    /**
-     * Store the result.
-     */
-    svm->registers[reg].integer = val1 * val2;
-    svm->registers[reg].type = INTEGER;
-
-    return (false);
-}
-
-_Bool op_div(struct svm * svm)
-{
-    /* get the destination register */
-    unsigned int reg = READ_BYTE();
-    BOUNDS_TEST_REGISTER(reg);
-
-    /* get the source register */
-    unsigned int src1 = READ_BYTE();
-    BOUNDS_TEST_REGISTER(reg);
-
-    /* get the source register */
-    unsigned int src2 = READ_BYTE();
-    BOUNDS_TEST_REGISTER(reg);
-
-    if (src2 == 0)
-        svm_default_error_handler(svm, "Attempted division by zero.");
-
-    if (getenv("DEBUG") != NULL)
-        printf("DIV_OP(Register:%d = Register:%d / Register:%d)\n", reg, src1, src2);
-
-    /* if the result-register stores a string .. free it */
-    if ((svm->registers[reg].type == STRING) && (svm->registers[reg].string))
-        free(svm->registers[reg].string);
-
-    /*
-     * Ensure both source registers have integer values.
-     */
-    int val1 = get_int_reg(svm, src1);
-    int val2 = get_int_reg(svm, src2);
-
-    /**
-     * Store the result.
-     */
-    svm->registers[reg].integer = val1 / val2;
-    svm->registers[reg].type = INTEGER;
-
-
-    return (false);
-}
-
+MATH_OPERATION(op_add, +)MATH_OPERATION(op_and, &)MATH_OPERATION(op_sub,
+                                                                 -)MATH_OPERATION(op_mul,
+                                                                                  *)MATH_OPERATION
+    (op_div, /)MATH_OPERATION(op_xor, ^)MATH_OPERATION(op_or, |)
 _Bool op_inc(struct svm * svm)
 {
     /* get the register number to increment */
@@ -1018,7 +774,7 @@ void opcode_init(svm_t * svm)
     svm->opcodes[MUL_OP] = op_mul;
     svm->opcodes[DIV_OP] = op_div;
     svm->opcodes[XOR_OP] = op_xor;
-    svm->opcodes[OR_OP]  = op_or;
+    svm->opcodes[OR_OP] = op_or;
     svm->opcodes[INC_OP] = op_inc;
     svm->opcodes[DEC_OP] = op_dec;
 
