@@ -341,6 +341,9 @@ _Bool op_string_store(struct svm * svm)
     svm->registers[reg].type = STRING;
     svm->registers[reg].string = str;
 
+    if (getenv("DEBUG") != NULL)
+        printf("STRING_STORE(Register %d) = '%s'\n", reg, str);
+
     /* We've tweaked the IP by jumping over the inline-string. */
     return (true);
 }
