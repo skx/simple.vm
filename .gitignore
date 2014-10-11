@@ -1,3 +1,5 @@
 *.o
 *.raw
 simple-vm
+embedded
+TODO
