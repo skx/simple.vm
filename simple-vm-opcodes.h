@@ -89,6 +89,12 @@
 #define STORE_IN_RAM  0x61
 
 
+/**
+ * Stack things.
+ */
+#define STACK_PUSH 0x70
+#define STACK_POP  0x71
+
 
 
 _Bool op_exit(struct svm *in);
@@ -126,6 +132,10 @@ _Bool op_nop(struct svm *in);
 
 _Bool op_load_from_ram(struct svm *in);
 _Bool op_store_in_ram(struct svm *in);
+
+_Bool op_stack_push(struct svm *in);
+_Bool op_stack_pop(struct svm *in);
+
 
 
 

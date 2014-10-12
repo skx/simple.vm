@@ -96,6 +96,17 @@ use constant STORE_IN_RAM  => 0x61;
 
 
 #
+#  Stack operations
+#
+use constant STACK_PUSH => 0x70;
+use constant STACK_POP  => 0x71;
+
+# call
+# ret
+
+
+
+#
 #  Labels - All are downcased and must be unique per-source.
 #
 my %LABELS;
@@ -179,7 +190,7 @@ while ( my $file = shift )
             my $reg = $1;
             my $val = $2;
 
-            die "Int too large" if ( $val >= 65535 );
+            die "Int too large" if ( $val > 65535 );
 
             my $val1 = $val % 256;
             my $val2 = ( $val - $val1 ) / 256;
@@ -459,6 +470,18 @@ while ( my $file = shift )
             print $out chr $reg;
             print $out chr $addr;
             $offset += 3;
+        }
+        elsif ( $line =~ /^\s*(push|pop)\s+#([0-9]+)/ )
+        {
+            my $opr = $1;
+            my $reg = $2;
+
+            print $out chr STACK_PUSH if ( $opr =~ /push/i );
+            print $out chr STACK_POP  if ( $opr =~ /pop/i );
+
+            print $out chr $reg;
+
+            $offset += 2;
         }
         else
         {

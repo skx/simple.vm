@@ -495,6 +495,7 @@ _Bool op_jump_z(struct svm * svm)
     if (getenv("DEBUG") != NULL)
         printf("JUMP_Z(Offset:%d [Hex:%04X]\n", offset, offset);
 
+
     if (svm->flags.z)
     {
         svm->ip = offset;
@@ -719,6 +720,62 @@ _Bool op_store_in_ram(struct svm * svm)
 }
 
 
+_Bool op_stack_push(struct svm * svm)
+{
+    /* get the register to push */
+    unsigned int reg = READ_BYTE();
+    BOUNDS_TEST_REGISTER(reg);
+
+    /* Get the value we're to store. */
+    int val = get_int_reg(svm, reg);
+
+    if (getenv("DEBUG") != NULL)
+        printf("PUSH(Register %d [=%04x])\n", reg, val);
+
+    /* store it */
+    svm->SP += 1;
+    svm->stack[svm->SP] = val;
+
+    /**
+     * Ensure the stack hasn't overflown.
+     */
+    int sp_size = sizeof(svm->stack) / sizeof(svm->stack[0]);
+    if (svm->SP > sp_size)
+        svm_default_error_handler(svm, "stack overflow - stack is full");
+
+    return (false);
+}
+
+_Bool op_stack_pop(struct svm * svm)
+{
+    /* get the register to pop */
+    unsigned int reg = READ_BYTE();
+    BOUNDS_TEST_REGISTER(reg);
+
+    /* ensure we're not outside the stack. */
+    if (svm->SP <= 0)
+        svm_default_error_handler(svm, "stack overflow - stack is empty");
+
+    /* Get the value from the stack. */
+    int val = svm->stack[svm->SP];
+    svm->SP -= 1;
+
+    if (getenv("DEBUG") != NULL)
+        printf("POP(Register %d) => %04x\n", reg, val);
+
+
+    /* if the register stores a string .. free it */
+    if ((svm->registers[reg].type == STRING) && (svm->registers[reg].string))
+        free(svm->registers[reg].string);
+
+    svm->registers[reg].integer = val;
+    svm->registers[reg].type = INTEGER;
+
+
+    return (false);
+}
+
+
 /**
  ** End implementation of virtual machine opcodes.
  **
@@ -785,4 +842,8 @@ void opcode_init(svm_t * svm)
     svm->opcodes[CMP_REG] = op_cmp_reg;
     svm->opcodes[CMP_IMMEDIATE] = op_cmp_immediate;
     svm->opcodes[CMP_STRING] = op_cmp_string;
+
+    // STACK
+    svm->opcodes[STACK_PUSH] = op_stack_push;
+    svm->opcodes[STACK_POP] = op_stack_pop;
 }

@@ -163,6 +163,11 @@ svm_t *svm_new(unsigned char *code, unsigned int size)
 
 
     /**
+     * Stack is empty.
+     */
+    cpun->SP = 0;
+
+    /**
      * Setup our default opcode-handlers
      */
     opcode_init(cpun);
