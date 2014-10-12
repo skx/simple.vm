@@ -38,7 +38,11 @@
 
 
 /**
- * A single register, which may be used to store a string or an integer.
+ * A single register.
+ *
+ * Our registers contain a simple union which allows them to store either
+ * a string or an integer.
+ *
  */
 typedef struct registers {
     union {
@@ -54,7 +58,8 @@ typedef struct registers {
 /**
  * Flags.
  *
- * The add/sub/incr/dec/cmp instructions set the Z flag if the result is zero.
+ * The various mathematical operations (such as add/sub/xor) will set the
+ * Z flag to be true if their result is zero.
  *
  * This flag can then be used for the JMP_Z and JUMP_NZ instructions.
  */
@@ -66,8 +71,8 @@ typedef struct flags {
 /**
  * This is the signature for an implementation of a bytecode operation.
  *
- * Each operation will receive a pointer to the svm_t,
- * referring to the virtual machine.
+ * Each operation will receive a pointer to the svm_t, containing the
+ * virtual machine reference.
  *
  * Note: Forward-declare the struct so we can use it.
  */
@@ -117,8 +122,7 @@ typedef struct svm {
     void (*error_handler) (char *msg);
 
     /**
-     * This is a lookup table which maps opcodes to the handlers
-     * for them.
+     * This is a lookup table which maps opcodes to the appropriate handler.
      */
     opcode_implementation *opcodes[255];
 
