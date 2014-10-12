@@ -1,0 +1,48 @@
+#
+# About
+#
+#  This program demonstrates that the stack can be used to store integers.
+#
+#
+# Usage
+#
+#  $ compiler ./stack.in ; ./simple-vm ./stack.raw
+#
+#
+#
+
+        #
+        # Store an integer, then push to the stack.
+        #
+        store #1, 2234
+        push #1
+
+        #
+        # Store a different integer.
+        #
+        store #1, 65535
+
+        #
+        # POP from the stack - so we're back where we were.
+        #
+        pop #1
+
+        #
+        # Ensure we're _really_ there, because the expected value
+        # has been returned.
+        #
+        cmp #1, 2234
+        jmpz ok
+
+        #
+        # Boo - Failure.
+        #
+        store #0, "Error - stack push/pop mismatch\n"
+        print_str #0
+        exit
+
+:ok
+        #  Success.
+        store #0, "Stack operation was successful\n"
+        print_str #0
+        exit
