@@ -72,11 +72,16 @@ Instructions
 There are several instruction-types implemented:
 
 * Storing string/int values into a given register.
-* Mathematical operations: add, and, sub, multiply, divide, incr, dec, or, & xor.
+* Mathematical operations:
+    * add, and, sub, multiply, divide, incr, dec, or, & xor.
 * Output the contents of a given register. (string/int).
 * Jumping instructions.
+    * Conditional and unconditional
 * Comparison of register contents.
+    * Against registers, or string/int constants.
 * String to integer conversion, and vice-versa.
+* Stack operations
+    * PUSH/POP/CALL/RETURN
 
 The instructions are pretty basic, as this is just a toy, but adding new ones isn't difficult and the available primitives are reasonably useful as-is.
 
@@ -118,6 +123,10 @@ The following are examples of all instructions:
     store #1, #4      # Load the address stored in register4 with the contents of reg1.
     random #2         # Store a random integer in register #2.
 
+    push #1           # Store the contents of register #1 in the stack
+    pop  #1           # Load register #1 with the contents of the stack.
+    call my_lable     # Call a defined label
+    ret               # Return from a called-routine.
 
 
 Simple Example
