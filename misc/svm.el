@@ -8,8 +8,8 @@
 ;;
 
 (setq svm-keywords
- '(("^\s*add\\|^\s*sub\\|^\s*mul\\|^\s*div\\|^\s*inc\\|^\s*dec\\|^\s*system\\|^\s*concat\\|^\s*string2int\\|^\s*int2string\\|^\s*cmp\\|^\s*load\\|^\s*print_int\\|^\s*print_str\\|^\s*store\\|^\s*nop\\|^\s*exit" . font-lock-function-name-face)
-   ("^\s*goto\\|^\s*jmpnz\\|^\s*jmpz\\|^:[-_A-Za-z0-9]+" . font-lock-warning-face)
+ '(("^\s*add\\|^\s*sub\\|^\s*mul\\|^\s*ret\\|^\s*div\\|^\s*inc\\|^\s*dec\\|^\s*system\\|^\s*concat\\|^\s*string2int\\|^\s*int2string\\|^\s*cmp\\|^\s*load\\|^\s*print_int\\|^\s*print_str\\|^\s*store\\|^\s*nop\\|^\s*exit" . font-lock-function-name-face)
+   ("^\s*goto\\|^\s*call\\|^\s*jmpnz\\|^\s*jmpz\\|^:[-_A-Za-z0-9]+" . font-lock-warning-face)
   )
 )
 
