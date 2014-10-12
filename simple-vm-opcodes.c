@@ -77,8 +77,8 @@
         printf( #function "(Register:%d = Register:%d " #operator " Register:%d)\n", reg, src1, src2); \
 \
     /* if the result-register stores a string .. free it */\
-    if ((svm->registers[reg].type == STRING) && (svm->registers[reg].string))\
-        free(svm->registers[reg].string);\
+    if ((svm->registers[reg].type == STRING) && (svm->registers[reg].content.string))\
+        free(svm->registers[reg].content.string);\
 \
     /* \
      * Ensure both source registers have integer values.\
@@ -89,13 +89,13 @@
     /** \
      * Store the result.\
      */\
-    svm->registers[reg].integer = val1 operator val2; \
+    svm->registers[reg].content.integer = val1 operator val2; \
     svm->registers[reg].type = INTEGER; \
 \
     /**\
      * Zero result? \
      */\
-    if (svm->registers[reg].integer == 0)\
+    if (svm->registers[reg].content.integer == 0)\
         svm->flags.z = true;\
         else\
         svm->flags.z = false;\
@@ -120,7 +120,7 @@
 char *get_string_reg(svm_t * cpu, int reg)
 {
     if (cpu->registers[reg].type == STRING)
-        return (cpu->registers[reg].string);
+        return (cpu->registers[reg].content.string);
 
     svm_default_error_handler(cpu, "The register deesn't contain a string");
     return NULL;
@@ -135,7 +135,7 @@ char *get_string_reg(svm_t * cpu, int reg)
 int get_int_reg(svm_t * cpu, int reg)
 {
     if (cpu->registers[reg].type == INTEGER)
-        return (cpu->registers[reg].integer);
+        return (cpu->registers[reg].content.integer);
 
     svm_default_error_handler(cpu, "The register doesn't contain an integer");
     return 0;
@@ -238,10 +238,10 @@ _Bool op_int_store(struct svm * svm)
         printf("STORE_INT(Reg:%02x) => %04d [Hex:%04x]\n", reg, value, value);
 
     /* if the register stores a string .. free it */
-    if ((svm->registers[reg].type == STRING) && (svm->registers[reg].string))
-        free(svm->registers[reg].string);
+    if ((svm->registers[reg].type == STRING) && (svm->registers[reg].content.string))
+        free(svm->registers[reg].content.string);
 
-    svm->registers[reg].integer = value;
+    svm->registers[reg].content.integer = value;
     svm->registers[reg].type = INTEGER;
 
     return false;
@@ -283,11 +283,11 @@ _Bool op_int_tostring(struct svm * svm)
 
     /* allocate a buffer. */
     svm->registers[reg].type = STRING;
-    svm->registers[reg].string = malloc(10);
+    svm->registers[reg].content.string = malloc(10);
 
     /* store the string-value */
-    memset(svm->registers[reg].string, '\0', 10);
-    sprintf(svm->registers[reg].string, "%d", cur);
+    memset(svm->registers[reg].content.string, '\0', 10);
+    sprintf(svm->registers[reg].content.string, "%d", cur);
 
     return (false);
 }
@@ -305,14 +305,14 @@ _Bool op_int_random(struct svm * svm)
     /**
      * If we already have a string in the register delete it.
      */
-    if ((svm->registers[reg].type == STRING) && (svm->registers[reg].string))
+    if ((svm->registers[reg].type == STRING) && (svm->registers[reg].content.string))
     {
-        free(svm->registers[reg].string);
+        free(svm->registers[reg].content.string);
     }
 
     /* set the value. */
     svm->registers[reg].type = INTEGER;
-    svm->registers[reg].integer = rand() % 0xFFFF;
+    svm->registers[reg].content.integer = rand() % 0xFFFF;
 
     return (false);
 }
@@ -330,16 +330,16 @@ _Bool op_string_store(struct svm * svm)
     /**
      * If we already have a string in the register delete it.
      */
-    if ((svm->registers[reg].type == STRING) && (svm->registers[reg].string))
+    if ((svm->registers[reg].type == STRING) && (svm->registers[reg].content.string))
     {
-        free(svm->registers[reg].string);
+        free(svm->registers[reg].content.string);
     }
 
     /**
      * Now store the new string.
      */
     svm->registers[reg].type = STRING;
-    svm->registers[reg].string = str;
+    svm->registers[reg].content.string = str;
 
     if (getenv("DEBUG") != NULL)
         printf("STRING_STORE(Register %d) = '%s'\n", reg, str);
@@ -411,10 +411,10 @@ _Bool op_string_concat(struct svm * svm)
 
 
     /* if the destination-register currently contains a string .. free it */
-    if ((svm->registers[reg].type == STRING) && (svm->registers[reg].string))
-        free(svm->registers[reg].string);
+    if ((svm->registers[reg].type == STRING) && (svm->registers[reg].content.string))
+        free(svm->registers[reg].content.string);
 
-    svm->registers[reg].string = tmp;
+    svm->registers[reg].content.string = tmp;
     svm->registers[reg].type = STRING;
 
     return (false);
@@ -449,11 +449,11 @@ _Bool op_string_toint(struct svm * svm)
     int i = atoi(str);
 
     /* free the old version */
-    free(svm->registers[reg].string);
+    free(svm->registers[reg].content.string);
 
     /* set the int. */
     svm->registers[reg].type = INTEGER;
-    svm->registers[reg].integer = i;
+    svm->registers[reg].content.integer = i;
 
     return (false);
 }
@@ -547,9 +547,9 @@ _Bool op_inc(struct svm * svm)
     /* get, incr, set */
     int cur = get_int_reg(svm, reg);
     cur += 1;
-    svm->registers[reg].integer = cur;
+    svm->registers[reg].content.integer = cur;
 
-    if (svm->registers[reg].integer == 0)
+    if (svm->registers[reg].content.integer == 0)
         svm->flags.z = true;
     else
         svm->flags.z = false;
@@ -569,9 +569,9 @@ _Bool op_dec(struct svm * svm)
     /* get, decr, set */
     int cur = get_int_reg(svm, reg);
     cur -= 1;
-    svm->registers[reg].integer = cur;
+    svm->registers[reg].content.integer = cur;
 
-    if (svm->registers[reg].integer == 0)
+    if (svm->registers[reg].content.integer == 0)
         svm->flags.z = true;
     else
         svm->flags.z = false;
@@ -599,11 +599,11 @@ _Bool op_cmp_reg(struct svm * svm)
     {
         if (svm->registers[reg1].type == STRING)
         {
-            if (strcmp(svm->registers[reg1].string, svm->registers[reg2].string) == 0)
+            if (strcmp(svm->registers[reg1].content.string, svm->registers[reg2].content.string) == 0)
                 svm->flags.z = true;
         } else
         {
-            if (svm->registers[reg1].integer == svm->registers[reg2].integer)
+            if (svm->registers[reg1].content.integer == svm->registers[reg2].content.integer)
                 svm->flags.z = true;
         }
     }
@@ -684,10 +684,10 @@ _Bool op_load_from_ram(struct svm * svm)
     int val = svm->code[adr];
 
     /* if the destination currently contains a string .. free it */
-    if ((svm->registers[reg].type == STRING) && (svm->registers[reg].string))
-        free(svm->registers[reg].string);
+    if ((svm->registers[reg].type == STRING) && (svm->registers[reg].content.string))
+        free(svm->registers[reg].content.string);
 
-    svm->registers[reg].integer = val;
+    svm->registers[reg].content.integer = val;
     svm->registers[reg].type = INTEGER;
     return (false);
 }
@@ -765,10 +765,10 @@ _Bool op_stack_pop(struct svm * svm)
 
 
     /* if the register stores a string .. free it */
-    if ((svm->registers[reg].type == STRING) && (svm->registers[reg].string))
-        free(svm->registers[reg].string);
+    if ((svm->registers[reg].type == STRING) && (svm->registers[reg].content.string))
+        free(svm->registers[reg].content.string);
 
-    svm->registers[reg].integer = val;
+    svm->registers[reg].content.integer = val;
     svm->registers[reg].type = INTEGER;
 
 

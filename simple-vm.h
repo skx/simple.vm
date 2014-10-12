@@ -48,7 +48,7 @@ typedef struct registers {
     union {
         unsigned int integer;
         char *string;
-    };
+    } content;
     char *str;
     enum { INTEGER, STRING } type;
 } reg_t;

@@ -152,8 +152,8 @@ svm_t *svm_new(unsigned char *code, unsigned int size)
     for (i = 0; i < REGISTER_COUNT; i++)
     {
         cpun->registers[i].type = INTEGER;
-        cpun->registers[i].integer = 0;
-        cpun->registers[i].string = NULL;
+        cpun->registers[i].content.integer = 0;
+        cpun->registers[i].content.string = NULL;
     }
 
     /**
@@ -208,11 +208,11 @@ void svm_dump_registers(svm_t * cpup)
     {
         if (cpup->registers[i].type == STRING)
         {
-            printf("\tRegister %02d - str: %s\n", i, cpup->registers[i].string);
+            printf("\tRegister %02d - str: %s\n", i, cpup->registers[i].content.string);
         } else if (cpup->registers[i].type == INTEGER)
         {
             printf("\tRegister %02d - Decimal:%04d [Hex:%04X]\n", i,
-                   cpup->registers[i].integer, cpup->registers[i].integer);
+                   cpup->registers[i].content.integer, cpup->registers[i].content.integer);
         } else
         {
             printf("\tRegister %02d has unknown type!\n", i);
