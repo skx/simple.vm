@@ -53,7 +53,7 @@ unsigned char bytecode[] = {
  */
 _Bool op_custom(struct svm *svm)
 {
-    printf("Custom Handling Here\n");
+    printf("\nCustom Handling Here\n");
     printf("\tOur bytecode is %d bytes long\n", svm->size);
 
     /**
