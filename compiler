@@ -101,6 +101,7 @@ use constant STORE_IN_RAM  => 0x61;
 use constant STACK_PUSH => 0x70;
 use constant STACK_POP  => 0x71;
 use constant STACK_RET  => 0x72;
+use constant STACK_CALL => 0x73;
 
 
 
@@ -283,6 +284,25 @@ while ( my $file = shift )
             print $out chr 0;    # this will be updated.
 
             $offset += 3;        # jump + val1 + val2
+
+            #
+            # we now need to record the fact we have to patch up this
+            # instruction.
+            #
+            push( @UPDATES,
+                  {  offset => ( $offset - 2 ),
+                     label  => $label
+                  } );
+        }
+        elsif ( $line =~ /^\s*call\s+([^ ]+)/ )
+        {
+            my $label = $1;
+
+            print $out chr STACK_CALL;
+            print $out chr 0;    # this will be updated.
+            print $out chr 0;    # this will be updated.
+
+            $offset += 3;        # call + val1 + val2
 
             #
             # we now need to record the fact we have to patch up this

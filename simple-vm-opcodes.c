@@ -797,6 +797,37 @@ _Bool op_stack_ret(struct svm * svm)
 }
 
 
+_Bool op_stack_call(struct svm * svm)
+{
+    /**
+     * Read the two bytes which will build up the destination
+     */
+    unsigned int off1 = READ_BYTE();
+    unsigned int off2 = READ_BYTE();
+
+    /**
+     * Convert to the offset in our code-segment.
+     */
+    int offset = BYTES_TO_ADDR(off1, off2);
+
+
+    /**
+     * Now we've got to save the address past this instruction
+     * on the stack so that the "ret(urn)" instruction will go
+     * to the correct place.
+     */
+    svm->SP += 1;
+    svm->stack[svm->SP] = svm->ip+1;
+
+    /**
+     * Now we've saved the return-address we can update the IP
+     */
+    svm->ip = offset;
+
+    /* We've updated the IP, so we must return true. */
+    return (true);
+}
+
 /**
  ** End implementation of virtual machine opcodes.
  **
@@ -868,4 +899,5 @@ void opcode_init(svm_t * svm)
     svm->opcodes[STACK_PUSH] = op_stack_push;
     svm->opcodes[STACK_POP] = op_stack_pop;
     svm->opcodes[STACK_RET] = op_stack_ret;
+    svm->opcodes[STACK_CALL] = op_stack_call;
 }

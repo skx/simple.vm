@@ -95,6 +95,7 @@
 #define STACK_PUSH 0x70
 #define STACK_POP  0x71
 #define STACK_RET  0x72
+#define STACK_CALL 0x73
 
 
 
@@ -137,6 +138,7 @@ _Bool op_store_in_ram(struct svm *in);
 _Bool op_stack_push(struct svm *in);
 _Bool op_stack_pop(struct svm *in);
 _Bool op_stack_ret(struct svm *in);
+_Bool op_stack_call(struct svm *in);
 
 
 
