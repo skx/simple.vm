@@ -123,6 +123,17 @@ typedef struct svm {
     opcode_implementation *opcodes[255];
 
     /**
+     * This is the stack for the virtual machine.  There are
+     * only a small number of entries permitted.
+     */
+    int stack[1024];
+
+    /**
+     * The stack pointer which starts from zero and grows upwards.
+     */
+    int SP;
+
+    /**
      * State - Shouldn't really be here.
      */
     _Bool running;
