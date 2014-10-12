@@ -775,6 +775,27 @@ _Bool op_stack_pop(struct svm * svm)
     return (false);
 }
 
+_Bool op_stack_ret(struct svm * svm)
+{
+    /* ensure we're not outside the stack. */
+    if (svm->SP <= 0)
+        svm_default_error_handler(svm, "stack overflow - stack is empty");
+
+    /* Get the value from the stack. */
+    int val = svm->stack[svm->SP];
+    svm->SP -= 1;
+
+    if (getenv("DEBUG") != NULL)
+        printf("RET() => %04x\n", val);
+
+
+    /* update our instruction pointer. */
+    svm->ip = val;
+
+    /* We've updated the IP, so we must return true. */
+    return (true);
+}
+
 
 /**
  ** End implementation of virtual machine opcodes.
@@ -846,4 +867,5 @@ void opcode_init(svm_t * svm)
     // STACK
     svm->opcodes[STACK_PUSH] = op_stack_push;
     svm->opcodes[STACK_POP] = op_stack_pop;
+    svm->opcodes[STACK_RET] = op_stack_ret;
 }

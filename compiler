@@ -100,9 +100,7 @@ use constant STORE_IN_RAM  => 0x61;
 #
 use constant STACK_PUSH => 0x70;
 use constant STACK_POP  => 0x71;
-
-# call
-# ret
+use constant STACK_RET  => 0x72;
 
 
 
@@ -482,6 +480,11 @@ while ( my $file = shift )
             print $out chr $reg;
 
             $offset += 2;
+        }
+        elsif ( $line =~ /^\s*ret\s*/ )
+        {
+            print $out chr STACK_RET;
+            $offset += 1;
         }
         else
         {
