@@ -179,10 +179,15 @@ while ( my $file = shift )
             }
             else
             {
+
+                #
+                # Store the current location of the code in the label.
+                #
+                # We can do this safely because each generator keeps track
+                # of how long and instruction is.
+                #
                 $LABELS{ $name } = $offset;
             }
-
-            # so we found a label - store the offset of the code in our array.
         }
         elsif ( $line =~ /^\s*store\s+#([0-9]+)\s*,\s*([0-9]+)/i )
         {
@@ -293,6 +298,22 @@ while ( my $file = shift )
                   {  offset => ( $offset - 2 ),
                      label  => $label
                   } );
+        }
+        elsif ( $line =~ /^\s*call\s+0x([0-9a-fA-F]+)/ )
+        {
+
+            # call an absolute hex-address.
+            my $addr = $1;
+
+            $addr = hex($addr);
+            my $a1 = $addr % 256;
+            my $a2 = ( $addr - $a1 ) / 256;
+
+            print $out chr STACK_CALL;
+            print $out chr $a1;
+            print $out chr $a2;
+
+            $offset += 3;    # call + val1 + val2
         }
         elsif ( $line =~ /^\s*call\s+([^ ]+)/ )
         {
@@ -542,7 +563,9 @@ while ( my $file = shift )
             # now we find the target of the label
             #
             my $target = $LABELS{ $label };
-            die "No target for label '$label' - You've tried to use a label which isn't defined!" unless ( defined($target) );
+            die
+              "No target for label '$label' - You've tried to use a label which isn't defined!"
+              unless ( defined($target) );
 
             #
             # Split the address into two bytes.
