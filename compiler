@@ -520,37 +520,45 @@ while ( my $file = shift )
     #  OK now this is nasty - we want to go back and patch up the jump
     # instructions we know we've emitted.
     #
-    foreach my $update (@UPDATES)
+    if ( scalar @UPDATES )
     {
-        my $offset = $update->{ 'offset' };
-        my $label  = $update->{ 'label' };
 
         #
         #  Open for in-place editing and make sure we're at the right spot.
         #
         open( my $tmp, "+<", $output ) or die "Failed to write to output - $!";
-        seek $tmp, $offset, 0;
+
+        foreach my $update (@UPDATES)
+        {
+            my $offset = $update->{ 'offset' };
+            my $label  = $update->{ 'label' };
+
+            #
+            #  Seek to the correct location.
+            #
+            seek $tmp, $offset, 0;
+
+            #
+            # now we find the target of the label
+            #
+            my $target = $LABELS{ $label };
+            die "No target for label '$label' - You've tried to use a label which isn't defined!" unless ( defined($target) );
+
+            #
+            # Split the address into two bytes.
+            #
+            my $t1 = $target % 256;
+            my $t2 = ( $target - $t1 ) / 256;
+
+            #
+            # Update the compiled file on-disk.  (Remember the seek?)
+            #
+            print $tmp chr $t1;
+            print $tmp chr $t2;
+        }
 
         #
-        # now we find the target of the label
-        #
-        my $target = $LABELS{ $label };
-        die "No target for label '$label'" unless ( defined($target) );
-
-        #
-        # Split the address into two bytes.
-        #
-        my $t1 = $target % 256;
-        my $t2 = ( $target - $t1 ) / 256;
-
-        #
-        # Update the compiled file on-disk.  (Remember the seek?)
-        #
-        print $tmp chr $t1;
-        print $tmp chr $t2;
-
-        #
-        # Close again.  Inefficient if we have >N labels..
+        # Close the output file.
         #
         close($tmp);
     }
