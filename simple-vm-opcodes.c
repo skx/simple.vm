@@ -817,7 +817,7 @@ _Bool op_stack_call(struct svm * svm)
      * to the correct place.
      */
     svm->SP += 1;
-    svm->stack[svm->SP] = svm->ip+1;
+    svm->stack[svm->SP] = svm->ip + 1;
 
     /**
      * Now we've saved the return-address we can update the IP
@@ -841,7 +841,7 @@ _Bool op_stack_call(struct svm * svm)
 void opcode_init(svm_t * svm)
 {
     /**
-     * Initialize the random see for INT_RANDOM()
+     * Initialize the random seed for the rendom opcode (INT_RANDOM)
      */
     srand(time(NULL));
 
@@ -849,53 +849,51 @@ void opcode_init(svm_t * svm)
      * All instructions will default to unknown.
      */
     for (int i = 0; i < 255; i++)
-    {
         svm->opcodes[i] = op_unknown;
-    }
 
-    // misc
-    svm->opcodes[OPCODE_EXIT] = op_exit;
-    svm->opcodes[NOP_OP] = op_nop;
-
-    // ints
+    /* early opcodes */
+    svm->opcodes[EXIT] = op_exit;
     svm->opcodes[INT_STORE] = op_int_store;
     svm->opcodes[INT_PRINT] = op_int_print;
     svm->opcodes[INT_TOSTRING] = op_int_tostring;
     svm->opcodes[INT_RANDOM] = op_int_random;
 
-    // strings
+    /* jumps */
+    svm->opcodes[JUMP_TO] = op_jump_to;
+    svm->opcodes[JUMP_NZ] = op_jump_nz;
+    svm->opcodes[JUMP_Z] = op_jump_z;
+
+    /* math */
+    svm->opcodes[ADD] = op_add;
+    svm->opcodes[AND] = op_and;
+    svm->opcodes[SUB] = op_sub;
+    svm->opcodes[MUL] = op_mul;
+    svm->opcodes[DIV] = op_div;
+    svm->opcodes[XOR] = op_xor;
+    svm->opcodes[OR] = op_or;
+    svm->opcodes[INC] = op_inc;
+    svm->opcodes[DEC] = op_dec;
+
+    /* strings */
     svm->opcodes[STRING_STORE] = op_string_store;
     svm->opcodes[STRING_PRINT] = op_string_print;
     svm->opcodes[STRING_CONCAT] = op_string_concat;
     svm->opcodes[STRING_SYSTEM] = op_string_system;
     svm->opcodes[STRING_TOINT] = op_string_toint;
 
-    // jumps
-    svm->opcodes[JUMP_TO] = op_jump_to;
-    svm->opcodes[JUMP_NZ] = op_jump_nz;
-    svm->opcodes[JUMP_Z] = op_jump_z;
-
-    // RAM
-    svm->opcodes[LOAD_FROM_RAM] = op_load_from_ram;
-    svm->opcodes[STORE_IN_RAM] = op_store_in_ram;
-
-    // math
-    svm->opcodes[ADD_OP] = op_add;
-    svm->opcodes[AND_OP] = op_and;
-    svm->opcodes[SUB_OP] = op_sub;
-    svm->opcodes[MUL_OP] = op_mul;
-    svm->opcodes[DIV_OP] = op_div;
-    svm->opcodes[XOR_OP] = op_xor;
-    svm->opcodes[OR_OP] = op_or;
-    svm->opcodes[INC_OP] = op_inc;
-    svm->opcodes[DEC_OP] = op_dec;
-
-    // comparisons
+    /* comparisons */
     svm->opcodes[CMP_REG] = op_cmp_reg;
     svm->opcodes[CMP_IMMEDIATE] = op_cmp_immediate;
     svm->opcodes[CMP_STRING] = op_cmp_string;
 
-    // STACK
+    /* misc */
+    svm->opcodes[NOP] = op_nop;
+
+    /* PEEK/POKE */
+    svm->opcodes[LOAD_FROM_RAM] = op_load_from_ram;
+    svm->opcodes[STORE_IN_RAM] = op_store_in_ram;
+
+    /* stack */
     svm->opcodes[STACK_PUSH] = op_stack_push;
     svm->opcodes[STACK_POP] = op_stack_pop;
     svm->opcodes[STACK_RET] = op_stack_ret;
