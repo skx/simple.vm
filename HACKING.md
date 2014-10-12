@@ -1,5 +1,8 @@
 
-THis document describes the internal structure of this repository.
+Overview
+========
+
+This document briefly describes the internal structure of this repository.
 
 The implementation broadly falls into two camps:
 
@@ -13,10 +16,10 @@ Virtual Machine Implementation
 The virtual machine is encapsulated in the `svm_t` structure, which
 contains:
 
-* The registers the machine contains.
-* The flags.
-* The stack.
+* The virtual-machine registers.
+* The virtual-machine flags.
 * The code to be executed.
+* The stack.
 
 All the implementation of the virtual machine lives in the `simple-vm.c` file,
 with the public parts exposed to `simple-vm.h`.
