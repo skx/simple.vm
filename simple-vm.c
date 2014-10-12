@@ -280,10 +280,6 @@ void svm_run(svm_t * cpup)
      */
     while (cpup->running == true)
     {
-        if (!cpup->running)
-            break;
-
-
         /**
          * Lookup the instruction at the instruction-pointer.
          */
