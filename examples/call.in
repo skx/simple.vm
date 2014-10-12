@@ -1,0 +1,36 @@
+#
+# About
+#
+#  This program demonstrates that we can use subroutines.
+#
+#
+# Usage
+#
+#  $ compiler ./call.in ; ./simple-vm ./call.raw
+#
+#
+#
+        store #1, 15
+        call print
+
+        store #1, 240
+        call print
+
+        store #1, 255
+        call print
+
+        exit
+
+
+#
+#  This routine will print the integer stored in register #1
+#
+#  Then it will print a newline.
+#
+#  Then it will return to the caller.
+#
+:print
+        print_int #1
+        store #1, "\n"
+        print_str #1
+        ret
