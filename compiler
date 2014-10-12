@@ -533,7 +533,9 @@ while ( my $file = shift )
         }
     }
 
-
+    #
+    #  Close the input/output files.
+    #
     close($in);
     close($out);
 
@@ -549,8 +551,15 @@ while ( my $file = shift )
         #
         open( my $tmp, "+<", $output ) or die "Failed to write to output - $!";
 
+        #
+        #  For each update we must apply
+        #
         foreach my $update (@UPDATES)
         {
+            #
+            # We have the offset in the output file to update, and the
+            # label which should be replaced with the address.
+            #
             my $offset = $update->{ 'offset' };
             my $label  = $update->{ 'label' };
 
@@ -581,7 +590,7 @@ while ( my $file = shift )
         }
 
         #
-        # Close the output file.
+        # Close the updated output file.
         #
         close($tmp);
     }
