@@ -106,7 +106,6 @@ use constant STACK_CALL => 0x73;
 
 
 
-
 #
 #  Get the input file we'll parse
 #
@@ -197,6 +196,7 @@ while ( my $file = shift )
         }
         elsif ( $line =~ /^\s*store\s+#([0-9]+)\s*,\s*([0-9]+)/i )
         {
+
             # store an integer
             my $reg = $1;
             my $val = $2;
@@ -215,6 +215,7 @@ while ( my $file = shift )
         }
         elsif ( $line =~ /^\s+store\s+#([0-9]+)\s?,\s?"([^"]*)"/ )
         {
+
             # store a string
             my $reg = $1;
             my $str = $2;
@@ -518,18 +519,19 @@ while ( my $file = shift )
             #
             foreach my $db ( split( /,/, $data ) )
             {
+
                 # strip leading/trailing space
                 $db =~ s/^\s+|\s+$//g;
 
-                next unless( length($db) );
+                next unless ( length($db) );
 
                 # convert from hex if appropriate
-                $db = hex( $db ) if ( $db =~ /^0x/i );
+                $db = hex($db) if ( $db =~ /^0x/i );
 
                 # ensure the byte is within range.
                 die "Data too large for a byte: $db" if ( $db > 255 );
 
-                print $out chr  $db ;
+                print $out chr $db;
 
                 $offset += 1;
             }
