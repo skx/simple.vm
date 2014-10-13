@@ -264,7 +264,7 @@ while ( my $file = shift )
             print $out chr $reg;
             $offset += 2;
         }
-        elsif ( $line =~ /^\s*goto\s+0x([0-9a-fA-F]+)/ )
+        elsif ( $line =~ /^\s*(goto|jmp)\s+0x([0-9a-fA-F]+)/ )
         {
 
             # jump to absolute hex-address.
