@@ -105,19 +105,6 @@ use constant STACK_CALL => 0x73;
 
 
 
-#
-#  Labels - All are downcased and must be unique per-source.
-#
-my %LABELS;
-
-
-#
-#  A running list of the jump-destinations we've got to update
-# post-compilation - see the note in the header.
-#
-my @UPDATES;
-
-
 
 
 #
@@ -127,12 +114,31 @@ while ( my $file = shift )
 {
 
     #
-    #  Compiled programs have the same basename, but will have a .raw
-    # suffix appended.
+    #  Storage for any labels we find in the source-file.
+    #
+    my %LABELS;
+
+
+    #
+    #  This stores the offsets we need to update when we've finished
+    # compiling the source.
+    #
+    #  Every time we see a "JUMP $label" statement we output JMP 0x0000
+    # and once the input has been completely parsed we will then go back
+    # and update the output with the real destinations.
+    #
+    #  See the header for more discussion on this topic.
+    #
+    my @UPDATES;
+
+
+    #
+    # Output/compiled programs will have a .raw suffix.
     #
     my $output = $file;
     $output =~ s/\.[^.]+$//;
     $output .= ".raw";
+
 
     #
     #  Open our input/output files.
