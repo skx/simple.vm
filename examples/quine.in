@@ -12,9 +12,22 @@
 #
 
         #
-        #  Bytes to show
+        #  The number of bytes to show is the same as the length
+        # of this (compiled) script.
         #
-        store #1, 49
+        #  If we store the offset of the "end" label, in register 1,
+        # that will correspond to our length.
+        #
+        store #1, end
+
+        #
+        #  We'll loop with offset 1.
+        #
+        #  i.e. register 1 is the store of iterates.
+        #
+        #       and each loop we set: reg1 = reg1 - reg2
+        #
+        #
         store #2, 1
 
         #
@@ -58,3 +71,5 @@
         store #1, "\n"
         print_str #1
         exit
+
+:end

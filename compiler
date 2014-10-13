@@ -197,6 +197,7 @@ while ( my $file = shift )
         }
         elsif ( $line =~ /^\s*store\s+#([0-9]+)\s*,\s*([0-9]+)/i )
         {
+            # store an integer
             my $reg = $1;
             my $val = $2;
 
@@ -212,18 +213,9 @@ while ( my $file = shift )
 
             $offset += 4;
         }
-        elsif ( $line =~ /^\s+exit/ )
-        {
-            print $out chr EXIT;
-            $offset += 1;
-        }
-        elsif ( $line =~ /^\s+nop/ )
-        {
-            print $out chr NOP_OP;
-            $offset += 1;
-        }
         elsif ( $line =~ /^\s+store\s+#([0-9]+)\s?,\s?"([^"]*)"/ )
         {
+            # store a string
             my $reg = $1;
             my $str = $2;
 
@@ -245,6 +237,35 @@ while ( my $file = shift )
 
             $offset += 4;              # store + reg + len
             $offset += length($str);
+        }
+        elsif ( $line =~ /^\s+store\s+#([0-9]+)\s?,\s?([^\s]+)/ )
+        {
+
+            # store a label address
+            my $reg   = $1;
+            my $label = $2;
+
+            print $out chr INT_STORE;
+            print $out chr $reg;
+            print $out chr 0x00;
+            print $out chr 0x00;
+
+            $offset += 4;    # store + reg + len
+
+            push( @UPDATES,
+                  {  offset => ( $offset - 2 ),
+                     label  => $label
+                  } );
+        }
+        elsif ( $line =~ /^\s+exit/ )
+        {
+            print $out chr EXIT;
+            $offset += 1;
+        }
+        elsif ( $line =~ /^\s+nop/ )
+        {
+            print $out chr NOP_OP;
+            $offset += 1;
         }
         elsif ( $line =~ /^\s*print_int\s?#(.*)/ )
         {
