@@ -531,10 +531,13 @@ _Bool op_jump_nz(struct svm * svm)
 }
 
 
-MATH_OPERATION(op_add, +)MATH_OPERATION(op_and, &)MATH_OPERATION(op_sub,
-                                                                 -)MATH_OPERATION(op_mul,
-                                                                                  *)MATH_OPERATION
-    (op_div, /)MATH_OPERATION(op_xor, ^)MATH_OPERATION(op_or, |)
+MATH_OPERATION(op_add, +)       // reg_result = reg1 + reg2 ;
+    MATH_OPERATION(op_and, &)   // reg_result = reg1 & reg2 ;
+    MATH_OPERATION(op_sub, -)   // reg_result = reg1 - reg2 ;
+    MATH_OPERATION(op_mul, *)   // reg_result = reg1 * reg2 ;
+    MATH_OPERATION(op_div, /)   // reg_result = reg1 / reg2 ;
+    MATH_OPERATION(op_xor, ^)   // reg_result = reg1 ^ reg2 ;
+    MATH_OPERATION(op_or, |)    // reg_result = reg1 | reg2 ;
 _Bool op_inc(struct svm * svm)
 {
     /* get the register number to increment */
@@ -599,11 +602,14 @@ _Bool op_cmp_reg(struct svm * svm)
     {
         if (svm->registers[reg1].type == STRING)
         {
-            if (strcmp(svm->registers[reg1].content.string, svm->registers[reg2].content.string) == 0)
+            if (strcmp
+                (svm->registers[reg1].content.string,
+                 svm->registers[reg2].content.string) == 0)
                 svm->flags.z = true;
         } else
         {
-            if (svm->registers[reg1].content.integer == svm->registers[reg2].content.integer)
+            if (svm->registers[reg1].content.integer ==
+                svm->registers[reg2].content.integer)
                 svm->flags.z = true;
         }
     }

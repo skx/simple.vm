@@ -212,7 +212,8 @@ void svm_dump_registers(svm_t * cpup)
         } else if (cpup->registers[i].type == INTEGER)
         {
             printf("\tRegister %02d - Decimal:%04d [Hex:%04X]\n", i,
-                   cpup->registers[i].content.integer, cpup->registers[i].content.integer);
+                   cpup->registers[i].content.integer,
+                   cpup->registers[i].content.integer);
         } else
         {
             printf("\tRegister %02d has unknown type!\n", i);

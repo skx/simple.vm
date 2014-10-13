@@ -338,7 +338,7 @@ while ( my $file = shift )
             #
             my %maths = ( add    => ADD_OP,
                           and    => AND_OP,
-                          or    => OR_OP,
+                          or     => OR_OP,
                           sub    => SUB_OP,
                           mul    => MUL_OP,
                           div    => DIV_OP,
