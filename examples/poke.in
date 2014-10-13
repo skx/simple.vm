@@ -1,0 +1,31 @@
+#
+# About
+#
+#  Show some opcodes in RAM, then execute them.
+#
+#
+# Usage
+#
+#  $ compiler ./poke.in ; ./simple-vm ./poke.raw
+#
+#
+#
+
+        #
+        # Set the byte at 0x5000 to read "NOP"
+        #
+        store #1, 0x50
+        store #2, 0x5000
+        poke #1, #2
+
+        #
+        # Set the byte at 0x5001 to read "EXIT"
+        #
+        store #1, 0
+        store #2, 0x5001
+        poke #1, #2
+
+        #
+        # Jump to that new code.
+        #
+        goto 0x5000
