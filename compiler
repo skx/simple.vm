@@ -85,8 +85,8 @@ use constant CMP_STRING    => 0x42;
 #
 #  Misc things
 #
-use constant NOP_OP => 0x50;
-
+use constant NOP_OP  => 0x50;
+use constant MEM_CPY => 0x51;
 
 #
 #  Load from RAM/store in RAM
@@ -194,25 +194,6 @@ while ( my $file = shift )
                 $LABELS{ $name } = $offset;
             }
         }
-        elsif ( $line =~ /^\s*store\s+#([0-9]+)\s*,\s*([0-9]+)/i )
-        {
-
-            # store an integer
-            my $reg = $1;
-            my $val = $2;
-
-            die "Int too large" if ( $val > 65535 );
-
-            my $val1 = $val % 256;
-            my $val2 = ( $val - $val1 ) / 256;
-
-            print $out chr INT_STORE;
-            print $out chr $reg;
-            print $out chr $val1;
-            print $out chr $val2;
-
-            $offset += 4;
-        }
         elsif ( $line =~ /^\s+store\s+#([0-9]+)\s?,\s?"([^"]*)"/ )
         {
 
@@ -242,21 +223,40 @@ while ( my $file = shift )
         elsif ( $line =~ /^\s+store\s+#([0-9]+)\s?,\s?([^\s]+)/ )
         {
 
-            # store a label address
-            my $reg   = $1;
-            my $label = $2;
+            # store a label address, or integer
+            my $reg = $1;
+            my $val = $2;
 
-            print $out chr INT_STORE;
-            print $out chr $reg;
-            print $out chr 0x00;
-            print $out chr 0x00;
+            if ( ( $val =~ /^0x/ ) ||
+                 ( $val =~ /^([0-9]+)$/ ) )
+            {
+                $val = hex($val) if ( $val =~ /^0x/i );
 
-            $offset += 4;    # store + reg + len
+                die "Int too large" if ( $val > 65535 );
 
-            push( @UPDATES,
-                  {  offset => ( $offset - 2 ),
-                     label  => $label
-                  } );
+                my $val1 = $val % 256;
+                my $val2 = ( $val - $val1 ) / 256;
+
+                print $out chr INT_STORE;
+                print $out chr $reg;
+                print $out chr $val1;
+                print $out chr $val2;
+                $offset += 4;    # store + reg + len
+            }
+            else
+            {
+                print $out chr INT_STORE;
+                print $out chr $reg;
+                print $out chr 0x00;
+                print $out chr 0x00;
+
+                $offset += 4;    # store + reg + len
+
+                push( @UPDATES,
+                      {  offset => ( $offset - 2 ),
+                         label  => $val
+                      } );
+            }
         }
         elsif ( $line =~ /^\s+exit/ )
         {
@@ -296,7 +296,7 @@ while ( my $file = shift )
         {
 
             # jump to absolute hex-address.
-            my $addr = $1;
+            my $addr = $2;
 
             $addr = hex($addr);
             my $a1 = $addr % 256;
@@ -474,7 +474,7 @@ while ( my $file = shift )
             $offset += 4;              # cmp + reg + len
             $offset += length($str);
         }
-        elsif ( $line =~ /^\s*load\s+#([0-9]+)\s*,\s*#([0-9]+)/ )
+        elsif ( $line =~ /^\s*peek\s+#([0-9]+)\s*,\s*#([0-9]+)/ )
         {
             my $reg  = $1;
             my $addr = $2;
@@ -484,7 +484,7 @@ while ( my $file = shift )
 
             $offset += 3;
         }
-        elsif ( $line =~ /^\s*store\s+#([0-9]+)\s*,\s*#([0-9]+)/ )
+        elsif ( $line =~ /^\s*poke\s+#([0-9]+)\s*,\s*#([0-9]+)/ )
         {
             my $reg  = $1;
             my $addr = $2;
