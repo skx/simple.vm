@@ -120,8 +120,8 @@ The following are examples of all instructions:
     cmp #3, 42        # Compare contents of reg 3 with the constant 42.  sets z.
     cmp #3, "Moi"     # Compare contents of reg 3 with the constant string "Moi".  sets z.
 
-    load #1, #4       # Load register 1 with the contents of the address in #4.
-    store #1, #4      # Load the address stored in register4 with the contents of reg1.
+    peek #1, #4       # Load register 1 with the contents of the address in #4.
+    poke #1, #4       # Set the address stored in register4 with the contents of reg1.
     random #2         # Store a random integer in register #2.
 
     push #1           # Store the contents of register #1 in the stack
