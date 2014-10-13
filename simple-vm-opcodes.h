@@ -88,8 +88,9 @@ enum opcode_values {
     /**
      * PEEK/POKE operations.
      */
-    LOAD_FROM_RAM = 0x60,
-    STORE_IN_RAM,
+    PEEK = 0x60,
+    POKE,
+    MEMCPY,
 
     /**
      * Stack operations.
@@ -139,10 +140,12 @@ _Bool op_cmp_string(struct svm *in);
 
 /* 0x50 - 0x5F */
 _Bool op_nop(struct svm *in);
+_Bool op_mem_cpy(struct svm *in);
 
 /* 0x60 - 0x6F */
-_Bool op_load_from_ram(struct svm *in);
-_Bool op_store_in_ram(struct svm *in);
+_Bool op_peek(struct svm *in);
+_Bool op_poke(struct svm *in);
+_Bool op_memcpy(struct svm *in);
 
 /* 0x70 - 0x7F */
 _Bool op_stack_push(struct svm *in);

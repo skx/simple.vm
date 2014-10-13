@@ -222,7 +222,6 @@ _Bool op_nop(struct svm * svm)
     return false;
 }
 
-
 _Bool op_int_store(struct svm * svm)
 {
     /* get the register number to store in */
@@ -666,7 +665,7 @@ _Bool op_cmp_string(struct svm * svm)
     return (true);
 }
 
-_Bool op_load_from_ram(struct svm * svm)
+_Bool op_peek(struct svm * svm)
 {
     /* get the destination register */
     unsigned int reg = READ_BYTE();
@@ -698,7 +697,7 @@ _Bool op_load_from_ram(struct svm * svm)
     return (false);
 }
 
-_Bool op_store_in_ram(struct svm * svm)
+_Bool op_poke(struct svm * svm)
 {
     /* get the destination register */
     unsigned int reg = READ_BYTE();
@@ -708,14 +707,15 @@ _Bool op_store_in_ram(struct svm * svm)
     unsigned int addr = READ_BYTE();
     BOUNDS_TEST_REGISTER(addr);
 
-    if (getenv("DEBUG") != NULL)
-        printf("STORE_IN_RAM(Address %04X set to contents of register %d)\n", addr, reg);
-
     /* Get the value we're to store. */
     int val = get_int_reg(svm, reg);
 
     /* Get the address we're to store it in. */
     int adr = get_int_reg(svm, addr);
+
+
+    if (getenv("DEBUG") != NULL)
+        printf("STORE_IN_RAM(Address %04X set to %02X)\n", adr, val);
 
     if (adr < 0 || adr > 0xffff)
         svm_default_error_handler(svm, "Writing outside RAM");
@@ -723,6 +723,40 @@ _Bool op_store_in_ram(struct svm * svm)
     /* do the necessary */
     svm->code[adr] = val;
     return (false);
+}
+
+_Bool op_memcpy(struct svm * svm)
+{
+    /* get the register number to store to */
+    unsigned int dest_reg = READ_BYTE();
+    BOUNDS_TEST_REGISTER(dest_reg);
+
+    /* get the register number to copy from */
+    unsigned int src_reg = READ_BYTE();
+    BOUNDS_TEST_REGISTER(src_reg);
+
+    /* get the register number with the size */
+    unsigned int size_reg = READ_BYTE();
+    BOUNDS_TEST_REGISTER(size_reg);
+
+    /**
+     * Now handle the copy.
+     */
+    int src = get_int_reg(svm, src_reg);
+    int dest = get_int_reg(svm, dest_reg);
+    int size = get_int_reg(svm, size_reg);
+
+    if (getenv("DEBUG") != NULL)
+    {
+        printf("Copying %4x bytes from %04x to %04X\n", size, src, dest);
+    }
+
+    /** Slow, but copes with nulls and allows debugging. */
+    for (int i = 0; i < size; i++)
+    {
+        svm->code[dest + i] = svm->code[src + i];
+    }
+    return false;
 }
 
 
@@ -896,8 +930,9 @@ void opcode_init(svm_t * svm)
     svm->opcodes[NOP] = op_nop;
 
     /* PEEK/POKE */
-    svm->opcodes[LOAD_FROM_RAM] = op_load_from_ram;
-    svm->opcodes[STORE_IN_RAM] = op_store_in_ram;
+    svm->opcodes[PEEK] = op_peek;
+    svm->opcodes[POKE] = op_poke;
+    svm->opcodes[MEMCPY] = op_memcpy;
 
     /* stack */
     svm->opcodes[STACK_PUSH] = op_stack_push;

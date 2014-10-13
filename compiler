@@ -85,14 +85,15 @@ use constant CMP_STRING    => 0x42;
 #
 #  Misc things
 #
-use constant NOP_OP  => 0x50;
-use constant MEM_CPY => 0x51;
+use constant NOP_OP => 0x50;
+
 
 #
 #  Load from RAM/store in RAM
 #
-use constant LOAD_FROM_RAM => 0x60;
-use constant STORE_IN_RAM  => 0x61;
+use constant PEEK   => 0x60;
+use constant POKE   => 0x61;
+use constant MEMCPY => 0x62;
 
 
 #
@@ -478,7 +479,7 @@ while ( my $file = shift )
         {
             my $reg  = $1;
             my $addr = $2;
-            print $out chr LOAD_FROM_RAM;
+            print $out chr PEEK;
             print $out chr $reg;
             print $out chr $addr;
 
@@ -488,10 +489,23 @@ while ( my $file = shift )
         {
             my $reg  = $1;
             my $addr = $2;
-            print $out chr STORE_IN_RAM;
+            print $out chr POKE;
             print $out chr $reg;
             print $out chr $addr;
             $offset += 3;
+        }
+        elsif (
+             $line =~ /^\s*memcpy\s+#([0-9]+)\s*,\s*#([0-9]+)\s*,\s*#([0-9]+)/ )
+        {
+            my $src = $1;
+            my $dst = $2;
+            my $len = $3;
+            print $out chr MEMCPY;
+            print $out chr $src;
+            print $out chr $dst;
+            print $out chr $len;
+
+            $offset += 4;
         }
         elsif ( $line =~ /^\s*(push|pop)\s+#([0-9]+)/ )
         {
