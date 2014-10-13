@@ -280,25 +280,6 @@ while ( my $file = shift )
 
             $offset += 3;    # jump + val1 + val2
         }
-        elsif ( $line =~ /^\s*goto\s+([^ ]+)/ )
-        {
-            my $label = $1;
-
-            print $out chr JUMP_TO;
-            print $out chr 0;    # this will be updated.
-            print $out chr 0;    # this will be updated.
-
-            $offset += 3;        # jump + val1 + val2
-
-            #
-            # we now need to record the fact we have to patch up this
-            # instruction.
-            #
-            push( @UPDATES,
-                  {  offset => ( $offset - 2 ),
-                     label  => $label
-                  } );
-        }
         elsif ( $line =~ /^\s*call\s+0x([0-9a-fA-F]+)/ )
         {
 
@@ -315,49 +296,22 @@ while ( my $file = shift )
 
             $offset += 3;    # call + val1 + val2
         }
-        elsif ( $line =~ /^\s*call\s+([^ ]+)/ )
+        elsif ( $line =~ /^\s*(call|goto|jmp|jmpz|jmpnz)\s+([^ ]+)/ )
         {
-            my $label = $1;
-
-            print $out chr STACK_CALL;
-            print $out chr 0;    # this will be updated.
-            print $out chr 0;    # this will be updated.
-
-            $offset += 3;        # call + val1 + val2
 
             #
-            # we now need to record the fact we have to patch up this
-            # instruction.
+            # Each of these uses a label, and needs a post-compile patch
+            # applied.
             #
-            push( @UPDATES,
-                  {  offset => ( $offset - 2 ),
-                     label  => $label
-                  } );
-        }
-        elsif ( $line =~ /^\s*jmpz\s+([^ ]+)/ )
-        {
-            my $label = $1;
 
-            print $out chr JUMP_Z;
-            print $out chr 0;    # this will be updated.
-            print $out chr 0;    # this will be updated.
+            my $inst  = $1;
+            my $label = $2;
 
-            $offset += 3;        # jump + val1 + val2
+            print $out chr JUMP_TO    if ( $inst =~ /^(goto|jmp)$/i );
+            print $out chr STACK_CALL if ( $inst =~ /^(call)$/i );
+            print $out chr JUMP_NZ    if ( $inst =~ /^(jmpnz)$/i );
+            print $out chr JUMP_Z     if ( $inst =~ /^(jmpz)$/i );
 
-            #
-            # we now need to record the fact we have to patch up this
-            # instruction.
-            #
-            push( @UPDATES,
-                  {  offset => ( $offset - 2 ),
-                     label  => $label
-                  } );
-        }
-        elsif ( $line =~ /^\s*jmpnz\s+([^ ]+)/ )
-        {
-            my $label = $1;
-
-            print $out chr JUMP_NZ;
             print $out chr 0;    # this will be updated.
             print $out chr 0;    # this will be updated.
 
@@ -378,7 +332,7 @@ while ( my $file = shift )
         {
 
             #
-            #  All these operations have args of the form:
+            #  Each of these operations compiles to code of the form:
             #
             #   OPERATION Result-Register, SrcReg1, SrcReg2
             #
@@ -556,6 +510,7 @@ while ( my $file = shift )
         #
         foreach my $update (@UPDATES)
         {
+
             #
             # We have the offset in the output file to update, and the
             # label which should be replaced with the address.
