@@ -45,7 +45,7 @@
         #
         #  Get the contents of the byte and show it
         #
-        load #5, #3
+        peek #5, #3
         print_int #5
 
         #
