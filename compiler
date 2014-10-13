@@ -509,6 +509,31 @@ while ( my $file = shift )
             print $out chr STACK_RET;
             $offset += 1;
         }
+        elsif ( $line =~ /^\s*(db|data)\s+(.*)/i )
+        {
+            my $data = $2;
+
+            #
+            #  Split each byte
+            #
+            foreach my $db ( split( /,/, $data ) )
+            {
+                # strip leading/trailing space
+                $db =~ s/^\s+|\s+$//g;
+
+                next unless( length($db) );
+
+                # convert from hex if appropriate
+                $db = hex( $db ) if ( $db =~ /^0x/i );
+
+                # ensure the byte is within range.
+                die "Data too large for a byte: $db" if ( $db > 255 );
+
+                print $out chr  $db ;
+
+                $offset += 1;
+            }
+        }
         else
         {
             print "WARNING UNKNOWN LINE: $line\n";

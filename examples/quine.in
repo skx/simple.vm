@@ -72,4 +72,10 @@
         print_str #1
         exit
 
+        #
+        #  DATA - just for fun.
+        #
+        DB 0x01, 0x0F, 0x02, 0xF0
+        DATA 255, 255
+
 :end
