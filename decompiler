@@ -13,46 +13,108 @@ use warnings;
 
 use Getopt::Long;
 
+
+#
+#  Default to not showing the address of code.
+#
+#  Although you need the address for the jumps/calls to make sense
+# adding them means you can't pipe the output back to the compiler.
+#
+#
 my %CONFIG = ( show_address => 0 );
 
+#
+#  Parse options
+#
 exit if ( !GetOptions( "show-address", \$CONFIG{ 'show_address' } ) );
 
+
+
+#
+#  Process each file o nthe command-line.
+#
 foreach my $file (@ARGV)
 {
     decompile($file);
 }
+
+
+#
+# All done.
+#
 exit(0);
 
+
+
+=begin doc
+
+Open the named file, and attempt to decompile the binary opcodes from
+within it.
+
+Once again we're complicated by the fact that we have variable-length
+instructions:
+
+* A NOP/EXIT instruction is a single-byte.
+* A JUMP/CALL instruction is three bytes.
+* An inline-string might be 50+ bytes.
+
+To cope with this we read the program entirely into a string, which
+should be safe because the max-size of a binary is 64k and iterate over
+in one-byte amounts.  We'll update the offset we're working with as we
+go to skip over arguments & etc.
+
+=end doc
+
+=cut
 
 sub decompile
 {
     my ($file) = (@_);
 
+    #
+    #  OPen the file.
+    #
     open( my $handle, "<", $file ) or
       die "Failed to open $file - $!";
     binmode($handle);
 
 
+    #
+    #  Read it entirely.
+    #
     my $buff = '';
     my $rc;
     do {$rc = sysread( $handle, $buff, 5000000, length($buff) );} while ($rc);
     close($handle);
 
     #
-    #  Now we have a buffer
+    #  Now we have a buffer and we'll split that into an array.
     #
-    my $i = 0;
     my @data = split( //, $buff );
 
+    #
+    #  Parse the program from 0x0000 -> Exit.
+    #
+    #  NOTE:  The code to decompile will update the index - as it skips
+    # over registers, data, & etc.
+    #
     for ( my $i = 0 ; $i <= $#data ; $i++ )
     {
-
         #
-        #  Show the address
+        #  Show the address we're processing, if we should.
         #
         print sprintf( "%04X", $i ) if ( $CONFIG{ 'show_address' } );
 
+        #
+        #  Get the opcode
+        #
         my $opcode = ord( $data[$i] );
+
+
+        #
+        #  Now work out what the hell it is..
+        #
+
 
         if ( $opcode == 0x00 )
         {
@@ -352,7 +414,6 @@ sub decompile
         {
             print "\tDATA " . $opcode . "\n";
 
-            #            print "\tUnknown opcode (" . $opcode . " " . hex($opcode) . ")\n";
         }
     }
 }
