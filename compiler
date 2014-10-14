@@ -231,6 +231,11 @@ while ( my $file = shift )
             if ( ( $val =~ /^0x/ ) ||
                  ( $val =~ /^([0-9]+)$/ ) )
             {
+
+                #
+                #  If the value is entirely numeric, or starts with 0x
+                # then it is an integer.
+                #
                 $val = hex($val) if ( $val =~ /^0x/i );
 
                 die "Int too large" if ( $val > 65535 );
@@ -246,6 +251,10 @@ while ( my $file = shift )
             }
             else
             {
+
+                #
+                # Storing the address of a label.
+                #
                 print $out chr INT_STORE;
                 print $out chr $reg;
                 print $out chr 0x00;
@@ -293,67 +302,56 @@ while ( my $file = shift )
             print $out chr $reg;
             $offset += 2;
         }
-        elsif ( $line =~ /^\s*(goto|jmp)\s+0x([0-9a-fA-F]+)/ )
+        elsif ( $line =~ /^\s*(goto|jmp|jmpz|jmpnz|call)\s+([^\s]+)\s*/ )
         {
 
-            # jump to absolute hex-address.
-            my $addr = $2;
+            # jump/call
+            my $type = $1;
+            my $dest = $2;
 
-            $addr = hex($addr);
-            my $a1 = $addr % 256;
-            my $a2 = ( $addr - $a1 ) / 256;
-
-            print $out chr JUMP_TO;
-            print $out chr $a1;
-            print $out chr $a2;
-
-            $offset += 3;    # jump + val1 + val2
-        }
-        elsif ( $line =~ /^\s*call\s+0x([0-9a-fA-F]+)/ )
-        {
-
-            # call an absolute hex-address.
-            my $addr = $1;
-
-            $addr = hex($addr);
-            my $a1 = $addr % 256;
-            my $a2 = ( $addr - $a1 ) / 256;
-
-            print $out chr STACK_CALL;
-            print $out chr $a1;
-            print $out chr $a2;
-
-            $offset += 3;    # call + val1 + val2
-        }
-        elsif ( $line =~ /^\s*(call|goto|jmp|jmpz|jmpnz)\s+([^ ]+)/ )
-        {
+            my %types = ( goto  => JUMP_TO,
+                          jmp   => JUMP_TO,
+                          jmpz  => JUMP_Z,
+                          jmpnz => JUMP_NZ,
+                          call  => STACK_CALL
+                        );
 
             #
-            # Each of these uses a label, and needs a post-compile patch
-            # applied.
+            #  If the destination begins with 0x or is entirely numeric
+            # then it is an address - otherwise a label.
             #
+            if ( ( $dest =~ /^0x/ ) ||
+                 ( $dest =~ /^([0-9]+)$/ ) )
+            {
 
-            my $inst  = $1;
-            my $label = $2;
+                $dest = hex($dest) if ( $dest =~ /0x/i );
+                my $a1 = $dest % 256;
+                my $a2 = ( $dest - $a1 ) / 256;
 
-            print $out chr JUMP_TO    if ( $inst =~ /^(goto|jmp)$/i );
-            print $out chr STACK_CALL if ( $inst =~ /^(call)$/i );
-            print $out chr JUMP_NZ    if ( $inst =~ /^(jmpnz)$/i );
-            print $out chr JUMP_Z     if ( $inst =~ /^(jmpz)$/i );
+                print $out chr $types{ $type };
+                print $out chr $a1;
+                print $out chr $a2;
+                $offset += 3;    # jump + val1 + val2
 
-            print $out chr 0;    # this will be updated.
-            print $out chr 0;    # this will be updated.
+            }
+            else
+            {
+                print $out chr $types{ $type };
 
-            $offset += 3;        # jump + val1 + val2
+                print $out chr 0;    # this will be updated.
+                print $out chr 0;    # this will be updated.
 
-            #
-            # we now need to record the fact we have to patch up this
-            # instruction.
-            #
-            push( @UPDATES,
-                  {  offset => ( $offset - 2 ),
-                     label  => $label
-                  } );
+                $offset += 3;        # jump + val1 + val2
+
+                #
+                # we now need to record the fact we have to patch up this
+                # instruction.
+                #
+                push( @UPDATES,
+                      {  offset => ( $offset - 2 ),
+                         label  => $dest
+                      } );
+            }
         }
         elsif ( $line =~
             /^\s*(add|and|sub|mul|div|or|xor|concat)\s+#([0-9]+)\s*,\s*#([0-9]+)\s*,\s*#([0-9]+)/
@@ -441,21 +439,6 @@ while ( my $file = shift )
 
             $offset += 3;
         }
-        elsif ( $line =~ /^\s*cmp\s+#([0-9]+)\s*,\s*([0-9]+)\s*/i )
-        {
-            my $reg = $1;
-            my $val = $2;
-
-            my $val1 = $val % 256;
-            my $val2 = ( $val - $val1 ) / 256;
-
-            print $out chr CMP_IMMEDIATE;
-            print $out chr $reg;
-            print $out chr $val1;
-            print $out chr $val2;
-
-            $offset += 4;    # cmp reg val1 val2
-        }
         elsif ( $line =~ /^\s+cmp\s+#([0-9]+)\s?,\s?"([^"]*)"/ )
         {
             my $reg = $1;
@@ -474,6 +457,23 @@ while ( my $file = shift )
 
             $offset += 4;              # cmp + reg + len
             $offset += length($str);
+        }
+        elsif ( $line =~ /^\s*cmp\s+#([0-9]+)\s*,\s*([^\s]+)\s*/i )
+        {
+            my $reg = $1;
+            my $val = $2;
+
+            # convert from hex if appropriate.
+            $val = hex($val) if ( $val =~ /^0x/i );
+
+            my $val1 = $val % 256;
+            my $val2 = ( $val - $val1 ) / 256;
+
+            print $out chr CMP_IMMEDIATE;
+            print $out chr $reg;
+            print $out chr $val1;
+            print $out chr $val2;
+            $offset += 4;    # cmp reg val1 val2
         }
         elsif ( $line =~ /^\s*peek\s+#([0-9]+)\s*,\s*#([0-9]+)/ )
         {
