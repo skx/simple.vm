@@ -15,7 +15,7 @@ use Getopt::Long;
 
 my %CONFIG = ( show_address => 0 );
 
-exit if ( ! GetOptions( "show-address", \$CONFIG{'show_address'} ) );
+exit if ( !GetOptions( "show-address", \$CONFIG{ 'show_address' } ) );
 
 foreach my $file (@ARGV)
 {
@@ -46,10 +46,11 @@ sub decompile
 
     for ( my $i = 0 ; $i <= $#data ; $i++ )
     {
+
         #
         #  Show the address
         #
-        print sprintf( "%04X", $i ) if ( $CONFIG{'show_address'} );
+        print sprintf( "%04X", $i ) if ( $CONFIG{ 'show_address' } );
 
         my $opcode = ord( $data[$i] );
 
