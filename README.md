@@ -23,14 +23,14 @@ This particular virtual machine is intentionally simple, but despite that it is 
 
 Because writing (binary) bytecode by hand is not pleasant there is also a simple Perl "compiler" script included within the repository which will read source and generate the appropriate bytecodes.  Using the compiler programs can be written in your favourite text-editor, compiled, and then later executed.
 
-This particular virtual machine is register-based, having ten registers which can be used to either store strings or integer values.
+This particular virtual machine is register-based, having ten registers which can be used to store strings or integer values.
 
 Implementing a basic virtual machine, like this one, is a pretty well-understood problem:
 
-* Load the bytecode that is to be intepretted into a buffer.
+* Load the bytecode that is to be interpreted into a buffer.
 * Fetch an instruction from from the buffer.
    * Decode the instruction, usually via a long `case` statement.
-   * Advance the index such that the next instruction is ready to be intepretted.
+   * Advance the index such that the next instruction is ready to be interpreted.
    * Continue until you hit a `halt`, or `exit` instruction.
 * Cleanup.
 
@@ -42,9 +42,9 @@ The main complications of writing a virtual machine are:
 * Implementing a useful range of operations/opcodes.
     * For example "add", "dec", "inc", etc.
 
-This particular virtual machine contains only a few primitives, but it include the support for labels and conditional jumps.  The handling of labels and jumps is perhaps worthy of note, because many simple/demonstration virtual machines don't handle them at all.
+This particular virtual machine contains only a few primitives, but it does include the support for labels, looping, conditional jumps, calls and returns.  The handling of labels is perhaps worthy of note, because many simple/demonstration virtual machines don't handle them at all.
 
-In order to support jumping to labels which haven't necessarily been defined yet our compiler keeps a running list of all labels (i.e. possible jump destinations) and when it encounters a jump instruction just outputs a placeholder instruction:
+In order to support jumping to labels which haven't necessarily been defined yet our compiler keeps a running list of all labels (i.e. possible jump destinations) and when it encounters a jump instruction, or something else that refers to a label, it must outputs a placeholder-address, such as:
 
 * `JUMP 0x000`
     * In our bytecode that is the three-byte sequence `0x10 0x00 0x00` as the JUMP instruction is defined as `0x10`.
