@@ -100,6 +100,7 @@ sub decompile
     #
     for ( my $i = 0 ; $i <= $#data ; $i++ )
     {
+
         #
         #  Show the address we're processing, if we should.
         #
