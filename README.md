@@ -10,7 +10,16 @@ simple.vm
 
 This repository contains the implementation for a simple virtual-machine, along with a driver which will read a program from a file and execute it via that virtual machine.
 
-The virtual machine is intentionally simple, but despite that it is implemented in a  readable fashion.  ("Simplicity" here means that we support only a small number of virtual-instructions, and the registers the virtual CPU possesses can store strings and integers with no floating-point support.)
+In addition to the virtual machine itself you'll also find:
+
+* [A simple compiler](compiler).
+    * This will translate from assembly-source into binary-opcodes.
+* [A simple decompiler](decompiler).
+    * This will translate in the other direction.
+
+Finally there is an example of embedding the virtual machine, along with the definition of a custom-opcode handler in the file [embedded.c](embedded.c).
+
+This particular virtual machine is intentionally simple, but despite that it is hopefully implemented in a readable fashion.  ("Simplicity" here means that we support only a small number of instructions, and the registers the virtual CPU possesses can store strings and integers, but not floating-point values.)
 
 Because writing (binary) bytecode by hand is not pleasant there is also a simple Perl "compiler" script included within the repository which will read source and generate the appropriate bytecodes.  Using the compiler programs can be written in your favourite text-editor, compiled, and then later executed.
 
