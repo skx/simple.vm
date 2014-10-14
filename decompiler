@@ -1,0 +1,357 @@
+#!/usr/bin/perl
+#
+#  This is a sleazy program which decompiles compiled scripts.
+#
+#  It is possibly unreliable.
+#
+# Steve
+# --
+#
+
+use strict;
+use warnings;
+
+use Getopt::Long;
+
+my %CONFIG = ( show_address => 0 );
+
+exit if ( ! GetOptions( "show-address", \$CONFIG{'show_address'} ) );
+
+foreach my $file (@ARGV)
+{
+    decompile($file);
+}
+exit(0);
+
+
+sub decompile
+{
+    my ($file) = (@_);
+
+    open( my $handle, "<", $file ) or
+      die "Failed to open $file - $!";
+    binmode($handle);
+
+
+    my $buff = '';
+    my $rc;
+    do {$rc = sysread( $handle, $buff, 5000000, length($buff) );} while ($rc);
+    close($handle);
+
+    #
+    #  Now we have a buffer
+    #
+    my $i = 0;
+    my @data = split( //, $buff );
+
+    for ( my $i = 0 ; $i <= $#data ; $i++ )
+    {
+        #
+        #  Show the address
+        #
+        print sprintf( "%04X", $i ) if ( $CONFIG{'show_address'} );
+
+        my $opcode = ord( $data[$i] );
+
+        if ( $opcode == 0x00 )
+        {
+            print "\texit\n";
+        }
+        elsif ( $opcode == 0x01 )
+        {
+            my $reg = ord( $data[$i + 1] );
+            my $v1  = ord( $data[$i + 2] );
+            my $v2  = ord( $data[$i + 3] );
+
+            my $val = $v1 + ( 256 * $v2 );
+            $val = sprintf( "0x%04X", $val );
+            print "\tstore #$reg, $val\n";
+
+            $i += 3;
+        }
+        elsif ( $opcode == 0x02 )
+        {
+            my $reg = ord( $data[$i + 1] );
+            print "\tprint_int #$reg\n";
+            $i += 1;
+        }
+        elsif ( $opcode == 0x03 )
+        {
+            my $reg = ord( $data[$i + 1] );
+            print "\tint2string #$reg\n";
+            $i += 1;
+        }
+        elsif ( $opcode == 0x04 )
+        {
+            my $reg = ord( $data[$i + 1] );
+            print "\trandom #$reg\n";
+            $i += 1;
+        }
+        elsif ( $opcode == 0x10 )
+        {
+            my $v1 = ord( $data[$i + 1] );
+            my $v2 = ord( $data[$i + 2] );
+
+            my $val = $v1 + ( 256 * $v2 );
+            $val = sprintf( "0x%04X", $val );
+
+            print "\tjmp $val\n";
+            $i += 2;
+        }
+        elsif ( $opcode == 0x11 )
+        {
+            my $v1 = ord( $data[$i + 1] );
+            my $v2 = ord( $data[$i + 2] );
+
+            my $val = $v1 + ( 256 * $v2 );
+            $val = sprintf( "0x%04X", $val );
+
+            print "\tjmpz $val\n";
+
+            $i += 2;
+        }
+        elsif ( $opcode == 0x12 )
+        {
+            my $v1 = ord( $data[$i + 1] );
+            my $v2 = ord( $data[$i + 2] );
+
+            my $val = $v1 + ( 256 * $v2 );
+            $val = sprintf( "0x%04X", $val );
+            print "\tjmpnz $val\n";
+
+            $i += 2;
+        }
+        elsif ( $opcode == 0x20 )
+        {
+            my $r1  = ord( $data[$i + 1] );
+            my $in1 = ord( $data[$i + 2] );
+            my $in2 = ord( $data[$i + 3] );
+
+            print "\txor #$r1, #$in1, #$in2\n";
+            $i += 3;
+        }
+        elsif ( $opcode == 0x21 )
+        {
+            my $r1  = ord( $data[$i + 1] );
+            my $in1 = ord( $data[$i + 2] );
+            my $in2 = ord( $data[$i + 3] );
+
+            print "\tadd #$r1, #$in1, #$in2\n";
+            $i += 3;
+        }
+        elsif ( $opcode == 0x22 )
+        {
+            my $r1  = ord( $data[$i + 1] );
+            my $in1 = ord( $data[$i + 2] );
+            my $in2 = ord( $data[$i + 3] );
+
+            print "\tsub #$r1, #$in1, #$in2\n";
+            $i += 3;
+        }
+        elsif ( $opcode == 0x23 )
+        {
+            my $r1  = ord( $data[$i + 1] );
+            my $in1 = ord( $data[$i + 2] );
+            my $in2 = ord( $data[$i + 3] );
+
+            print "\tmul #$r1, #$in1, #$in2\n";
+            $i += 3;
+        }
+        elsif ( $opcode == 0x24 )
+        {
+            my $r1  = ord( $data[$i + 1] );
+            my $in1 = ord( $data[$i + 2] );
+            my $in2 = ord( $data[$i + 3] );
+
+            print "\tdiv #$r1, #$in1, #$in2\n";
+            $i += 3;
+        }
+        elsif ( $opcode == 0x25 )
+        {
+            my $reg = ord( $data[$i + 1] );
+            print "\tinc #$reg\n";
+            $i += 1;
+        }
+        elsif ( $opcode == 0x26 )
+        {
+            my $reg = ord( $data[$i + 1] );
+            print "\tdec #$reg\n";
+            $i += 1;
+        }
+        elsif ( $opcode == 0x27 )
+        {
+            my $r1  = ord( $data[$i + 1] );
+            my $in1 = ord( $data[$i + 2] );
+            my $in2 = ord( $data[$i + 3] );
+
+            print "\tand #$r1, #$in1, #$in2\n";
+            $i += 3;
+        }
+        elsif ( $opcode == 0x28 )
+        {
+            my $r1  = ord( $data[$i + 1] );
+            my $in1 = ord( $data[$i + 2] );
+            my $in2 = ord( $data[$i + 3] );
+
+            print "\tor #$r1, #$in1, #$in2\n";
+            $i += 3;
+        }
+        elsif ( $opcode == 0x30 )
+        {
+            my $reg  = ord( $data[$i + 1] );
+            my $len1 = ord( $data[$i + 2] );
+            my $len2 = ord( $data[$i + 3] );
+            my $len  = $len1 + 256 * $len2;
+
+            my $str = "";
+            for ( my $d = 0 ; $d < $len ; $d++ )
+            {
+                my $c = $data[$i + 4 + $d];
+                if ( $c eq "\n" )
+                {
+                    $c = "\\n";
+                }
+                if ( $c eq "\t" )
+                {
+                    $c = "\\t";
+                }
+                $str .= $c;
+            }
+            print "\tstore #$reg, \"$str\"\n";
+            $i += 3;
+            $i += $len;
+
+        }
+        elsif ( $opcode == 0x31 )
+        {
+            my $reg = ord( $data[$i + 1] );
+            print "\tprint_str #$reg\n";
+            $i += 1;
+        }
+        elsif ( $opcode == 0x32 )
+        {
+            my $reg = ord( $data[$i + 1] );
+            my $in1 = ord( $data[$i + 2] );
+            my $in2 = ord( $data[$i + 3] );
+            print "\tconcat #$reg, #$in1, #$in2\n";
+            $i += 3;
+        }
+        elsif ( $opcode == 0x33 )
+        {
+            my $reg = ord( $data[$i + 1] );
+            print "\tsystem #$reg\n";
+            $i += 1;
+        }
+        elsif ( $opcode == 0x34 )
+        {
+            my $reg = ord( $data[$i + 1] );
+            print "\tstring2int #$reg\n";
+            $i += 1;
+        }
+        elsif ( $opcode == 0x40 )
+        {
+            my $reg1 = ord( $data[$i + 1] );
+            my $reg2 = ord( $data[$i + 2] );
+            print "\tcmp #$reg1,#$reg2\n";
+            $i += 2;
+        }
+        elsif ( $opcode == 0x41 )
+        {
+            my $reg = ord( $data[$i + 1] );
+            my $v1  = ord( $data[$i + 2] );
+            my $v2  = ord( $data[$i + 3] );
+
+            my $val = $v1 + ( 256 * $v2 );
+            $val = sprintf( "0x%04X", $val );
+
+            print "\tcmp #$reg,$val\n";
+            $i += 3;
+        }
+        elsif ( $opcode == 0x42 )
+        {
+
+            # cmp string
+            my $reg  = ord( $data[$i + 1] );
+            my $len1 = ord( $data[$i + 2] );
+            my $len2 = ord( $data[$i + 3] );
+            my $len  = $len1 + 256 * $len2;
+
+            my $str = "";
+            for ( my $d = 0 ; $d < $len ; $d++ )
+            {
+                my $c = $data[$i + 4 + $d];
+                if ( $c eq "\n" )
+                {
+                    $c = "\\n";
+                }
+                if ( $c eq "\t" )
+                {
+                    $c = "\\t";
+                }
+                $str .= $c;
+            }
+            print "\tcmp #$reg, \"$str\"\n";
+            $i += 3;
+            $i += $len;
+        }
+        elsif ( $opcode == 0x50 )
+        {
+            print "\tnop\n";
+        }
+        elsif ( $opcode == 0x60 )
+        {
+            my $reg1 = ord( $data[$i + 1] );
+            my $reg2 = ord( $data[$i + 2] );
+            print "\tpeek #$reg1, #$reg2\n";
+            $i += 2;
+        }
+        elsif ( $opcode == 0x61 )
+        {
+            my $reg1 = ord( $data[$i + 1] );
+            my $reg2 = ord( $data[$i + 2] );
+            print "\tpoke #$reg1, #$reg2\n";
+            $i += 2;
+        }
+        elsif ( $opcode == 0x62 )
+        {
+            my $reg1 = ord( $data[$i + 1] );
+            my $reg2 = ord( $data[$i + 2] );
+            my $reg3 = ord( $data[$i + 3] );
+            print "\tmemcpy #$reg1, #$reg2, #$reg3\n";
+            $i += 3;
+        }
+        elsif ( $opcode == 0x70 )
+        {
+            my $reg = ord( $data[$i + 1] );
+            print "\tpush #$reg\n";
+            $i += 1;
+        }
+        elsif ( $opcode == 0x71 )
+        {
+            my $reg = ord( $data[$i + 1] );
+            print "\tpop #$reg\n";
+            $i += 1;
+        }
+        elsif ( $opcode == 0x72 )
+        {
+            print "\tret\n";
+        }
+        elsif ( $opcode == 0x73 )
+        {
+            my $v1 = ord( $data[$i + 1] );
+            my $v2 = ord( $data[$i + 2] );
+
+            my $val = $v1 + ( 256 * $v2 );
+            $val = sprintf( "0x%04X", $val );
+
+            print "\tcall $val\n";
+            $i += 2;
+        }
+        else
+        {
+            print "\tDATA " . $opcode . "\n";
+
+            #            print "\tUnknown opcode (" . $opcode . " " . hex($opcode) . ")\n";
+        }
+    }
+}
