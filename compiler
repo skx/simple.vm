@@ -183,17 +183,25 @@ while ( my $file = shift )
                 print "         Picking first occurrence.\n";
                 print "         This is probably your bug.\n";
             }
-            else
-            {
 
-                #
-                # Store the current location of the code in the label.
-                #
-                # We can do this safely because each generator keeps track
-                # of how long and instruction is.
-                #
-                $LABELS{ $name } = $offset;
+            #
+            #  If a label starts with "0x" or is entirely numeric it
+            # WILL be confused for an address.
+            #
+            if ( ( $name =~ /^0x/i ) || ( $name =~ /^([0-9]+)$/ ) )
+            {
+                print
+                  "WARNING: Label named '$name' WILL be confused for an address\n";
+                print "         Strongly consider changing this\n";
             }
+
+            #
+            # Store the current location of the code in the label.
+            #
+            # We can do this safely because each generator keeps track
+            # of how long and instruction is.
+            #
+            $LABELS{ $name } = $offset;
         }
         elsif ( $line =~ /^\s+store\s+#([0-9]+)\s?,\s?"([^"]*)"/ )
         {
@@ -430,6 +438,8 @@ while ( my $file = shift )
         }
         elsif ( $line =~ /^\s*cmp\s+#([0-9]+)\s*,\s*#([0-9]+)\s*/i )
         {
+
+            # compare two registers
             my $reg1 = $1;
             my $reg2 = $2;
 
@@ -441,6 +451,8 @@ while ( my $file = shift )
         }
         elsif ( $line =~ /^\s+cmp\s+#([0-9]+)\s?,\s?"([^"]*)"/ )
         {
+
+            # compare a register with a string.
             my $reg = $1;
             my $str = $2;
             my $len = length($str);
@@ -460,6 +472,8 @@ while ( my $file = shift )
         }
         elsif ( $line =~ /^\s*cmp\s+#([0-9]+)\s*,\s*([^\s]+)\s*/i )
         {
+
+            # compare a register with an int - TODO: Label.
             my $reg = $1;
             my $val = $2;
 
@@ -556,6 +570,12 @@ while ( my $file = shift )
         }
     }
 
+
+    if ( $offset < 1 )
+    {
+        print "WARNING: Didn't generate any code\n";
+    }
+
     #
     #  Close the input/output files.
     #
@@ -596,8 +616,7 @@ while ( my $file = shift )
             # now we find the target of the label
             #
             my $target = $LABELS{ $label };
-            die
-              "No target for label '$label' - You've tried to use a label which isn't defined!"
+            die "No target for label '$label' - Label not defined!"
               unless ( defined($target) );
 
             #
