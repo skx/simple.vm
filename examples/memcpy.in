@@ -1,0 +1,37 @@
+#
+# About
+#
+#  This program copies a bunch of memory about, then jumps to it.
+#
+#
+# Usage
+#
+#  $ compiler ./memcpy.in ; ./simple-vm ./memcpy.raw
+#
+#
+#
+
+        goto run
+    :code
+
+        #
+        #  This is the code we're going to copy and execute.
+        #
+        store #1, "Steve Kemp\n"
+        print_str #1
+        exit
+
+    :run
+        #
+        # Copy the code to 0x5000 - NOTE The length is a guess here.
+        # if we could support "store #1, run-code" that would be neat.
+        #
+        store #1, 0x5000
+        store #2, code
+        store #3, 50
+        memcpy #1, #2, #3
+
+        #
+        # Jump there.
+        #
+        goto 0x5000
