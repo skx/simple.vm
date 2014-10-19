@@ -38,12 +38,6 @@
 
 
 
-/**
- * Read and return the next byte from the current instruction-pointer.
- */
-#define READ_BYTE() (svm->code[++svm->ip])
-
-
 
 /**
  * Helper to convert a two-byte value to an integer in the range 0x0000-0xffff
@@ -62,15 +56,15 @@
 #define MATH_OPERATION(function,operator)  void function(struct svm * svm) \
 { \
     /* get the destination register */ \
-    unsigned int reg = READ_BYTE(); \
+    unsigned int reg = next_byte(svm); \
     BOUNDS_TEST_REGISTER(reg); \
 \
     /* get the source register */ \
-    unsigned int src1 = READ_BYTE(); \
+    unsigned int src1 = next_byte(svm); \
     BOUNDS_TEST_REGISTER(reg); \
 \
     /* get the source register */\
-    unsigned int src2 = READ_BYTE();\
+    unsigned int src2 = next_byte(svm);\
     BOUNDS_TEST_REGISTER(reg);\
 \
     if (getenv("DEBUG") != NULL)\
@@ -103,11 +97,6 @@
     /* handle the next instruction */ \
     svm->ip += 1; \
 }
-
-
-
-
-
 
 
 
@@ -196,6 +185,23 @@ char *string_from_stack(svm_t * svm)
 
 
 /**
+ * Read and return the next byte from the current instruction-pointer.
+ *
+ * This function ensures that reading will wrap around the address-space
+ * of the virtual CPU.
+ */
+unsigned char next_byte(svm_t * svm)
+{
+    svm->ip += 1;
+
+    if (svm->ip >= 0xFFFF)
+        svm->ip = 0;
+
+    return (svm->code[svm->ip]);
+}
+
+
+/**
  ** Start implementation of virtual machine opcodes.
  **
  **/
@@ -232,12 +238,12 @@ void op_nop(struct svm *svm)
 void op_int_store(struct svm *svm)
 {
     /* get the register number to store in */
-    unsigned int reg = READ_BYTE();
+    unsigned int reg = next_byte(svm);
     BOUNDS_TEST_REGISTER(reg);
 
     /* get the value */
-    unsigned int val1 = READ_BYTE();
-    unsigned int val2 = READ_BYTE();
+    unsigned int val1 = next_byte(svm);
+    unsigned int val2 = next_byte(svm);
     int value = BYTES_TO_ADDR(val1, val2);
 
     if (getenv("DEBUG") != NULL)
@@ -258,7 +264,7 @@ void op_int_store(struct svm *svm)
 void op_int_print(struct svm *svm)
 {
     /* get the register number to print */
-    unsigned int reg = READ_BYTE();
+    unsigned int reg = next_byte(svm);
     BOUNDS_TEST_REGISTER(reg);
 
     if (getenv("DEBUG") != NULL)
@@ -280,7 +286,7 @@ void op_int_print(struct svm *svm)
 void op_int_tostring(struct svm *svm)
 {
     /* get the register number to convert */
-    unsigned int reg = READ_BYTE();
+    unsigned int reg = next_byte(svm);
     BOUNDS_TEST_REGISTER(reg);
 
     if (getenv("DEBUG") != NULL)
@@ -304,7 +310,7 @@ void op_int_tostring(struct svm *svm)
 void op_int_random(struct svm *svm)
 {
     /* get the register to save the output to */
-    unsigned int reg = READ_BYTE();
+    unsigned int reg = next_byte(svm);
     BOUNDS_TEST_REGISTER(reg);
 
     if (getenv("DEBUG") != NULL)
@@ -331,7 +337,7 @@ void op_int_random(struct svm *svm)
 void op_string_store(struct svm *svm)
 {
     /* get the destination register */
-    unsigned int reg = READ_BYTE();
+    unsigned int reg = next_byte(svm);
     BOUNDS_TEST_REGISTER(reg);
 
     /* get the string to store */
@@ -361,7 +367,7 @@ void op_string_store(struct svm *svm)
 void op_string_print(struct svm *svm)
 {
     /* get the reg number to print */
-    unsigned int reg = READ_BYTE();
+    unsigned int reg = next_byte(svm);
     BOUNDS_TEST_REGISTER(reg);
 
     if (getenv("DEBUG") != NULL)
@@ -383,15 +389,15 @@ void op_string_print(struct svm *svm)
 void op_string_concat(struct svm *svm)
 {
     /* get the destination register */
-    unsigned int reg = READ_BYTE();
+    unsigned int reg = next_byte(svm);
     BOUNDS_TEST_REGISTER(reg);
 
     /* get the source register */
-    unsigned int src1 = READ_BYTE();
+    unsigned int src1 = next_byte(svm);
     BOUNDS_TEST_REGISTER(reg);
 
     /* get the source register */
-    unsigned int src2 = READ_BYTE();
+    unsigned int src2 = next_byte(svm);
     BOUNDS_TEST_REGISTER(reg);
 
     if (getenv("DEBUG") != NULL)
@@ -435,7 +441,7 @@ void op_string_concat(struct svm *svm)
 void op_string_system(struct svm *svm)
 {
     /* get the reg */
-    unsigned int reg = READ_BYTE();
+    unsigned int reg = next_byte(svm);
     BOUNDS_TEST_REGISTER(reg);
 
     if (getenv("DEBUG") != NULL)
@@ -451,7 +457,7 @@ void op_string_system(struct svm *svm)
 void op_string_toint(struct svm *svm)
 {
     /* get the destination register */
-    unsigned int reg = READ_BYTE();
+    unsigned int reg = next_byte(svm);
     BOUNDS_TEST_REGISTER(reg);
 
     if (getenv("DEBUG") != NULL)
@@ -478,8 +484,8 @@ void op_jump_to(struct svm *svm)
     /**
      * Read the two bytes which will build up the destination
      */
-    unsigned int off1 = READ_BYTE();
-    unsigned int off2 = READ_BYTE();
+    unsigned int off1 = next_byte(svm);
+    unsigned int off2 = next_byte(svm);
 
     /**
      * Convert to the offset in our code-segment.
@@ -497,8 +503,8 @@ void op_jump_z(struct svm *svm)
     /**
      * Read the two bytes which will build up the destination
      */
-    unsigned int off1 = READ_BYTE();
-    unsigned int off2 = READ_BYTE();
+    unsigned int off1 = next_byte(svm);
+    unsigned int off2 = next_byte(svm);
 
     /**
      * Convert to the offset in our code-segment.
@@ -525,8 +531,8 @@ void op_jump_nz(struct svm *svm)
     /**
      * Read the two bytes which will build up the destination
      */
-    unsigned int off1 = READ_BYTE();
-    unsigned int off2 = READ_BYTE();
+    unsigned int off1 = next_byte(svm);
+    unsigned int off2 = next_byte(svm);
 
     /**
      * Convert to the offset in our code-segment.
@@ -557,7 +563,7 @@ MATH_OPERATION(op_add, +)       // reg_result = reg1 + reg2 ;
 void op_inc(struct svm *svm)
 {
     /* get the register number to increment */
-    unsigned int reg = READ_BYTE();
+    unsigned int reg = next_byte(svm);
     BOUNDS_TEST_REGISTER(reg);
 
     if (getenv("DEBUG") != NULL)
@@ -581,7 +587,7 @@ void op_inc(struct svm *svm)
 void op_dec(struct svm *svm)
 {
     /* get the register number to decrement */
-    unsigned int reg = READ_BYTE();
+    unsigned int reg = next_byte(svm);
     BOUNDS_TEST_REGISTER(reg);
 
     if (getenv("DEBUG") != NULL)
@@ -605,11 +611,11 @@ void op_dec(struct svm *svm)
 void op_cmp_reg(struct svm *svm)
 {
     /* get the source register */
-    unsigned int reg1 = READ_BYTE();
+    unsigned int reg1 = next_byte(svm);
     BOUNDS_TEST_REGISTER(reg1);
 
     /* get the source register */
-    unsigned int reg2 = READ_BYTE();
+    unsigned int reg2 = next_byte(svm);
     BOUNDS_TEST_REGISTER(reg2);
 
     if (getenv("DEBUG") != NULL)
@@ -640,12 +646,12 @@ void op_cmp_reg(struct svm *svm)
 void op_cmp_immediate(struct svm *svm)
 {
     /* get the source register */
-    unsigned int reg = READ_BYTE();
+    unsigned int reg = next_byte(svm);
     BOUNDS_TEST_REGISTER(reg);
 
     /* get the integer to compare with */
-    unsigned int val1 = READ_BYTE();
-    unsigned int val2 = READ_BYTE();
+    unsigned int val1 = next_byte(svm);
+    unsigned int val2 = next_byte(svm);
     int val = BYTES_TO_ADDR(val1, val2);
 
     if (getenv("DEBUG") != NULL)
@@ -665,7 +671,7 @@ void op_cmp_immediate(struct svm *svm)
 void op_cmp_string(struct svm *svm)
 {
     /* get the source register */
-    unsigned int reg = READ_BYTE();
+    unsigned int reg = next_byte(svm);
     BOUNDS_TEST_REGISTER(reg);
 
     /* Now we get the string to compare against from the stack */
@@ -690,11 +696,11 @@ void op_cmp_string(struct svm *svm)
 void op_peek(struct svm *svm)
 {
     /* get the destination register */
-    unsigned int reg = READ_BYTE();
+    unsigned int reg = next_byte(svm);
     BOUNDS_TEST_REGISTER(reg);
 
     /* get the address to read from the second register */
-    unsigned int addr = READ_BYTE();
+    unsigned int addr = next_byte(svm);
     BOUNDS_TEST_REGISTER(addr);
 
     if (getenv("DEBUG") != NULL)
@@ -724,11 +730,11 @@ void op_peek(struct svm *svm)
 void op_poke(struct svm *svm)
 {
     /* get the destination register */
-    unsigned int reg = READ_BYTE();
+    unsigned int reg = next_byte(svm);
     BOUNDS_TEST_REGISTER(reg);
 
     /* get the address to write to from the second register */
-    unsigned int addr = READ_BYTE();
+    unsigned int addr = next_byte(svm);
     BOUNDS_TEST_REGISTER(addr);
 
     /* Get the value we're to store. */
@@ -754,15 +760,15 @@ void op_poke(struct svm *svm)
 void op_memcpy(struct svm *svm)
 {
     /* get the register number to store to */
-    unsigned int dest_reg = READ_BYTE();
+    unsigned int dest_reg = next_byte(svm);
     BOUNDS_TEST_REGISTER(dest_reg);
 
     /* get the register number to copy from */
-    unsigned int src_reg = READ_BYTE();
+    unsigned int src_reg = next_byte(svm);
     BOUNDS_TEST_REGISTER(src_reg);
 
     /* get the register number with the size */
-    unsigned int size_reg = READ_BYTE();
+    unsigned int size_reg = next_byte(svm);
     BOUNDS_TEST_REGISTER(size_reg);
 
     /**
@@ -791,7 +797,7 @@ void op_memcpy(struct svm *svm)
 void op_stack_push(struct svm *svm)
 {
     /* get the register to push */
-    unsigned int reg = READ_BYTE();
+    unsigned int reg = next_byte(svm);
     BOUNDS_TEST_REGISTER(reg);
 
     /* Get the value we're to store. */
@@ -819,7 +825,7 @@ void op_stack_push(struct svm *svm)
 void op_stack_pop(struct svm *svm)
 {
     /* get the register to pop */
-    unsigned int reg = READ_BYTE();
+    unsigned int reg = next_byte(svm);
     BOUNDS_TEST_REGISTER(reg);
 
     /* ensure we're not outside the stack. */
@@ -871,8 +877,8 @@ void op_stack_call(struct svm *svm)
     /**
      * Read the two bytes which will build up the destination
      */
-    unsigned int off1 = READ_BYTE();
-    unsigned int off2 = READ_BYTE();
+    unsigned int off1 = next_byte(svm);
+    unsigned int off2 = next_byte(svm);
 
     /**
      * Convert to the offset in our code-segment.
