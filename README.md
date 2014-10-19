@@ -136,7 +136,7 @@ The following are examples of all instructions:
     push #1           # Store the contents of register #1 in the stack
     pop  #1           # Load register #1 with the contents of the stack.
     call 0xFFEE       # Call the given address.
-    call my_lable     # Call the defined label
+    call my_label     # Call the defined label
     ret               # Return from a called-routine.
 
 
