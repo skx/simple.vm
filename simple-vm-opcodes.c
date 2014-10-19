@@ -46,6 +46,8 @@
 
 
 
+
+
 /**
  * This is a macro definition for a "math" operation.
  *
@@ -101,6 +103,16 @@
 
 
 
+
+/**
+ * Foward declarations for code in this module which is not exported.
+ */
+char *get_string_reg(svm_t * cpu, int reg);
+int get_int_reg(svm_t * cpu, int reg);
+char *string_from_stack(svm_t * svm);
+unsigned char next_byte(svm_t * svm);
+
+
 /**
  * Helper to return the string-content of a register.
  *
@@ -153,8 +165,8 @@ int get_int_reg(svm_t * cpu, int reg)
 char *string_from_stack(svm_t * svm)
 {
     /* the string length */
-    unsigned int len1 = READ_BYTE();
-    unsigned int len2 = READ_BYTE();
+    unsigned int len1 = next_byte(svm);
+    unsigned int len2 = next_byte(svm);
 
     /* build up the length 0-64k */
     int len = BYTES_TO_ADDR(len1, len2);
