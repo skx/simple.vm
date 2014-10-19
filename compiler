@@ -85,7 +85,8 @@ use constant CMP_STRING    => 0x42;
 #
 #  Misc things
 #
-use constant NOP_OP => 0x50;
+use constant NOP_OP    => 0x50;
+use constant REG_STORE => 0x51;
 
 
 #
@@ -228,6 +229,19 @@ while ( my $file = shift )
 
             $offset += 4;              # store + reg + len
             $offset += length($str);
+        }
+        elsif ( $line =~ /^\s+store\s+#([0-9]+)\s?,\s?#([0-9]+)/ )
+        {
+
+            # store a register contents with another
+            my $dest = $1;
+            my $src  = $2;
+
+            print $out chr REG_STORE;
+            print $out chr $dest;
+            print $out chr $src;
+
+            $offset += 3;    # store + reg1 + reg2
         }
         elsif ( $line =~ /^\s+store\s+#([0-9]+)\s?,\s?([^\s]+)/ )
         {

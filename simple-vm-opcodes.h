@@ -84,6 +84,7 @@ enum opcode_values {
      * Misc.
      */
     NOP = 0x50,
+    STORE_REG,
 
     /**
      * PEEK/POKE operations.
@@ -140,12 +141,14 @@ void op_cmp_string(struct svm *in);
 
 /* 0x50 - 0x5F */
 void op_nop(struct svm *in);
-void op_mem_cpy(struct svm *in);
+void op_reg_store(struct svm *in);
+
 
 /* 0x60 - 0x6F */
 void op_peek(struct svm *in);
 void op_poke(struct svm *in);
 void op_memcpy(struct svm *in);
+
 
 /* 0x70 - 0x7F */
 void op_stack_push(struct svm *in);

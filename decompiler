@@ -362,6 +362,17 @@ sub decompile
         {
             print "\tnop\n";
         }
+        elsif ( $opcode == 0x51 )
+        {
+
+            # register store
+            my $dst = ord( $data[$i + 1] );
+            my $src = ord( $data[$i + 2] );
+
+
+            $i += 2;
+            print "\tstore #$dst,#$src\n";
+        }
         elsif ( $opcode == 0x60 )
         {
             my $reg1 = ord( $data[$i + 1] );

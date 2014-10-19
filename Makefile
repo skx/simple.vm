@@ -8,7 +8,7 @@
 #
 CC=gcc
 LINKER=$(CC) -o
-CFLAGS+=-O2 -W -Wall -Wextra -pedantic -std=c11
+CFLAGS+=-O2 -W -Wall -Wextra -pedantic -std=gnu99
 
 
 

@@ -105,6 +105,7 @@ The following are examples of all instructions:
 
     store #1, 33      # store 33 in register 1
     store #2, "Steve" # Store the string "Steve" in register 1.
+    store #1, #3      # register1 is set to the contents of register #3.
 
     exit              # Stop processing.
     nop               # Do nothing

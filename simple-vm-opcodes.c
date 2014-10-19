@@ -247,6 +247,48 @@ void op_nop(struct svm *svm)
     svm->ip += 1;
 }
 
+
+void op_reg_store(struct svm *svm)
+{
+    (void) svm;
+
+    /* get the destination register */
+    unsigned int dst = next_byte(svm);
+    BOUNDS_TEST_REGISTER(dst);
+
+    /* get the source register */
+    unsigned int src = next_byte(svm);
+    BOUNDS_TEST_REGISTER(src);
+
+    if (getenv("DEBUG") != NULL)
+        printf("STORE(Reg%02x will be set to contents of Reg%02x)\n", dst, src);
+
+    /* Free the existing string, if present */
+    if ((svm->registers[dst].type == STRING) && (svm->registers[dst].content.string))
+        free(svm->registers[dst].content.string);
+
+
+    /* if storing a string - then use strdup */
+    if (svm->registers[src].type == STRING)
+    {
+        svm->registers[dst].type = STRING;
+        svm->registers[dst].content.string = strdup(svm->registers[src].content.string);
+    } else
+    {
+        svm->registers[dst].type = svm->registers[src].type;
+        svm->registers[dst].content.integer = svm->registers[src].content.integer;
+    }
+
+
+
+
+
+
+    /* handle the next instruction */
+    svm->ip += 1;
+}
+
+
 void op_int_store(struct svm *svm)
 {
     /* get the register number to store in */
@@ -973,6 +1015,7 @@ void opcode_init(svm_t * svm)
 
     /* misc */
     svm->opcodes[NOP] = op_nop;
+    svm->opcodes[STORE_REG] = op_reg_store;
 
     /* PEEK/POKE */
     svm->opcodes[PEEK] = op_peek;
