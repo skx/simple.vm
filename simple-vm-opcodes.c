@@ -59,7 +59,7 @@
  * all the typing and redundency defining: add, sub, div, mod, xor, or.
  *
  */
-#define MATH_OPERATION(function,operator)  _Bool function(struct svm * svm) \
+#define MATH_OPERATION(function,operator)  void function(struct svm * svm) \
 { \
     /* get the destination register */ \
     unsigned int reg = READ_BYTE(); \
@@ -100,8 +100,8 @@
         else\
         svm->flags.z = false;\
 \
-\
-    return (false); \
+    /* handle the next instruction */ \
+    svm->ip += 1; \
 }
 
 
@@ -190,6 +190,7 @@ char *string_from_stack(svm_t * svm)
         svm->ip++;
     }
 
+    svm->ip--;
     return tmp;
 }
 
@@ -200,29 +201,35 @@ char *string_from_stack(svm_t * svm)
  **/
 
 
-_Bool op_unknown(svm_t * svm)
+void op_unknown(svm_t * svm)
 {
     int instruction = svm->code[svm->ip];
     printf("%04X - op_unknown(%02X)\n", svm->ip, instruction);
-    return false;
+
+    /* handle the next instruction */
+    svm->ip += 1;
 }
 
-_Bool op_exit(struct svm * svm)
+void op_exit(struct svm *svm)
 {
     svm->running = false;
-    return false;
+
+    /* handle the next instruction - which won't happen */
+    svm->ip += 1;
 }
 
-_Bool op_nop(struct svm * svm)
+void op_nop(struct svm *svm)
 {
     (void) svm;
 
     if (getenv("DEBUG") != NULL)
         printf("nop()\n");
-    return false;
+
+    /* handle the next instruction */
+    svm->ip += 1;
 }
 
-_Bool op_int_store(struct svm * svm)
+void op_int_store(struct svm *svm)
 {
     /* get the register number to store in */
     unsigned int reg = READ_BYTE();
@@ -243,11 +250,12 @@ _Bool op_int_store(struct svm * svm)
     svm->registers[reg].content.integer = value;
     svm->registers[reg].type = INTEGER;
 
-    return false;
+    /* handle the next instruction */
+    svm->ip += 1;
 }
 
 
-_Bool op_int_print(struct svm * svm)
+void op_int_print(struct svm *svm)
 {
     /* get the register number to print */
     unsigned int reg = READ_BYTE();
@@ -265,10 +273,11 @@ _Bool op_int_print(struct svm * svm)
         printf("%02X", val);
 
 
-    return (false);
+    /* handle the next instruction */
+    svm->ip += 1;
 }
 
-_Bool op_int_tostring(struct svm * svm)
+void op_int_tostring(struct svm *svm)
 {
     /* get the register number to convert */
     unsigned int reg = READ_BYTE();
@@ -288,10 +297,11 @@ _Bool op_int_tostring(struct svm * svm)
     memset(svm->registers[reg].content.string, '\0', 10);
     sprintf(svm->registers[reg].content.string, "%d", cur);
 
-    return (false);
+    /* handle the next instruction */
+    svm->ip += 1;
 }
 
-_Bool op_int_random(struct svm * svm)
+void op_int_random(struct svm *svm)
 {
     /* get the register to save the output to */
     unsigned int reg = READ_BYTE();
@@ -313,11 +323,12 @@ _Bool op_int_random(struct svm * svm)
     svm->registers[reg].type = INTEGER;
     svm->registers[reg].content.integer = rand() % 0xFFFF;
 
-    return (false);
+    /* handle the next instruction */
+    svm->ip += 1;
 }
 
 
-_Bool op_string_store(struct svm * svm)
+void op_string_store(struct svm *svm)
 {
     /* get the destination register */
     unsigned int reg = READ_BYTE();
@@ -343,11 +354,11 @@ _Bool op_string_store(struct svm * svm)
     if (getenv("DEBUG") != NULL)
         printf("STRING_STORE(Register %d) = '%s'\n", reg, str);
 
-    /* We've tweaked the IP by jumping over the inline-string. */
-    return (true);
+    /* handle the next instruction */
+    svm->ip += 1;
 }
 
-_Bool op_string_print(struct svm * svm)
+void op_string_print(struct svm *svm)
 {
     /* get the reg number to print */
     unsigned int reg = READ_BYTE();
@@ -365,10 +376,11 @@ _Bool op_string_print(struct svm * svm)
     else
         printf("%s", str);
 
-    return (false);
+    /* handle the next instruction */
+    svm->ip += 1;
 }
 
-_Bool op_string_concat(struct svm * svm)
+void op_string_concat(struct svm *svm)
 {
     /* get the destination register */
     unsigned int reg = READ_BYTE();
@@ -416,10 +428,11 @@ _Bool op_string_concat(struct svm * svm)
     svm->registers[reg].content.string = tmp;
     svm->registers[reg].type = STRING;
 
-    return (false);
+    /* handle the next instruction */
+    svm->ip += 1;
 }
 
-_Bool op_string_system(struct svm * svm)
+void op_string_system(struct svm *svm)
 {
     /* get the reg */
     unsigned int reg = READ_BYTE();
@@ -431,10 +444,11 @@ _Bool op_string_system(struct svm * svm)
     char *str = get_string_reg(svm, reg);
     system(str);
 
-    return (false);
+    /* handle the next instruction */
+    svm->ip += 1;
 }
 
-_Bool op_string_toint(struct svm * svm)
+void op_string_toint(struct svm *svm)
 {
     /* get the destination register */
     unsigned int reg = READ_BYTE();
@@ -454,11 +468,12 @@ _Bool op_string_toint(struct svm * svm)
     svm->registers[reg].type = INTEGER;
     svm->registers[reg].content.integer = i;
 
-    return (false);
+    /* handle the next instruction */
+    svm->ip += 1;
 }
 
 
-_Bool op_jump_to(struct svm * svm)
+void op_jump_to(struct svm *svm)
 {
     /**
      * Read the two bytes which will build up the destination
@@ -475,10 +490,9 @@ _Bool op_jump_to(struct svm * svm)
         printf("JUMP_TO(Offset:%d [Hex:%04X]\n", offset, offset);
 
     svm->ip = offset;
-    return (true);
 }
 
-_Bool op_jump_z(struct svm * svm)
+void op_jump_z(struct svm *svm)
 {
     /**
      * Read the two bytes which will build up the destination
@@ -498,13 +512,15 @@ _Bool op_jump_z(struct svm * svm)
     if (svm->flags.z)
     {
         svm->ip = offset;
-        return true;
+    } else
+    {
+        /* handle the next instruction */
+        svm->ip += 1;
     }
 
-    return (false);
 }
 
-_Bool op_jump_nz(struct svm * svm)
+void op_jump_nz(struct svm *svm)
 {
     /**
      * Read the two bytes which will build up the destination
@@ -523,10 +539,11 @@ _Bool op_jump_nz(struct svm * svm)
     if (!svm->flags.z)
     {
         svm->ip = offset;
-        return true;
+    } else
+    {
+        /* handle the next instruction */
+        svm->ip += 1;
     }
-
-    return false;
 }
 
 
@@ -537,7 +554,7 @@ MATH_OPERATION(op_add, +)       // reg_result = reg1 + reg2 ;
     MATH_OPERATION(op_div, /)   // reg_result = reg1 / reg2 ;
     MATH_OPERATION(op_xor, ^)   // reg_result = reg1 ^ reg2 ;
     MATH_OPERATION(op_or, |)    // reg_result = reg1 | reg2 ;
-_Bool op_inc(struct svm * svm)
+void op_inc(struct svm *svm)
 {
     /* get the register number to increment */
     unsigned int reg = READ_BYTE();
@@ -556,10 +573,12 @@ _Bool op_inc(struct svm * svm)
     else
         svm->flags.z = false;
 
-    return (false);
+
+    /* handle the next instruction */
+    svm->ip += 1;
 }
 
-_Bool op_dec(struct svm * svm)
+void op_dec(struct svm *svm)
 {
     /* get the register number to decrement */
     unsigned int reg = READ_BYTE();
@@ -579,10 +598,11 @@ _Bool op_dec(struct svm * svm)
         svm->flags.z = false;
 
 
-    return (false);
+    /* handle the next instruction */
+    svm->ip += 1;
 }
 
-_Bool op_cmp_reg(struct svm * svm)
+void op_cmp_reg(struct svm *svm)
 {
     /* get the source register */
     unsigned int reg1 = READ_BYTE();
@@ -613,10 +633,11 @@ _Bool op_cmp_reg(struct svm * svm)
         }
     }
 
-    return (false);
+    /* handle the next instruction */
+    svm->ip += 1;
 }
 
-_Bool op_cmp_immediate(struct svm * svm)
+void op_cmp_immediate(struct svm *svm)
 {
     /* get the source register */
     unsigned int reg = READ_BYTE();
@@ -637,10 +658,11 @@ _Bool op_cmp_immediate(struct svm * svm)
     if (cur == val)
         svm->flags.z = true;
 
-    return (false);
+    /* handle the next instruction */
+    svm->ip += 1;
 }
 
-_Bool op_cmp_string(struct svm * svm)
+void op_cmp_string(struct svm *svm)
 {
     /* get the source register */
     unsigned int reg = READ_BYTE();
@@ -661,11 +683,11 @@ _Bool op_cmp_string(struct svm * svm)
     else
         svm->flags.z = false;
 
-    /* We've tweaked the IP by jumping over the inline-string. */
-    return (true);
+    /* handle the next instruction */
+    svm->ip += 1;
 }
 
-_Bool op_peek(struct svm * svm)
+void op_peek(struct svm *svm)
 {
     /* get the destination register */
     unsigned int reg = READ_BYTE();
@@ -694,10 +716,12 @@ _Bool op_peek(struct svm * svm)
 
     svm->registers[reg].content.integer = val;
     svm->registers[reg].type = INTEGER;
-    return (false);
+
+    /* handle the next instruction */
+    svm->ip += 1;
 }
 
-_Bool op_poke(struct svm * svm)
+void op_poke(struct svm *svm)
 {
     /* get the destination register */
     unsigned int reg = READ_BYTE();
@@ -722,10 +746,12 @@ _Bool op_poke(struct svm * svm)
 
     /* do the necessary */
     svm->code[adr] = val;
-    return (false);
+
+    /* handle the next instruction */
+    svm->ip += 1;
 }
 
-_Bool op_memcpy(struct svm * svm)
+void op_memcpy(struct svm *svm)
 {
     /* get the register number to store to */
     unsigned int dest_reg = READ_BYTE();
@@ -756,11 +782,13 @@ _Bool op_memcpy(struct svm * svm)
     {
         svm->code[dest + i] = svm->code[src + i];
     }
-    return false;
+
+    /* handle the next instruction */
+    svm->ip += 1;
 }
 
 
-_Bool op_stack_push(struct svm * svm)
+void op_stack_push(struct svm *svm)
 {
     /* get the register to push */
     unsigned int reg = READ_BYTE();
@@ -783,10 +811,12 @@ _Bool op_stack_push(struct svm * svm)
     if (svm->SP > sp_size)
         svm_default_error_handler(svm, "stack overflow - stack is full");
 
-    return (false);
+
+    /* handle the next instruction */
+    svm->ip += 1;
 }
 
-_Bool op_stack_pop(struct svm * svm)
+void op_stack_pop(struct svm *svm)
 {
     /* get the register to pop */
     unsigned int reg = READ_BYTE();
@@ -812,10 +842,11 @@ _Bool op_stack_pop(struct svm * svm)
     svm->registers[reg].type = INTEGER;
 
 
-    return (false);
+    /* handle the next instruction */
+    svm->ip += 1;
 }
 
-_Bool op_stack_ret(struct svm * svm)
+void op_stack_ret(struct svm *svm)
 {
     /* ensure we're not outside the stack. */
     if (svm->SP <= 0)
@@ -832,12 +863,10 @@ _Bool op_stack_ret(struct svm * svm)
     /* update our instruction pointer. */
     svm->ip = val;
 
-    /* We've updated the IP, so we must return true. */
-    return (true);
 }
 
 
-_Bool op_stack_call(struct svm * svm)
+void op_stack_call(struct svm *svm)
 {
     /**
      * Read the two bytes which will build up the destination
@@ -864,8 +893,6 @@ _Bool op_stack_call(struct svm * svm)
      */
     svm->ip = offset;
 
-    /* We've updated the IP, so we must return true. */
-    return (true);
 }
 
 /**

@@ -51,16 +51,13 @@ unsigned char bytecode[] = {
 /**
  * The handler for the custom opcode
  */
-_Bool op_custom(struct svm *svm)
+void op_custom(struct svm *svm)
 {
     printf("\nCustom Handling Here\n");
     printf("\tOur bytecode is %d bytes long\n", svm->size);
 
-    /**
-     * This function *MUST* return false, because it didn't change the
-     * IP-register with the intention of redirecting control-flow.
-     */
-    return (false);
+    /* handle the next instruction */
+    svm->ip += 1;
 }
 
 

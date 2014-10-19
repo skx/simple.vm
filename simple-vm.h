@@ -77,7 +77,7 @@ typedef struct flags {
  * Note: Forward-declare the struct so we can use it.
  */
 struct svm;
-typedef _Bool opcode_implementation(struct svm *in);
+typedef void opcode_implementation(struct svm *in);
 
 
 

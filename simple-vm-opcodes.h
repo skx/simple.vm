@@ -104,54 +104,54 @@ enum opcode_values {
 
 
 /* 0x00 - 0x0F */
-_Bool op_exit(struct svm *in);
-_Bool op_int_store(struct svm *in);
-_Bool op_int_print(struct svm *in);
-_Bool op_int_tostring(struct svm *in);
-_Bool op_int_random(struct svm *in);
+void op_exit(struct svm *in);
+void op_int_store(struct svm *in);
+void op_int_print(struct svm *in);
+void op_int_tostring(struct svm *in);
+void op_int_random(struct svm *in);
 
 /* 0x10 - 0x1F */
-_Bool op_jump_to(struct svm *in);
-_Bool op_jump_z(struct svm *in);
-_Bool op_jump_nz(struct svm *in);
+void op_jump_to(struct svm *in);
+void op_jump_z(struct svm *in);
+void op_jump_nz(struct svm *in);
 
 /* 0x20 - 0x2F */
-_Bool op_xor(struct svm *in);
-_Bool op_or(struct svm *in);
-_Bool op_add(struct svm *in);
-_Bool op_and(struct svm *in);
-_Bool op_sub(struct svm *in);
-_Bool op_mul(struct svm *in);
-_Bool op_div(struct svm *in);
-_Bool op_inc(struct svm *in);
-_Bool op_dec(struct svm *in);
+void op_xor(struct svm *in);
+void op_or(struct svm *in);
+void op_add(struct svm *in);
+void op_and(struct svm *in);
+void op_sub(struct svm *in);
+void op_mul(struct svm *in);
+void op_div(struct svm *in);
+void op_inc(struct svm *in);
+void op_dec(struct svm *in);
 
 /* 0x30 - 0x3F */
-_Bool op_string_store(struct svm *in);
-_Bool op_string_print(struct svm *in);
-_Bool op_string_concat(struct svm *in);
-_Bool op_string_system(struct svm *in);
-_Bool op_string_toint(struct svm *in);
+void op_string_store(struct svm *in);
+void op_string_print(struct svm *in);
+void op_string_concat(struct svm *in);
+void op_string_system(struct svm *in);
+void op_string_toint(struct svm *in);
 
 /* 0x40 - 0x4F */
-_Bool op_cmp_reg(struct svm *in);
-_Bool op_cmp_immediate(struct svm *in);
-_Bool op_cmp_string(struct svm *in);
+void op_cmp_reg(struct svm *in);
+void op_cmp_immediate(struct svm *in);
+void op_cmp_string(struct svm *in);
 
 /* 0x50 - 0x5F */
-_Bool op_nop(struct svm *in);
-_Bool op_mem_cpy(struct svm *in);
+void op_nop(struct svm *in);
+void op_mem_cpy(struct svm *in);
 
 /* 0x60 - 0x6F */
-_Bool op_peek(struct svm *in);
-_Bool op_poke(struct svm *in);
-_Bool op_memcpy(struct svm *in);
+void op_peek(struct svm *in);
+void op_poke(struct svm *in);
+void op_memcpy(struct svm *in);
 
 /* 0x70 - 0x7F */
-_Bool op_stack_push(struct svm *in);
-_Bool op_stack_pop(struct svm *in);
-_Bool op_stack_ret(struct svm *in);
-_Bool op_stack_call(struct svm *in);
+void op_stack_push(struct svm *in);
+void op_stack_pop(struct svm *in);
+void op_stack_ret(struct svm *in);
+void op_stack_call(struct svm *in);
 
 
 

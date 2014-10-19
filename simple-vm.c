@@ -275,12 +275,22 @@ void svm_run(svm_t * cpup)
 
 
     /**
-     * Run continuously - unless we walk off the end of our
-     * allocated code, or an EXIT instruction causes our run
-     * flag to be set to zero.
+     * Run continuously.
+     *
+     * In practice this means until an EXIT instruction is encountered,
+     * which will set the "running"-flag to be false.
+     *
+     * However the system can cope with IP wrap-around.
      */
     while (cpup->running == true)
     {
+        /**
+         * Wrap IP on the 64k boundary, if required.
+         */
+        if (cpup->ip >= 0xFFFF)
+            cpup->ip = 0;
+
+
         /**
          * Lookup the instruction at the instruction-pointer.
          */
@@ -295,21 +305,21 @@ void svm_run(svm_t * cpup)
          * Call the opcode implementation, if defined.
          */
         if (cpup->opcodes[opcode] != NULL)
-        {
-            /**
-             *
-             * If the handler didn't return TRUE we will continue
-             * to make or own IP updates.
-             *
-             * If the handler did something sneakly like updating
-             * the IP register then they will be responsible for
-             * the consequences themselves - it should just work.
-             *
-             */
-            if (!cpup->opcodes[opcode] (cpup))
-                cpup->ip++;
-        }
+            cpup->opcodes[opcode] (cpup);
 
+        /**
+         * NOTE: At this point you might be looking for
+         *       a line of the form : cpup->ip += 1;
+         *
+         *       However this is NOT REQUIRED as each opcode
+         *       will have already updated the (global) instruction
+         *       pointer.
+         *
+         *       This is neater because each opcode knows how long it is,
+         *       and will probably have bumped the IP to read the register
+         *       number, or other arguments.
+         *
+         */
         iterations++;
     }
 
