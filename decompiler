@@ -358,6 +358,19 @@ sub decompile
             $i += 3;
             $i += $len;
         }
+        elsif ( $opcode == 0x43 )
+        {
+            my $reg = ord( $data[$i + 1] );
+            print "\tis_string #$reg\n";
+
+            $i += 1;
+        }
+        elsif ( $opcode == 0x44 )
+        {
+            my $reg = ord( $data[$i + 1] );
+            print "\tis_integer #$reg\n";
+            $i += 1;
+        }
         elsif ( $opcode == 0x50 )
         {
             print "\tnop\n";

@@ -80,7 +80,8 @@ use constant STRING_TOINT  => 0x34;
 use constant CMP_REG       => 0x40;
 use constant CMP_IMMEDIATE => 0x41;
 use constant CMP_STRING    => 0x42;
-
+use constant IS_STRING     => 0x43;
+use constant IS_INTEGER    => 0x44;
 
 #
 #  Misc things
@@ -502,6 +503,22 @@ while ( my $file = shift )
             print $out chr $val1;
             print $out chr $val2;
             $offset += 4;    # cmp reg val1 val2
+        }
+        elsif ( $line =~ /^\s*is_(string|integer)\s+#([0-9]+)/ )
+        {
+            my $type = $1;
+            my $reg  = $2;
+
+            if ( $type =~ /string/i )
+            {
+                print $out chr IS_STRING;
+            }
+            if ( $type =~ /integer/i )
+            {
+                print $out chr IS_INTEGER;
+            }
+            print $out chr $reg;
+            $offset += 2;
         }
         elsif ( $line =~ /^\s*peek\s+#([0-9]+)\s*,\s*#([0-9]+)/ )
         {

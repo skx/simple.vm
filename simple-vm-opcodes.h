@@ -74,11 +74,14 @@ enum opcode_values {
     STRING_TOINT,
 
     /**
-     * Comparison operations.
+     * Comparison/Test operations.
      */
     CMP_REG = 0x40,
     CMP_IMMEDIATE,
     CMP_STRING,
+    IS_STRING,
+    IS_INTEGER,
+
 
     /**
      * Misc.
@@ -138,6 +141,8 @@ void op_string_toint(struct svm *in);
 void op_cmp_reg(struct svm *in);
 void op_cmp_immediate(struct svm *in);
 void op_cmp_string(struct svm *in);
+void op_is_string(struct svm *in);
+void op_is_integer(struct svm *in);
 
 /* 0x50 - 0x5F */
 void op_nop(struct svm *in);

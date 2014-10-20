@@ -228,6 +228,10 @@ void op_unknown(svm_t * svm)
     svm->ip += 1;
 }
 
+
+/**
+ * Break out of our main intepretter loop.
+ */
 void op_exit(struct svm *svm)
 {
     svm->running = false;
@@ -236,6 +240,10 @@ void op_exit(struct svm *svm)
     svm->ip += 1;
 }
 
+
+/**
+ * No-operation / NOP.
+ */
 void op_nop(struct svm *svm)
 {
     (void) svm;
@@ -248,6 +256,9 @@ void op_nop(struct svm *svm)
 }
 
 
+/**
+ * Store the contents of one register in another.
+ */
 void op_reg_store(struct svm *svm)
 {
     (void) svm;
@@ -280,15 +291,14 @@ void op_reg_store(struct svm *svm)
     }
 
 
-
-
-
-
     /* handle the next instruction */
     svm->ip += 1;
 }
 
 
+/**
+ * Store an integer in a register.
+ */
 void op_int_store(struct svm *svm)
 {
     /* get the register number to store in */
@@ -315,6 +325,9 @@ void op_int_store(struct svm *svm)
 }
 
 
+/**
+ * Print the integer contents of the given register.
+ */
 void op_int_print(struct svm *svm)
 {
     /* get the register number to print */
@@ -337,6 +350,9 @@ void op_int_print(struct svm *svm)
     svm->ip += 1;
 }
 
+/**
+ * Convert the integer contents of a register to a string
+ */
 void op_int_tostring(struct svm *svm)
 {
     /* get the register number to convert */
@@ -361,6 +377,10 @@ void op_int_tostring(struct svm *svm)
     svm->ip += 1;
 }
 
+
+/**
+ * Generate a random integer and store in the specified register.
+ */
 void op_int_random(struct svm *svm)
 {
     /* get the register to save the output to */
@@ -388,6 +408,9 @@ void op_int_random(struct svm *svm)
 }
 
 
+/**
+ * Store a string in a register.
+ */
 void op_string_store(struct svm *svm)
 {
     /* get the destination register */
@@ -418,6 +441,10 @@ void op_string_store(struct svm *svm)
     svm->ip += 1;
 }
 
+
+/**
+ * Print the (string) contents of a register.
+ */
 void op_string_print(struct svm *svm)
 {
     /* get the reg number to print */
@@ -440,6 +467,10 @@ void op_string_print(struct svm *svm)
     svm->ip += 1;
 }
 
+
+/**
+ * Concatenate two strings, and store the result.
+ */
 void op_string_concat(struct svm *svm)
 {
     /* get the destination register */
@@ -492,6 +523,10 @@ void op_string_concat(struct svm *svm)
     svm->ip += 1;
 }
 
+
+/**
+ * Invoke the C system() function against a string register.
+ */
 void op_string_system(struct svm *svm)
 {
     /* get the reg */
@@ -508,6 +543,9 @@ void op_string_system(struct svm *svm)
     svm->ip += 1;
 }
 
+/**
+ * Convert a string to an int.
+ */
 void op_string_toint(struct svm *svm)
 {
     /* get the destination register */
@@ -533,6 +571,9 @@ void op_string_toint(struct svm *svm)
 }
 
 
+/**
+ * Unconditional jump
+ */
 void op_jump_to(struct svm *svm)
 {
     /**
@@ -552,6 +593,10 @@ void op_jump_to(struct svm *svm)
     svm->ip = offset;
 }
 
+
+/**
+ * Jump to the given address if the Z-flag is set.
+ */
 void op_jump_z(struct svm *svm)
 {
     /**
@@ -580,6 +625,10 @@ void op_jump_z(struct svm *svm)
 
 }
 
+
+/**
+ * Jump to the given address if the Z flag is NOT set.
+ */
 void op_jump_nz(struct svm *svm)
 {
     /**
@@ -614,6 +663,9 @@ MATH_OPERATION(op_add, +)       // reg_result = reg1 + reg2 ;
     MATH_OPERATION(op_div, /)   // reg_result = reg1 / reg2 ;
     MATH_OPERATION(op_xor, ^)   // reg_result = reg1 ^ reg2 ;
     MATH_OPERATION(op_or, |)    // reg_result = reg1 | reg2 ;
+/**
+ * Increment the given (integer) register.
+ */
 void op_inc(struct svm *svm)
 {
     /* get the register number to increment */
@@ -638,6 +690,10 @@ void op_inc(struct svm *svm)
     svm->ip += 1;
 }
 
+
+/**
+ * Decrement the given (integer) register.
+ */
 void op_dec(struct svm *svm)
 {
     /* get the register number to decrement */
@@ -662,6 +718,10 @@ void op_dec(struct svm *svm)
     svm->ip += 1;
 }
 
+
+/**
+ * Compare two registers.  Set the Z-flag if equal.
+ */
 void op_cmp_reg(struct svm *svm)
 {
     /* get the source register */
@@ -697,6 +757,10 @@ void op_cmp_reg(struct svm *svm)
     svm->ip += 1;
 }
 
+
+/**
+ * Compare a register contents with a constant integer.
+ */
 void op_cmp_immediate(struct svm *svm)
 {
     /* get the source register */
@@ -722,6 +786,10 @@ void op_cmp_immediate(struct svm *svm)
     svm->ip += 1;
 }
 
+
+/**
+ * Compare a register contents with the given string.
+ */
 void op_cmp_string(struct svm *svm)
 {
     /* get the source register */
@@ -747,6 +815,53 @@ void op_cmp_string(struct svm *svm)
     svm->ip += 1;
 }
 
+
+/**
+ * Does the given register contain a string?  Set the Z-flag if so.
+ */
+void op_is_string(struct svm *svm)
+{
+    /* get the register to test */
+    unsigned int reg = next_byte(svm);
+    BOUNDS_TEST_REGISTER(reg);
+
+    if (getenv("DEBUG") != NULL)
+        printf("is register %02X a string?\n", reg);
+
+    if (svm->registers[reg].type == STRING)
+        svm->flags.z = true;
+    else
+        svm->flags.z = false;
+
+    /* handle the next instruction */
+    svm->ip += 1;
+}
+
+
+/**
+ * Does the given register contain an integer?  Set the Z-flag if so.
+ */
+void op_is_integer(struct svm *svm)
+{
+    /* get the register to test */
+    unsigned int reg = next_byte(svm);
+    BOUNDS_TEST_REGISTER(reg);
+
+    if (getenv("DEBUG") != NULL)
+        printf("is register %02X an integer?\n", reg);
+
+    if (svm->registers[reg].type == INTEGER)
+        svm->flags.z = true;
+    else
+        svm->flags.z = false;
+
+    /* handle the next instruction */
+    svm->ip += 1;
+}
+
+/**
+ * Read from a given address into the specified register.
+ */
 void op_peek(struct svm *svm)
 {
     /* get the destination register */
@@ -781,6 +896,9 @@ void op_peek(struct svm *svm)
     svm->ip += 1;
 }
 
+/**
+ * Write a register-contents to memory.
+ */
 void op_poke(struct svm *svm)
 {
     /* get the destination register */
@@ -811,6 +929,10 @@ void op_poke(struct svm *svm)
     svm->ip += 1;
 }
 
+
+/**
+ * Copy a chunk of memory.
+ */
 void op_memcpy(struct svm *svm)
 {
     /* get the register number to store to */
@@ -847,7 +969,9 @@ void op_memcpy(struct svm *svm)
     svm->ip += 1;
 }
 
-
+/**
+ * Push the contents of a given register onto the stack.
+ */
 void op_stack_push(struct svm *svm)
 {
     /* get the register to push */
@@ -876,6 +1000,10 @@ void op_stack_push(struct svm *svm)
     svm->ip += 1;
 }
 
+
+/**
+ * Pop the topmost entry from the stack into the given register.
+ */
 void op_stack_pop(struct svm *svm)
 {
     /* get the register to pop */
@@ -906,6 +1034,11 @@ void op_stack_pop(struct svm *svm)
     svm->ip += 1;
 }
 
+
+/**
+ * Return from a call - by popping the return address from the stack
+ * and jumping to it.
+ */
 void op_stack_ret(struct svm *svm)
 {
     /* ensure we're not outside the stack. */
@@ -926,6 +1059,9 @@ void op_stack_ret(struct svm *svm)
 }
 
 
+/**
+ * Call a routine - push the return address onto the stack.
+ */
 void op_stack_call(struct svm *svm)
 {
     /**
@@ -1008,10 +1144,12 @@ void opcode_init(svm_t * svm)
     svm->opcodes[STRING_SYSTEM] = op_string_system;
     svm->opcodes[STRING_TOINT] = op_string_toint;
 
-    /* comparisons */
+    /* comparisons/tests */
     svm->opcodes[CMP_REG] = op_cmp_reg;
     svm->opcodes[CMP_IMMEDIATE] = op_cmp_immediate;
     svm->opcodes[CMP_STRING] = op_cmp_string;
+    svm->opcodes[IS_STRING] = op_is_string;
+    svm->opcodes[IS_INTEGER] = op_is_integer;
 
     /* misc */
     svm->opcodes[NOP] = op_nop;

@@ -1,0 +1,38 @@
+#
+# About
+#
+#  This program tests our type-handling - which is basic.
+#
+#
+# Usage
+#
+#  $ compiler ./types.in ; ./simple-vm ./types.raw
+#
+#
+#
+
+        store #1, 43
+        is_integer #1
+        jmpz ok1
+
+        store #1, "ERR - Failed int-test\n"
+        print_str #1
+        exit
+
+:ok1
+        store #1, "OK - Int-test succeeded\n"
+        print_str #1
+
+
+        store #1, "Steve"
+        is_string #1
+        jmpz ok2
+
+        store #1, "ERR - Failed string-test\n"
+        print_str #1
+        exit
+
+:ok2
+        store #1, "OK - string-test succeeded\n"
+        print_str #1
+        exit
