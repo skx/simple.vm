@@ -16,14 +16,16 @@ In addition to the virtual machine itself you'll also find:
     * This will translate from assembly-source into binary-opcodes.
 * [A simple decompiler](decompiler).
     * This will translate in the other direction.
-
-Finally there is an example of embedding the virtual machine, along with the definition of a custom-opcode handler in the file [embedded.c](embedded.c).
+* Several [example programs](examples/).
+* An example of [embedding](embedded.c) the virtual machine in a C host program.
+    * Along with the definition of a custom-opcode handler.
 
 This particular virtual machine is intentionally simple, but despite that it is hopefully implemented in a readable fashion.  ("Simplicity" here means that we support only a small number of instructions, and the registers the virtual CPU possesses can store strings and integers, but not floating-point values.)
-
-Because writing (binary) bytecode by hand is not pleasant there is also a simple Perl "compiler" script included within the repository which will read source and generate the appropriate bytecodes.  Using the compiler programs can be written in your favourite text-editor, compiled, and then later executed.
-
 This particular virtual machine is register-based, having ten registers which can be used to store strings or integer values.
+
+
+Implementation Notes
+--------------------
 
 Implementing a basic virtual machine, like this one, is a pretty well-understood problem:
 
@@ -42,7 +44,9 @@ The main complications of writing a virtual machine are:
 * Implementing a useful range of operations/opcodes.
     * For example "add", "dec", "inc", etc.
 
-This particular virtual machine contains only a few primitives, but it does include the support for labels, looping, conditional jumps, calls and returns.  The handling of labels is perhaps worthy of note, because many simple/demonstration virtual machines don't handle them at all.
+This particular virtual machine contains only a few primitives, but it does include the support for labels, looping, conditional jumps, calls and returns.  There is also a stack which can be used for storing temporary values, and used for `call`/`ret` handling.
+
+The handling of labels in this implementation is perhaps worthy of note, because many simple/demonstration virtual machines don't handle them at all.
 
 In order to support jumping to labels which haven't necessarily been defined yet our compiler keeps a running list of all labels (i.e. possible jump destinations) and when it encounters a jump instruction, or something else that refers to a label, it must outputs a placeholder-address, such as:
 
@@ -53,7 +57,7 @@ After compilation is complete all the targets should have been discovered and th
 
 >**NOTE**:  In our virtual machines all jumps are absolute, so they might look like "`JUMP 0x0123`" rather than "`JUMP -4`" or "`JUMP +30`".
 
-
+>**NOTE**: The same thing applies for other instructions which handle labels, such as storing the address of a label, making a call, etc.
 
 
 Embedding
@@ -61,7 +65,7 @@ Embedding
 
 This virtual machine is designed primarily as a learning experience, but it is built with the idea of embedding in mind.
 
-The standard driver, which will read opcodes from a file and interpret them, is less than 20k in size.
+The standard `simple-vm` binary, which will read opcodes from a file and interpret them, is less than 25k in size.
 
 Because the processing of binary opcodes is handled via a dispatch-table it is trivially possible for you to add your own application-specific opcodes to the system which would allow you to execute tiny compiled, and efficient, programs which can call back into your application when they wish.
 
@@ -124,7 +128,9 @@ The following are examples of all instructions:
     inc #2            # Increment the integer in register 2
 
     string2int #3     # Change register 3 to have a string from an int
+    is_integer #3     # Does the given register have an integer content?
     int2string #3     # Change register 3 to have an int from a string
+    is_string  #3     # Does the given register have a string-content?
 
     cmp #3, #4        # Compare contents of reg 3 & 4, set the Z-flag.
     cmp #3, 42        # Compare contents of reg 3 with the constant 42.  sets z.
@@ -171,7 +177,7 @@ If you wish to debug the execution then run:
 
       DEBUG=1 ./simple-vm ./examples/simple.raw
 
-There are more examples stored beneath the `examples/` subdirectory in this repository.   The file `examples/quine.in` provides a good example of various features - it outputs its own opcodes.
+There are more examples stored beneath the `examples/` subdirectory in this repository.   The file [examples/quine.in](examples/quine.in) provides a good example of various features - it outputs its own opcodes.
 
 Steve
 --
