@@ -48,7 +48,7 @@ This particular virtual machine contains only a few primitives, but it does incl
 
 The handling of labels in this implementation is perhaps worthy of note, because many simple/demonstration virtual machines don't handle them at all.
 
-In order to support jumping to labels which haven't necessarily been defined yet our compiler keeps a running list of all labels (i.e. possible jump destinations) and when it encounters a jump instruction, or something else that refers to a label, it must outputs a placeholder-address, such as:
+In order to support jumping to labels which haven't necessarily been defined yet our compiler keeps a running list of all labels (i.e. possible jump destinations) and when it encounters a jump instruction, or something else that refers to a label, it outputs a placeholder-address, such as:
 
 * `JUMP 0x000`
     * In our bytecode that is the three-byte sequence `0x10 0x00 0x00` as the JUMP instruction is defined as `0x10`.
