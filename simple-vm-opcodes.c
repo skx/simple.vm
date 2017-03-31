@@ -343,7 +343,7 @@ void op_int_print(struct svm *svm)
     if (getenv("DEBUG") != NULL)
         printf("[STDOUT] Register R%02d => %d [Hex:%04x]\n", reg, val, val);
     else
-        printf("%02X", val);
+        printf("Ox%04X", val);
 
 
     /* handle the next instruction */

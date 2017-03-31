@@ -37,12 +37,6 @@
 
 :repeat
         #
-        #  Print a prefix for the bytes.
-        #
-        store #5, "0x"
-        print_str #5
-
-        #
         #  Get the contents of the byte and show it
         #
         peek #5, #3
