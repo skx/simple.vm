@@ -1163,7 +1163,7 @@ void opcode_init(svm_t * svm)
     /**
      * All instructions will default to unknown.
      */
-    for (int i = 0; i < 255; i++)
+    for (int i = 0; i <= 255; i++)
         svm->opcodes[i] = op_unknown;
 
     /* early opcodes */

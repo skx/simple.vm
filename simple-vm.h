@@ -124,7 +124,7 @@ typedef struct svm {
     /**
      * This is a lookup table which maps opcodes to the appropriate handler.
      */
-    opcode_implementation *opcodes[255];
+    opcode_implementation *opcodes[256];
 
     /**
      * This is the stack for the virtual machine.  There are
