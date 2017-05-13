@@ -65,7 +65,16 @@ int run_file(const char *filename, int dump_registers, int instructions)
         return 1;
     }
 
-    fread(code, 1, size, fp);
+    /**
+     * Abort on a short-read, or error.
+     */
+    size_t read = fread(code, 1, size, fp);
+    if ( read < 1 || ( read < (size_t)size ) )
+    {
+        fprintf(stderr,"Failed to wholly read input file\n" );
+        fclose(fp);
+        return 1;
+    }
     fclose(fp);
 
     svm_t *cpu = svm_new(code, size);
