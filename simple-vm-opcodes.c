@@ -590,7 +590,9 @@ void op_string_system(struct svm *svm)
         printf("STRING_SYSTEM(Register %d)\n", reg);
 
     char *str = get_string_reg(svm, reg);
-    system(str);
+
+    int result __attribute__((unused));
+    result = system(str);
 
     /* handle the next instruction */
     svm->ip += 1;
