@@ -1014,7 +1014,21 @@ void op_memcpy(struct svm *svm)
     /** Slow, but copes with nulls and allows debugging. */
     for (int i = 0; i < size; i++)
     {
-        svm->code[dest + i] = svm->code[src + i];
+        int sc = src + i;
+        int dt = dest + i;
+
+        /*
+         * Handle wrap-around.
+         *
+         * So copying 0x00FF bytes from 0xFFFE will actually
+         * wrap around to 0x00FE.
+         */
+        while( sc >= 0xFFFF )
+            sc -= 0xFFFF;
+        while( dt >= 0xFFFF )
+            dt -= 0xFFFF;
+
+        svm->code[dt] = svm->code[sc];
     }
 
     /* handle the next instruction */
