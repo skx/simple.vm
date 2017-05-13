@@ -239,6 +239,11 @@ void svm_free(svm_t * cpup)
     if (!cpup)
         return;
 
+    if ( cpup->code )
+    {
+        free(cpup->code);
+        cpup->code=NULL;
+    }
     free(cpup);
 }
 
