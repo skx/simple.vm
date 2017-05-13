@@ -1006,6 +1006,12 @@ void op_memcpy(struct svm *svm)
     int dest = get_int_reg(svm, dest_reg);
     int size = get_int_reg(svm, size_reg);
 
+    if ( ( src <0 ) || ( dest < 0 ) )
+    {
+        svm_default_error_handler(svm, "cannot copy to/from negative addresses");
+        return;
+    }
+
     if (getenv("DEBUG") != NULL)
     {
         printf("Copying %4x bytes from %04x to %04X\n", size, src, dest);
@@ -1027,6 +1033,12 @@ void op_memcpy(struct svm *svm)
             sc -= 0xFFFF;
         while( dt >= 0xFFFF )
             dt -= 0xFFFF;
+
+
+        if (getenv("DEBUG") != NULL)
+        {
+            printf("\tCopying from: %04x Copying-to %04X\n", sc, dt);
+        }
 
         svm->code[dt] = svm->code[sc];
     }
