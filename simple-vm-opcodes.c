@@ -104,6 +104,7 @@
 
 
 
+
 /**
  * Foward declarations for code in this module which is not exported.
  */
@@ -250,6 +251,58 @@ void op_nop(struct svm *svm)
 
     if (getenv("DEBUG") != NULL)
         printf("nop()\n");
+
+    /* handle the next instruction */
+    svm->ip += 1;
+}
+
+
+void op_divide(struct svm * svm)
+{
+    /* get the destination register */
+    unsigned int reg = next_byte(svm);
+    BOUNDS_TEST_REGISTER(reg);
+
+    /* get the source register */
+    unsigned int src1 = next_byte(svm);
+    BOUNDS_TEST_REGISTER(reg);
+
+    /* get the source register */
+    unsigned int src2 = next_byte(svm);
+    BOUNDS_TEST_REGISTER(reg);
+
+    if (getenv("DEBUG") != NULL)
+        printf( "DIV(Register:%d = Register:%d / Register:%d)\n", reg, src1, src2);
+
+    /* if the result-register stores a string .. free it */
+    if ((svm->registers[reg].type == STRING) && (svm->registers[reg].content.string))
+        free(svm->registers[reg].content.string);
+
+    /*
+     * Ensure both source registers have integer values.
+     */
+    int val1 = get_int_reg(svm, src1);
+    int val2 = get_int_reg(svm, src2);
+
+    if ( val2 == 0 )
+    {
+        svm_default_error_handler(svm, "Division by zero!");
+        return;
+    }
+
+    /**
+     * Store the result.
+     */
+    svm->registers[reg].content.integer = val1 / val2;
+    svm->registers[reg].type = INTEGER;
+
+    /**
+     * Zero result?
+     */
+    if (svm->registers[reg].content.integer == 0)
+        svm->flags.z = true;
+        else
+            svm->flags.z = false;
 
     /* handle the next instruction */
     svm->ip += 1;
@@ -660,7 +713,6 @@ MATH_OPERATION(op_add, +)       // reg_result = reg1 + reg2 ;
     MATH_OPERATION(op_and, &)   // reg_result = reg1 & reg2 ;
     MATH_OPERATION(op_sub, -)   // reg_result = reg1 - reg2 ;
     MATH_OPERATION(op_mul, *)   // reg_result = reg1 * reg2 ;
-    MATH_OPERATION(op_div, /)   // reg_result = reg1 / reg2 ;
     MATH_OPERATION(op_xor, ^)   // reg_result = reg1 ^ reg2 ;
     MATH_OPERATION(op_or, |)    // reg_result = reg1 | reg2 ;
 /**
@@ -1131,7 +1183,7 @@ void opcode_init(svm_t * svm)
     svm->opcodes[AND] = op_and;
     svm->opcodes[SUB] = op_sub;
     svm->opcodes[MUL] = op_mul;
-    svm->opcodes[DIV] = op_div;
+    svm->opcodes[DIV] = op_divide;
     svm->opcodes[XOR] = op_xor;
     svm->opcodes[OR] = op_or;
     svm->opcodes[INC] = op_inc;
