@@ -36,7 +36,7 @@ void error(char *msg)
 
 
 
-int run_file(const char *filename, int dump_registers)
+int run_file(const char *filename, int dump_registers, int instructions)
 {
     struct stat sb;
 
@@ -84,7 +84,7 @@ int run_file(const char *filename, int dump_registers)
     /**
      * Run the bytecode.
      */
-    svm_run(cpu);
+    svm_run_N_instructions(cpu, instructions);
 
 
     /**
@@ -114,6 +114,7 @@ int run_file(const char *filename, int dump_registers)
 int main(int argc, char **argv)
 {
     int dump_registers = 0;
+    int max_instructions = 0;
 
     if (argc < 2)
     {
@@ -121,9 +122,12 @@ int main(int argc, char **argv)
         return 0;
     }
 
+    if ( argc > 2 )
+        max_instructions = atoi(argv[2]);
+
     if (getenv("DEBUG") != NULL)
         dump_registers = 1;
 
-    return (run_file(argv[1], dump_registers));
+    return (run_file(argv[1], dump_registers, max_instructions));
 
 }

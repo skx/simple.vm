@@ -249,17 +249,27 @@ void svm_free(svm_t * cpup)
 
 
 /**
- *  Main virtual machine execution loop
+ *  Main virtual machine execution loop.
  *
  *  This function will walk through the code passed to the constructor
  * and attempt to execute each bytecode instruction.
  *
- *  If 20+ instructions are fond which can't be executed then the function
- * will abort - otherwise it will keep going until an EXIT instruction is
- * encountered, or the end of the code-block is reached.
- *
+ *  It will keep running forever.
  */
 void svm_run(svm_t * cpup)
+{
+    /*
+     * Run for real - no limit on execution.
+     */
+    svm_run_N_instructions(cpup, 0);
+}
+
+
+/**
+ * Run the virtual-machine, stoping after the given number of
+ * instructions - if this is zero it will not stop.
+ */
+void svm_run_N_instructions(svm_t * cpup, int max_instructions)
 {
     /**
      * How many instructions have we handled?
@@ -326,6 +336,12 @@ void svm_run(svm_t * cpup)
          *
          */
         iterations++;
+
+        /*
+         * Stop?
+         */
+        if ( max_instructions && iterations >= max_instructions )
+            cpup->running = false;
     }
 
     if (getenv("DEBUG") != NULL)

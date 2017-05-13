@@ -191,5 +191,11 @@ void svm_free(svm_t * cpup);
  */
 void svm_run(svm_t * cpup);
 
+/**
+ * Run the virtual machine, but only for the specified number
+ * of instructions.  This is useful for fuzzing, etc.
+ */
+void svm_run_N_instructions(svm_t * cpup, int max_instructions);
+
 
 #endif                          /* SIMPLE_VM_H */
