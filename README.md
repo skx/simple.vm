@@ -179,5 +179,35 @@ If you wish to debug the execution then run:
 
 There are more examples stored beneath the `examples/` subdirectory in this repository.   The file [examples/quine.in](examples/quine.in) provides a good example of various features - it outputs its own opcodes.
 
+
+Fuzz Testing
+------------
+
+If you wish to fuzz-test with [afl](http://lcamtuf.coredump.cx/afl/) you should find that pretty straight-forward:
+
+* Install `afl` itself, as per the instructions.
+* Compile this project, setting `CC=afl-gcc` in the `Makefile`.
+* Generate some sample-programs, as starting point, then run the fuzzer.
+
+You can compile each of our bundled samples like so:
+
+     cd examples/
+     for i in *.in; do ../compiler $; done
+
+This will compile `examples/*.in` into `examples/*.out`.  Place those in a directory, and start your fuzzer:
+
+     mkdir samples/
+     cp examples/*.raw samples/
+
+Now you have `./samples/` containing only compiled programs.  You can then mutate/permute those examples under the control of the fuzzer with a command-line like this:
+
+     export FUZZ=1
+     afl-fuzz -i ./samples/ -o results/ ./simple-vm @@ 16384
+
+>**NOTE**: Here we cap each run to executing no more than 16384 instructions.  This will ensure that programs don't have infinite loops in them.
+
+We set the environmental variable `FUZZ` to contain `1` solely to disable the use of the `system()` function.  Which might accidentally remove your home-directory, format your drive, or [send me a donation](https://steve.fi/donate/)!
+
+
 Steve
 --
