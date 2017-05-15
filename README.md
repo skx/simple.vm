@@ -193,6 +193,7 @@ You can compile each of our bundled samples like so:
 
      cd examples/
      for i in *.in; do ../compiler $i; done
+     cd ..
 
 This will compile `examples/*.in` into `examples/*.raw`.  Place those in a directory, and start your fuzzer:
 
