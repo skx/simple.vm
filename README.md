@@ -192,7 +192,7 @@ If you wish to fuzz-test with [afl](http://lcamtuf.coredump.cx/afl/) you should 
 You can compile each of our bundled samples like so:
 
      cd examples/
-     for i in *.in; do ../compiler $; done
+     for i in *.in; do ../compiler $i; done
 
 This will compile `examples/*.in` into `examples/*.out`.  Place those in a directory, and start your fuzzer:
 
