@@ -589,7 +589,14 @@ void op_string_system(struct svm *svm)
     if (getenv("DEBUG") != NULL)
         printf("STRING_SYSTEM(Register %d)\n", reg);
 
+    /* Get the value we're to execute */
     char *str = get_string_reg(svm, reg);
+
+    if (getenv("FUZZ") != NULL)
+    {
+        printf("Fuzzing - skipping execution of: %s\n", str);
+        return;
+    }
 
     int result __attribute__((unused));
     result = system(str);
