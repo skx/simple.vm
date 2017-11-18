@@ -1,9 +1,6 @@
 
 * Git Repository:
     * http://github.com/skx/simple.vm
-* Git mirror:
-    * http://git.steve.org.uk/skx/simple.vm
-
 
 simple.vm
 ---------
