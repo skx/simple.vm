@@ -49,7 +49,6 @@ typedef struct registers {
         unsigned int integer;
         char *string;
     } content;
-    char *str;
     enum { INTEGER, STRING } type;
 } reg_t;
 
