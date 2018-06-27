@@ -62,6 +62,9 @@ type CPU struct {
 
 	// Instruction-pointer
 	ip int
+
+	// stack
+	stack []int
 }
 
 func debugPrintf(fmt_ string, args ...interface{}) {
@@ -266,6 +269,19 @@ func (c *CPU) Run() {
 
 			fmt.Printf("%s", c.regs[reg].s)
 			c.ip += 1
+		case 0x41:
+			debugPrintf("CMP_IMMEDIATE\n")
+			// register
+			c.ip += 1
+			reg := int(c.mem[c.ip])
+			c.ip += 1
+			val := c.read2Val()
+
+			if c.regs[reg].i == val {
+				c.flags.z = true
+			} else {
+				c.flags.z = false
+			}
 		case 0x50:
 			debugPrintf("NOP\n")
 			c.ip += 1
@@ -286,9 +302,58 @@ func (c *CPU) Run() {
 			c.regs[result].i = int(c.mem[addr])
 
 			c.ip += 1
-		case 0x61:
-			debugPrintf("POKE\n")
+		case 0x70:
+			debugPrintf("PUSH\n")
+
+			// register
 			c.ip += 1
+			reg := int(c.mem[c.ip])
+			c.ip += 1
+
+			// Store the value in the register on the stack
+			c.stack = append(c.stack, c.regs[reg].i)
+
+		case 0x71:
+			debugPrintf("POP\n")
+			debugPrintf("PUSH\n")
+
+			// register
+			c.ip += 1
+			reg := int(c.mem[c.ip])
+			c.ip += 1
+
+			// Store the value in the register on the stack
+			c.regs[reg].i = c.stack[0]
+			c.regs[reg].t = "int"
+
+			// Remove it
+			c.stack = append(c.stack[:0], c.stack[1:]...)
+		case 0x72:
+			debugPrintf("RET\n")
+			if len(c.stack) < 0 {
+				fmt.Printf("Stack Underflow!\n")
+				os.Exit(1)
+			}
+
+			// Get the address
+			addr := c.stack[0]
+
+			// Remove it
+			c.stack = append(c.stack[:0], c.stack[1:]...)
+
+			// jump
+			c.ip = addr
+		case 0x73:
+			debugPrintf("CALL\n")
+			c.ip += 1
+
+			addr := c.read2Val()
+
+			// push the current IP onto the stack
+			c.stack = append(c.stack, c.ip)
+
+			// jump to the call address
+			c.ip = addr
 		default:
 			fmt.Printf("Unrecognized/Unimplemented opcode %02X at IP %04X\n", instruction, c.ip)
 			os.Exit(1)
