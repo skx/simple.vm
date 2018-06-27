@@ -177,6 +177,45 @@ If you wish to debug the execution then run:
 There are more examples stored beneath the `examples/` subdirectory in this repository.   The file [examples/quine.in](examples/quine.in) provides a good example of various features - it outputs its own opcodes.
 
 
+Golang Port
+-----------
+
+The virtual-machine which executes the bytecode is written in C, so for fun
+I thought it would be interesting to port it to golang.
+
+The result is `main.go` which executes some of the programs, it will terminate
+when it reaches an instruction which hasn't been implemented.  For the moment
+it runs a few of the examples:
+
+      $ ./compiler examples/jump.in
+      $ go run main.go examples/jump.raw
+      Loading file examples/jump.raw
+      Steve Kemp
+      32
+      Kirsi Kemp
+
+Similarly you can run the looping example:
+
+      $ ./compiler examples/loop.in
+      $ go run main.go examples/loop.raw
+      Loading file examples/loop.raw
+      Counting from ten to zero
+      10
+      9
+      8
+      7
+      6
+      5
+      4
+      3
+      2
+      1
+      0
+      Done
+
+If you wish to submit a pull request implementing the missing opcodes I'd
+be happy to accept it :)
+
 Fuzz Testing
 ------------
 
