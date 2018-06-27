@@ -351,6 +351,25 @@ func (c *CPU) Run() {
 			c.regs[result].i = int(c.mem[addr])
 			c.regs[result].t = "int"
 			c.ip += 1
+		case 0x61:
+			debugPrintf("POKE\n")
+
+			// register
+			c.ip += 1
+			src := int(c.mem[c.ip])
+			c.ip += 1
+
+			dst := int(c.mem[c.ip])
+			c.ip += 1
+
+			// So the destination will contain an address
+			// put the contents of the source to that.
+			addr := c.regs[dst].i
+			val := c.regs[src].i
+
+			debugPrintf("Writing %02X to %04X\n", val, addr)
+			c.mem[addr] = byte(val)
+
 		case 0x70:
 			debugPrintf("PUSH\n")
 
