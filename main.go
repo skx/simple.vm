@@ -228,6 +228,17 @@ func (c *CPU) Run() {
 				c.flags.z = true
 			}
 
+		case 0x25:
+			debugPrintf("INC\n")
+
+			// register
+			c.ip += 1
+			reg := c.mem[c.ip]
+
+			c.regs[reg].i += 1
+			// bump past that
+			c.ip += 1
+
 		case 0x30:
 			debugPrintf("STORE_STRING\n")
 
@@ -235,17 +246,15 @@ func (c *CPU) Run() {
 			c.ip += 1
 			reg := c.mem[c.ip]
 
-			// bump past that to the length
+			// bump past that to the length + string
 			c.ip += 1
-			debugPrintf("\tStoring to register %02X\n", reg)
 
-			// length
+			// read it
 			str := c.readString()
 			debugPrintf("\tRead String: '%s'\n", str)
 
-			// store the string
+			// store the string & type
 			c.regs[reg].s = str
-			// set the type
 			c.regs[reg].t = "string"
 
 		case 0x31:
@@ -260,8 +269,28 @@ func (c *CPU) Run() {
 		case 0x50:
 			debugPrintf("NOP\n")
 			c.ip += 1
+		case 0x60:
+			debugPrintf("PEEK\n")
+
+			// register
+			c.ip += 1
+			result := int(c.mem[c.ip])
+
+			c.ip += 1
+			src := int(c.mem[c.ip])
+
+			// get the address from the src register contents
+			addr := c.regs[src].i
+
+			// store the contents of the given address
+			c.regs[result].i = int(c.mem[addr])
+
+			c.ip += 1
+		case 0x61:
+			debugPrintf("POKE\n")
+			c.ip += 1
 		default:
-			debugPrintf("%04X - Instruction %02X\n", c.ip, instruction)
+			fmt.Printf("Unrecognized/Unimplemented opcode %02X at IP %04X\n", instruction, c.ip)
 			os.Exit(1)
 		}
 
