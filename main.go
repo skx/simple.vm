@@ -170,13 +170,17 @@ func (c *CPU) Run() {
 
 			// store the int
 			c.regs[reg].i = val
-			// set the type
 			c.regs[reg].t = "int"
 		case 0x02:
 			debugPrintf("INT_PRINT\n")
 			// register
 			c.ip += 1
 			reg := c.mem[c.ip]
+
+			if c.regs[reg].t != "int" {
+				fmt.Printf("BUG: Attempting to int_print on a non-int register\n")
+				os.Exit(3)
+			}
 
 			fmt.Printf("%d", c.regs[reg].i)
 			c.ip += 1
@@ -212,7 +216,7 @@ func (c *CPU) Run() {
 
 			// store result
 			c.regs[res].i = (c.regs[a].i + c.regs[b].i)
-
+			c.regs[res].t = "int"
 		case 0x22:
 			debugPrintf("SUB\n")
 			c.ip += 1
@@ -225,6 +229,7 @@ func (c *CPU) Run() {
 
 			// store result
 			c.regs[res].i = (c.regs[a].i - c.regs[b].i)
+			c.regs[res].t = "int"
 
 			// set the zero-flag if the result was zero or less
 			if c.regs[res].i <= 0 {
@@ -238,6 +243,10 @@ func (c *CPU) Run() {
 			c.ip += 1
 			reg := c.mem[c.ip]
 
+			if c.regs[reg].t != "int" {
+				fmt.Printf("BUG: Attempting to increment a non-integer register\n")
+				os.Exit(3)
+			}
 			c.regs[reg].i += 1
 			// bump past that
 			c.ip += 1
@@ -266,6 +275,11 @@ func (c *CPU) Run() {
 			// register
 			c.ip += 1
 			reg := c.mem[c.ip]
+
+			if c.regs[reg].t != "string" {
+				fmt.Printf("BUG: Attempting to print_string on a non-string register\n")
+				os.Exit(3)
+			}
 
 			fmt.Printf("%s", c.regs[reg].s)
 			c.ip += 1
@@ -297,7 +311,7 @@ func (c *CPU) Run() {
 			c.ip += 1
 			val := c.read2Val()
 
-			if c.regs[reg].i == val {
+			if c.regs[reg].t == "int" && c.regs[reg].i == val {
 				c.flags.z = true
 			} else {
 				c.flags.z = false
@@ -312,7 +326,7 @@ func (c *CPU) Run() {
 			// read it
 			str := c.readString()
 
-			if c.regs[reg].s == str {
+			if c.regs[reg].t == "string" && c.regs[reg].s == str {
 				c.flags.z = true
 			} else {
 				c.flags.z = false
@@ -335,7 +349,7 @@ func (c *CPU) Run() {
 
 			// store the contents of the given address
 			c.regs[result].i = int(c.mem[addr])
-
+			c.regs[result].t = "int"
 			c.ip += 1
 		case 0x70:
 			debugPrintf("PUSH\n")
@@ -350,7 +364,6 @@ func (c *CPU) Run() {
 
 		case 0x71:
 			debugPrintf("POP\n")
-			debugPrintf("PUSH\n")
 
 			// register
 			c.ip += 1
