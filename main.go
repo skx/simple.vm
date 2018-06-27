@@ -269,6 +269,26 @@ func (c *CPU) Run() {
 
 			fmt.Printf("%s", c.regs[reg].s)
 			c.ip += 1
+		case 0x40:
+			debugPrintf("CMP_REG\n")
+			c.ip += 1
+			r1 := int(c.mem[c.ip])
+			c.ip += 1
+			r2 := int(c.mem[c.ip])
+			c.ip += 1
+
+			c.flags.z = false
+
+			if c.regs[r1].t == "int" {
+				if c.regs[r1].i == c.regs[r2].i {
+					c.flags.z = true
+				}
+			}
+			if c.regs[r1].t == "string" {
+				if c.regs[r1].s == c.regs[r2].s {
+					c.flags.z = true
+				}
+			}
 		case 0x41:
 			debugPrintf("CMP_IMMEDIATE\n")
 			// register
@@ -278,6 +298,21 @@ func (c *CPU) Run() {
 			val := c.read2Val()
 
 			if c.regs[reg].i == val {
+				c.flags.z = true
+			} else {
+				c.flags.z = false
+			}
+		case 0x42:
+			debugPrintf("CMP_STR\n")
+			// register
+			c.ip += 1
+			reg := int(c.mem[c.ip])
+			c.ip += 1
+
+			// read it
+			str := c.readString()
+
+			if c.regs[reg].s == str {
 				c.flags.z = true
 			} else {
 				c.flags.z = false
