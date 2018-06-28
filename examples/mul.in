@@ -1,0 +1,49 @@
+#
+# About
+#
+#  This program multiples and divides two numbers.
+#
+#
+# Usage
+#
+#  $ compiler ./mul.in ; ./simple-vm ./mul.raw
+#
+#
+#
+
+        store #1, 10
+        store #2, 20
+
+        # show what we'll do
+        store #5, "Multiplying "
+        print_str #5
+        print_int #1
+        store #5, " and "
+        print_str #5
+        print_int #2
+        store #5, "\n"
+        print_str #5
+
+        # carry out the muiltiplication
+        mul #0, #1, #2
+
+        # show the result
+        store #5, "Result: "
+        print_str #5
+        print_int #0
+        store #5, "\n"
+        print_str #5
+
+
+
+        # now try a division.  #0 will have 200.  Divide by 4.
+        store #5, "Now dividing that result by four:\n"
+        print_str #5
+
+        store #3, 4
+        div #0, #0, #3
+        print_int #0
+
+        # add newline to the output
+        store #1, "\n"
+        print_str #1
