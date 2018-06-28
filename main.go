@@ -26,7 +26,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"runtime"
 )
 
 // Flags holds the CPU flags.
@@ -49,6 +48,13 @@ type Register struct {
 	t string
 }
 
+// Stack holds return-addresses when the `call` operation is being
+// completed.  It can also be used for storing ints.
+type Stack struct {
+	// The entries on our stack
+	entries []int
+}
+
 // CPU is our virtual machine state.
 type CPU struct {
 	// Registers
@@ -64,19 +70,51 @@ type CPU struct {
 	ip int
 
 	// stack
-	stack []int
+	stack *Stack
 }
 
+//
+// Global functions
+//
+
+// debugPrintf outputs some debugging details `$DEBUG=1`.
 func debugPrintf(fmt_ string, args ...interface{}) {
 	if os.Getenv("DEBUG") == "" {
 		return
 	}
-	programCounter, file, line, _ := runtime.Caller(1)
-	fn := runtime.FuncForPC(programCounter)
-	prefix := fmt.Sprintf("[%s:%s %d] %s", file, fn.Name(), line, fmt_)
+	prefix := fmt.Sprintf("%s", fmt_)
 	fmt.Printf(prefix, args...)
-	fmt.Println()
 }
+
+//
+// Stack functions
+//
+
+// NewStack creates a new stack object.
+func NewStack() *Stack {
+	return &Stack{}
+}
+
+// Is the stack empty?
+func (s *Stack) Empty() bool {
+	return (len(s.entries) <= 0)
+}
+
+// Push adds a value to the stack
+func (s *Stack) Push(value int) {
+	s.entries = append(s.entries, value)
+}
+
+// Pop removes a value from the stack
+func (s *Stack) Pop() int {
+	result := s.entries[0]
+	s.entries = append(s.entries[:0], s.entries[1:]...)
+	return (result)
+}
+
+//
+// CPU / VM functions
+//
 
 // NewCPU returns a new CPU object
 func NewCPU() *CPU {
@@ -85,7 +123,7 @@ func NewCPU() *CPU {
 		x.regs[i].t = "int"
 	}
 	x.ip = 0
-
+	x.stack = NewStack()
 	return x
 }
 
@@ -379,7 +417,7 @@ func (c *CPU) Run() {
 			c.ip += 1
 
 			// Store the value in the register on the stack
-			c.stack = append(c.stack, c.regs[reg].i)
+			c.stack.Push(c.regs[reg].i)
 
 		case 0x71:
 			debugPrintf("POP\n")
@@ -389,24 +427,26 @@ func (c *CPU) Run() {
 			reg := int(c.mem[c.ip])
 			c.ip += 1
 
+			// Ensure our stack isn't empty
+			if c.stack.Empty() {
+				fmt.Printf("Stack Underflow!\n")
+				os.Exit(1)
+			}
 			// Store the value in the register on the stack
-			c.regs[reg].i = c.stack[0]
+			c.regs[reg].i = c.stack.Pop()
 			c.regs[reg].t = "int"
 
-			// Remove it
-			c.stack = append(c.stack[:0], c.stack[1:]...)
 		case 0x72:
 			debugPrintf("RET\n")
-			if len(c.stack) < 0 {
+
+			// Ensure our stack isn't empty
+			if c.stack.Empty() {
 				fmt.Printf("Stack Underflow!\n")
 				os.Exit(1)
 			}
 
 			// Get the address
-			addr := c.stack[0]
-
-			// Remove it
-			c.stack = append(c.stack[:0], c.stack[1:]...)
+			addr := c.stack.Pop()
 
 			// jump
 			c.ip = addr
@@ -417,7 +457,7 @@ func (c *CPU) Run() {
 			addr := c.read2Val()
 
 			// push the current IP onto the stack
-			c.stack = append(c.stack, c.ip)
+			c.stack.Push(c.ip)
 
 			// jump to the call address
 			c.ip = addr
