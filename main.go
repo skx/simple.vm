@@ -23,10 +23,13 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
 	"os"
+	"os/exec"
+	"regexp"
 	"strconv"
 	"time"
 )
@@ -87,6 +90,47 @@ func debugPrintf(fmt_ string, args ...interface{}) {
 	}
 	prefix := fmt.Sprintf("%s", fmt_)
 	fmt.Printf(prefix, args...)
+}
+
+// Split a line of text into tokens, but keep anything "quoted"
+// together..
+//
+// So this input:
+//
+//   /bin/sh -c "ls /etc"
+//
+// Would give output of the form:
+//   /bin/sh
+//   -c
+//   ls /etc
+//
+func splitCommand(input string) []string {
+
+	//
+	// This does the split into an array
+	//
+	r := regexp.MustCompile(`[^\s"']+|"([^"]*)"|'([^']*)`)
+	res := r.FindAllString(input, -1)
+
+	//
+	// However the resulting pieces might be quoted.
+	// So we have to remove them, if present.
+	//
+	var result []string
+	for _, e := range res {
+		result = append(result, trimQuotes(e, '"'))
+	}
+	return (result)
+}
+
+// Remove balanced characters around a string.
+func trimQuotes(in string, c byte) string {
+	if len(in) >= 2 {
+		if in[0] == c && in[len(in)-1] == c {
+			return in[1 : len(in)-1]
+		}
+	}
+	return in
 }
 
 //
@@ -353,6 +397,57 @@ func (c *CPU) Run() {
 
 			fmt.Printf("%s", c.regs[reg].s)
 			c.ip += 1
+
+		case 0x32:
+			debugPrintf("STRING_CONCAT\n")
+
+			// output register
+			c.ip += 1
+			res := c.mem[c.ip]
+
+			// src1
+			c.ip += 1
+			a := c.mem[c.ip]
+
+			// src2
+			c.ip += 1
+			b := c.mem[c.ip]
+
+			c.ip += 1
+
+			c.regs[res].s = c.regs[a].s + c.regs[b].s
+			c.regs[res].t = "string"
+
+		case 0x33:
+			debugPrintf("SYSTEM\n")
+
+			// register
+			c.ip += 1
+			r := c.mem[c.ip]
+			c.ip += 1
+
+			if c.regs[r].t != "string" {
+				fmt.Printf("BUG: Attempting to exec a non-string register\n")
+				os.Exit(3)
+			}
+
+			// run the command
+			toExec := splitCommand(c.regs[r].s)
+			cmd := exec.Command(toExec[0], toExec[1:]...)
+
+			var out bytes.Buffer
+			var err bytes.Buffer
+			cmd.Stdout = &out
+			cmd.Stderr = &err
+			cmd.Run()
+
+			// stdout
+			fmt.Printf("%s", out.String())
+
+			// stderr - if non-empty
+			if len(err.String()) > 0 {
+				fmt.Printf("%s", err.String())
+			}
 		case 0x34:
 			debugPrintf("STRING_TOINT\n")
 
@@ -454,6 +549,20 @@ func (c *CPU) Run() {
 		case 0x50:
 			debugPrintf("NOP\n")
 			c.ip += 1
+		case 0x51:
+			debugPrintf("STORE\n")
+
+			// register
+			c.ip += 1
+			dst := int(c.mem[c.ip])
+			c.ip += 1
+
+			// register
+			src := int(c.mem[c.ip])
+			c.ip += 1
+
+			c.regs[src] = c.regs[dst]
+
 		case 0x60:
 			debugPrintf("PEEK\n")
 
@@ -489,7 +598,6 @@ func (c *CPU) Run() {
 
 			debugPrintf("Writing %02X to %04X\n", val, addr)
 			c.mem[addr] = byte(val)
-
 		case 0x70:
 			debugPrintf("PUSH\n")
 
