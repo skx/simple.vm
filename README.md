@@ -7,20 +7,41 @@ simple.vm
 
 This repository contains the implementation for a simple virtual-machine, along with a driver which will read a program from a file and execute it via that virtual machine.
 
-In addition to the virtual machine itself you'll also find:
+There are actually two intepreters, one written in C, and another written
+in golang.
 
-* [A simple compiler](compiler).
+In addition to the virtual machine interpreter you'll also find:
+
+* [A simple compiler](compiler), written in perl.
     * This will translate from assembly-source into binary-opcodes.
-* [A simple decompiler](decompiler).
+* [A simple decompiler](decompiler), written in perl.
     * This will translate in the other direction.
-* Several [example programs](examples/).
-* An example of [embedding](embedded.c) the virtual machine in a C host program.
+* Several [example programs](examples/) written in our custom assembly-language.
+* An example of [embedding](src/embedded.c) the virtual machine in a C host program.
     * Along with the definition of a custom-opcode handler.
-* A golang-interpreter for our bytecode.
-    * Which is 100% complete and identical the C-based interpreter.
 
 This particular virtual machine is intentionally simple, but despite that it is hopefully implemented in a readable fashion.  ("Simplicity" here means that we support only a small number of instructions, and the registers the virtual CPU possesses can store strings and integers, but not floating-point values.)
 This particular virtual machine is register-based, having ten registers which can be used to store strings or integer values.
+
+
+Compilation
+-----------
+
+Because the compiler and decompiler are written in Perl they need no special
+treatment.
+
+There are two interpretters, one written in C and one in Golang.  To build the
+C intepreter:
+
+    $ make
+
+This will generate `simple-vm` and `embedded` from the contents of [src/](src/).
+
+To build the golang interpreter:
+
+    $ go build .
+
+This will generate `simple.vm` from the file [main.go](main.go/)
 
 
 Implementation Notes
@@ -64,11 +85,11 @@ Embedding
 
 This virtual machine is designed primarily as a learning experience, but it is built with the idea of embedding in mind.
 
-The standard `simple-vm` binary, which will read opcodes from a file and interpret them, is less than 25k in size.
+The standard `simple-vm` binary, which will read opcodes from a file and interpret them, is less than 40k in size.
 
 Because the processing of binary opcodes is handled via a dispatch-table it is trivially possible for you to add your own application-specific opcodes to the system which would allow you to execute tiny compiled, and efficient, programs which can call back into your application when they wish.
 
-There is an example of defining a custom opcode in the file `embedded.c`.  This example defines a custom opcode `0xCD`, and executes a small program which uses that opcode for demonstration purposes:
+There is an example of defining a custom opcode in the file `src/embedded.c`.  This example defines a custom opcode `0xCD`, and executes a small program which uses that opcode for demonstration purposes:
 
      $ ./embedded
      [stdout] Register R01 => 16962 [Hex:4242]
@@ -190,7 +211,8 @@ The result is `main.go` which executes all of the [included example programs](ex
 Sample usage:
 
       $ ./compiler examples/jump.in
-      $ go run main.go examples/jump.raw
+      $ go build .
+      $ ./simple.vm examples/jump.raw
       Loading file examples/jump.raw
       Steve Kemp
       32
@@ -199,7 +221,7 @@ Sample usage:
 Similarly you can run the looping example:
 
       $ ./compiler examples/loop.in
-      $ go run main.go examples/loop.raw
+      $ ./simple.vm examples/loop.raw
       Loading file examples/loop.raw
       Counting from ten to zero
       10

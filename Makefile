@@ -20,23 +20,23 @@ all: simple-vm embedded
 #
 #  The sample driver.
 #
-simple-vm: main.o simple-vm.o simple-vm-opcodes.o
-	$(LINKER) $@  $(OBJECTS) $(CFLAGS) main.o simple-vm.o simple-vm-opcodes.o
+simple-vm: src/main.o src/simple-vm.o src/simple-vm-opcodes.o
+	$(LINKER) $@ $(OBJECTS) $(CFLAGS) src/main.o src/simple-vm.o src/simple-vm-opcodes.o
 
 
 #
 #  A program that contains an embedded virtual machine and allows
 # that machine to call into the application via a custom opcode 0xCD.
 #
-embedded: embedded.o simple-vm.o simple-vm-opcodes.o
-	$(LINKER) $@  $(OBJECTS) $(CFLAGS) simple-vm.o embedded.o simple-vm-opcodes.o
+embedded: src/embedded.o src/simple-vm.o src/simple-vm-opcodes.o
+	$(LINKER) $@ $(OBJECTS) $(CFLAGS) src/simple-vm.o src/embedded.o src/simple-vm-opcodes.o
 
 
 #
 #  Remove our compiled machine, and the sample programs.
 #
 clean:
-	@rm simple-vm embedded *.raw *.o || true
+	@rm simple-vm embedded *.raw src/*.o || true
 
 
 
