@@ -17,6 +17,7 @@ In addition to the virtual machine itself you'll also find:
 * An example of [embedding](embedded.c) the virtual machine in a C host program.
     * Along with the definition of a custom-opcode handler.
 * A golang-interpreter for our bytecode.
+    * Which is 100% complete and identical the C-based interpreter.
 
 This particular virtual machine is intentionally simple, but despite that it is hopefully implemented in a readable fashion.  ("Simplicity" here means that we support only a small number of instructions, and the registers the virtual CPU possesses can store strings and integers, but not floating-point values.)
 This particular virtual machine is register-based, having ten registers which can be used to store strings or integer values.
@@ -182,11 +183,9 @@ Golang Port
 -----------
 
 The virtual-machine which executes the bytecode is written in C, but for fun
-I thought it would be interesting to port it to golang.
+I thought it would be interesting to rewrite it to golang.
 
-The result is `main.go` which executes all of the sample programs, for those
-programs it cannot execute it will cleanly terminate when it reaches a bytecode
-instruction which hasn't been implemented.
+The result is `main.go` which executes all of the [included example programs](examples/).  As with the C-based interpreter it will operate only upon the compiled bytecode files - rather than the input source.
 
 Sample usage:
 
@@ -210,9 +209,6 @@ Similarly you can run the looping example:
       0
       Done
 
-There are a couple of missing math-operations, but I've implemented
-ADD & SUB which are required by a couple of the examples - if you implement
-them I'll be happy to accept a pull-request :)
 
 
 Fuzz Testing

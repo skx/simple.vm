@@ -349,6 +349,21 @@ func (c *CPU) Run() {
 				c.ip = addr
 			}
 
+		case 0x20:
+			debugPrintf("XOR\n")
+			c.ip += 1
+			res := c.mem[c.ip]
+			c.ip += 1
+			a := c.mem[c.ip]
+			c.ip += 1
+			b := c.mem[c.ip]
+			c.ip += 1
+
+			// store result
+			a_val := c.regs[a].GetInt()
+			b_val := c.regs[b].GetInt()
+			c.regs[res].SetInt(a_val ^ b_val)
+
 		case 0x21:
 			debugPrintf("ADD\n")
 			c.ip += 1
@@ -383,6 +398,41 @@ func (c *CPU) Run() {
 				c.flags.z = true
 			}
 
+		case 0x23:
+			debugPrintf("MUL\n")
+			c.ip += 1
+			res := c.mem[c.ip]
+			c.ip += 1
+			a := c.mem[c.ip]
+			c.ip += 1
+			b := c.mem[c.ip]
+			c.ip += 1
+
+			// store result
+			a_val := c.regs[a].GetInt()
+			b_val := c.regs[b].GetInt()
+			c.regs[res].SetInt(a_val * b_val)
+
+		case 0x24:
+			debugPrintf("DIV\n")
+			c.ip += 1
+			res := c.mem[c.ip]
+			c.ip += 1
+			a := c.mem[c.ip]
+			c.ip += 1
+			b := c.mem[c.ip]
+			c.ip += 1
+
+			// store result
+			a_val := c.regs[a].GetInt()
+			b_val := c.regs[b].GetInt()
+
+			if b_val == 0 {
+				fmt.Printf("Attempting to divide by zero - denying\n")
+				os.Exit(3)
+			}
+			c.regs[res].SetInt(a_val / b_val)
+
 		case 0x25:
 			debugPrintf("INC\n")
 
@@ -405,6 +455,36 @@ func (c *CPU) Run() {
 			c.regs[reg].SetInt(c.regs[reg].GetInt() - 1)
 			// bump past that
 			c.ip += 1
+		case 0x27:
+			debugPrintf("AND\n")
+			c.ip += 1
+			res := c.mem[c.ip]
+			c.ip += 1
+			a := c.mem[c.ip]
+			c.ip += 1
+			b := c.mem[c.ip]
+			c.ip += 1
+
+			// store result
+			a_val := c.regs[a].GetInt()
+			b_val := c.regs[b].GetInt()
+			c.regs[res].SetInt(a_val & b_val)
+
+		case 0x28:
+			debugPrintf("OR\n")
+			c.ip += 1
+			res := c.mem[c.ip]
+			c.ip += 1
+			a := c.mem[c.ip]
+			c.ip += 1
+			b := c.mem[c.ip]
+			c.ip += 1
+
+			// store result
+			a_val := c.regs[a].GetInt()
+			b_val := c.regs[b].GetInt()
+			c.regs[res].SetInt(a_val | b_val)
+
 		case 0x30:
 			debugPrintf("STORE_STRING\n")
 
