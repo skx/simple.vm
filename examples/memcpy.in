@@ -19,19 +19,33 @@
         #
         store #1, "Steve Kemp\n"
         print_str #1
+        store #1, "memcpy works\n"
+        print_str #1
         exit
+    :code_end
 
     :run
         #
-        # Copy the code to 0x5000 - NOTE The length is a guess here.
-        # if we could support "store #1, run-code" that would be neat.
+        # Copy the memory between `code` and `code_end` to 0x5000.
         #
+
+        # First of all calcuate the length
+        store #2, code
+        store #3, code_end
+        sub #3, #3, #2
+
+        # Show the length of the code we're copying
+        # Remember the result is in #3.
+        store #1, "Code length is "
+        print_str #1
+        print_int #3
+        store #1, "\n"
+        print_str #1
+
+        # setup the copy and run it
         store #1, 0x5000
         store #2, code
-        store #3, 50
         memcpy #1, #2, #3
 
-        #
-        # Jump there.
-        #
+        # Jump to the copied code.
         goto 0x5000

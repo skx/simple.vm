@@ -598,6 +598,40 @@ func (c *CPU) Run() {
 
 			debugPrintf("Writing %02X to %04X\n", val, addr)
 			c.mem[addr] = byte(val)
+		case 0x62:
+			debugPrintf("MEMCPY\n")
+
+			// register
+			c.ip += 1
+			dst := int(c.mem[c.ip])
+			c.ip += 1
+
+			src := int(c.mem[c.ip])
+			c.ip += 1
+
+			len := int(c.mem[c.ip])
+			c.ip += 1
+
+			// get the addresses from the registers
+			src_addr := c.regs[src].i
+			dst_addr := c.regs[dst].i
+			length := c.regs[len].i
+
+			i := 0
+			for i < length {
+
+				if dst_addr >= 0xFFFF {
+					dst_addr = 0
+				}
+				if src_addr >= 0xFFFF {
+					src_addr = 0
+				}
+
+				c.mem[dst_addr] = c.mem[src_addr]
+				dst_addr += 1
+				src_addr += 1
+				i += 1
+			}
 		case 0x70:
 			debugPrintf("PUSH\n")
 
