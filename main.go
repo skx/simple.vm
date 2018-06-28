@@ -1,20 +1,13 @@
 //
-// This is a simple port of the virtual machine to golang
+// This is a simple port of the virtual machine interpreter to golang.
 //
-// It is not complete, because it only operates upon some of the examples.
-//
-// For example the loop script:
+// For example the loop script could be compiled to bytecode like this:
 //
 //     ./compiler examples/loop.in
+//
+// Once that has been done it can be executed:
+//
 //     go run main.go examples/loop.raw
-//
-// And the jumping script:
-//
-//     ./compiler examples/jump.in
-//     go run main.go examples/jump.raw
-//
-// Still it shows how you could "port" this software, if you had a pressing
-// need for a Golang based VM.
 //
 // Steve
 // --
@@ -34,7 +27,7 @@ import (
 	"time"
 )
 
-// Flags holds the CPU flags.
+// Flags holds the CPU flags - of which we only have one.
 type Flags struct {
 	// Zero-flag
 	z bool
@@ -83,7 +76,7 @@ type CPU struct {
 // Global functions
 //
 
-// debugPrintf outputs some debugging details `$DEBUG=1`.
+// debugPrintf outputs some debugging details when `$DEBUG=1`.
 func debugPrintf(fmt_ string, args ...interface{}) {
 	if os.Getenv("DEBUG") == "" {
 		return
@@ -93,7 +86,7 @@ func debugPrintf(fmt_ string, args ...interface{}) {
 }
 
 // Split a line of text into tokens, but keep anything "quoted"
-// together..
+// together.
 //
 // So this input:
 //
@@ -204,22 +197,28 @@ func (s *Stack) Pop() int {
 // CPU / VM functions
 //
 
-// NewCPU returns a new CPU object
+// NewCPU returns a new CPU object.
 func NewCPU() *CPU {
 	x := &CPU{}
-	for i := 0; i < 16; i++ {
-		x.regs[i].SetInt(0)
-	}
-	x.ip = 0
-	x.stack = NewStack()
+	x.Reset()
 	return x
 }
 
-// Load opens the named program and loads it
+// Reset sets the CPU into a known-good state, by setting the IP to zero,
+// and emptying all registers (i.e. setting them to zero too.)
+func (c *CPU) Reset() {
+	for i := 0; i < 16; i++ {
+		c.regs[i].SetInt(0)
+	}
+	c.ip = 0
+	c.stack = NewStack()
+}
+
+// Load opens the named program and executes it.
 func (c *CPU) Load(path string) {
 
 	// Ensure we reset our state.
-	c.ip = 0
+	c.Reset()
 
 	// Load the file
 	b, err := ioutil.ReadFile(path)
