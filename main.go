@@ -22,6 +22,7 @@ import (
 	"math/rand"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"time"
@@ -205,7 +206,7 @@ func NewCPU() *CPU {
 }
 
 // Reset sets the CPU into a known-good state, by setting the IP to zero,
-// and emptying all registers (i.e. setting them to zero too.)
+// and emptying all registers (i.e. setting them to zero too).
 func (c *CPU) Reset() {
 	for i := 0; i < 16; i++ {
 		c.regs[i].SetInt(0)
@@ -241,10 +242,8 @@ func (c *CPU) Load(path string) {
 // Read a string from the IP position
 // Strings are prefixed by their lengths (two-bytes).
 func (c *CPU) readString() string {
-	// Read the length of the string
+	// Read the length of the string we expect
 	len := c.read2Val()
-
-	debugPrintf("string length(%04X);\n", len)
 
 	// Now build up the body of the string
 	s := ""
@@ -252,11 +251,14 @@ func (c *CPU) readString() string {
 		s += string(c.mem[c.ip+i])
 	}
 
+	// Jump the IP over the length of the string.
 	c.ip += (len)
 	return s
 }
 
 // Read a two-byte number from the current IP.
+// i.e This reads two bytes and returns a 16-bit value to the caller,
+// skipping over both bytes in the IP.
 func (c *CPU) read2Val() int {
 	l := int(c.mem[c.ip])
 	c.ip += 1
@@ -269,19 +271,17 @@ func (c *CPU) read2Val() int {
 
 // Run launches our intepreter.
 func (c *CPU) Run() {
-
-	c.ip = 0
 	run := true
 	for run {
 
 		instruction := c.mem[c.ip]
-
 		debugPrintf("About to execute instruction %02X\n", instruction)
 
 		switch instruction {
 		case 0x00:
 			debugPrintf("EXIT\n")
 			run = false
+
 		case 0x01:
 			debugPrintf("INT_STORE\n")
 
@@ -293,6 +293,7 @@ func (c *CPU) Run() {
 
 			debugPrintf("\tSet register %02X to %04X\n", reg, val)
 			c.regs[reg].SetInt(val)
+
 		case 0x02:
 			debugPrintf("INT_PRINT\n")
 			// register
@@ -301,6 +302,7 @@ func (c *CPU) Run() {
 
 			fmt.Printf("%d", c.regs[reg].GetInt())
 			c.ip += 1
+
 		case 0x03:
 			debugPrintf("INT_TOSTRING\n")
 			// register
@@ -315,6 +317,7 @@ func (c *CPU) Run() {
 
 			// next instruction
 			c.ip += 1
+
 		case 0x04:
 			debugPrintf("INT_RANDOM\n")
 			// register
@@ -328,11 +331,13 @@ func (c *CPU) Run() {
 			// New random number
 			c.regs[reg].SetInt(r1.Intn(0xffff))
 			c.ip += 1
+
 		case 0x10:
 			debugPrintf("JUMP\n")
 			c.ip += 1
 			addr := c.read2Val()
 			c.ip = addr
+
 		case 0x11:
 			debugPrintf("JUMP_Z\n")
 			c.ip += 1
@@ -340,6 +345,7 @@ func (c *CPU) Run() {
 			if c.flags.z {
 				c.ip = addr
 			}
+
 		case 0x12:
 			debugPrintf("JUMP_NZ\n")
 			c.ip += 1
@@ -377,6 +383,7 @@ func (c *CPU) Run() {
 			a_val := c.regs[a].GetInt()
 			b_val := c.regs[b].GetInt()
 			c.regs[res].SetInt(a_val + b_val)
+
 		case 0x22:
 			debugPrintf("SUB\n")
 			c.ip += 1
@@ -454,6 +461,7 @@ func (c *CPU) Run() {
 			c.regs[reg].SetInt(c.regs[reg].GetInt() - 1)
 			// bump past that
 			c.ip += 1
+
 		case 0x27:
 			debugPrintf("AND\n")
 			c.ip += 1
@@ -558,6 +566,7 @@ func (c *CPU) Run() {
 			if len(err.String()) > 0 {
 				fmt.Printf("%s", err.String())
 			}
+
 		case 0x34:
 			debugPrintf("STRING_TOINT\n")
 
@@ -599,6 +608,7 @@ func (c *CPU) Run() {
 					c.flags.z = true
 				}
 			}
+
 		case 0x41:
 			debugPrintf("CMP_IMMEDIATE\n")
 			// register
@@ -612,6 +622,7 @@ func (c *CPU) Run() {
 			} else {
 				c.flags.z = false
 			}
+
 		case 0x42:
 			debugPrintf("CMP_STR\n")
 			// register
@@ -627,6 +638,7 @@ func (c *CPU) Run() {
 			} else {
 				c.flags.z = false
 			}
+
 		case 0x43:
 			debugPrintf("IS_STRING\n")
 			// register
@@ -639,6 +651,7 @@ func (c *CPU) Run() {
 			} else {
 				c.flags.z = false
 			}
+
 		case 0x44:
 			debugPrintf("IS_INT\n")
 			// register
@@ -655,6 +668,7 @@ func (c *CPU) Run() {
 		case 0x50:
 			debugPrintf("NOP\n")
 			c.ip += 1
+
 		case 0x51:
 			debugPrintf("STORE\n")
 
@@ -685,6 +699,7 @@ func (c *CPU) Run() {
 			// store the contents of the given address
 			c.regs[result].SetInt(int(c.mem[addr]))
 			c.ip += 1
+
 		case 0x61:
 			debugPrintf("POKE\n")
 
@@ -703,6 +718,7 @@ func (c *CPU) Run() {
 
 			debugPrintf("Writing %02X to %04X\n", val, addr)
 			c.mem[addr] = byte(val)
+
 		case 0x62:
 			debugPrintf("MEMCPY\n")
 
@@ -737,6 +753,7 @@ func (c *CPU) Run() {
 				src_addr += 1
 				i += 1
 			}
+
 		case 0x70:
 			debugPrintf("PUSH\n")
 
@@ -778,6 +795,7 @@ func (c *CPU) Run() {
 
 			// jump
 			c.ip = addr
+
 		case 0x73:
 			debugPrintf("CALL\n")
 			c.ip += 1
@@ -789,6 +807,7 @@ func (c *CPU) Run() {
 
 			// jump to the call address
 			c.ip = addr
+
 		default:
 			fmt.Printf("Unrecognized/Unimplemented opcode %02X at IP %04X\n", instruction, c.ip)
 			os.Exit(1)
@@ -803,12 +822,14 @@ func (c *CPU) Run() {
 
 // Main driver
 func main() {
+	if len(os.Args) < 2 {
+		fmt.Printf("Usage %s file1.raw file2.raw .. fileN.raw\n",
+			filepath.Base(os.Args[0]))
+	}
 	for _, ent := range os.Args[1:] {
-
-		fmt.Printf("Loading file %s\n", ent)
+		fmt.Printf("Loading file: %s\n", ent)
 		c := NewCPU()
 		c.Load(ent)
-
 		c.Run()
 	}
 
