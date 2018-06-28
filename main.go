@@ -134,6 +134,47 @@ func trimQuotes(in string, c byte) string {
 }
 
 //
+// Register functions
+//
+
+// GetInt retrieves the integer content of the given register.
+// If the register contains a string that is a fatal error.
+func (r *Register) GetInt() int {
+	if r.t != "int" {
+		fmt.Printf("BUG: Attempting to call GetInt on a register holding a non-integer value.\n")
+		os.Exit(3)
+	}
+	return r.i
+}
+
+// SetInt stores the given integer in the register.
+func (r *Register) SetInt(v int) {
+	r.i = v
+	r.t = "int"
+}
+
+// GetInt retrieves the string content of the given register.
+// If the register contains an integer that is a fatal error.
+func (r *Register) GetString() string {
+	if r.t != "string" {
+		fmt.Printf("BUG: Attempting to call GetString on a register holding a non-string value.\n")
+		os.Exit(3)
+	}
+	return r.s
+}
+
+// SetString stores the supplied string in the register.
+func (r *Register) SetString(v string) {
+	r.s = v
+	r.t = "string"
+}
+
+// Return the type of a registers contents `int` vs. `string`.
+func (r *Register) Type() string {
+	return (r.t)
+}
+
+//
 // Stack functions
 //
 
@@ -167,7 +208,7 @@ func (s *Stack) Pop() int {
 func NewCPU() *CPU {
 	x := &CPU{}
 	for i := 0; i < 16; i++ {
-		x.regs[i].t = "int"
+		x.regs[i].SetInt(0)
 	}
 	x.ip = 0
 	x.stack = NewStack()
@@ -252,22 +293,14 @@ func (c *CPU) Run() {
 			val := c.read2Val()
 
 			debugPrintf("\tSet register %02X to %04X\n", reg, val)
-
-			// store the int
-			c.regs[reg].i = val
-			c.regs[reg].t = "int"
+			c.regs[reg].SetInt(val)
 		case 0x02:
 			debugPrintf("INT_PRINT\n")
 			// register
 			c.ip += 1
 			reg := c.mem[c.ip]
 
-			if c.regs[reg].t != "int" {
-				fmt.Printf("BUG: Attempting to int_print on a non-int register\n")
-				os.Exit(3)
-			}
-
-			fmt.Printf("%d", c.regs[reg].i)
+			fmt.Printf("%d", c.regs[reg].GetInt())
 			c.ip += 1
 		case 0x03:
 			debugPrintf("INT_TOSTRING\n")
@@ -276,11 +309,10 @@ func (c *CPU) Run() {
 			reg := c.mem[c.ip]
 
 			// get value
-			i := c.regs[reg].i
+			i := c.regs[reg].GetInt()
 
 			// change from int to string
-			c.regs[reg].t = "string"
-			c.regs[reg].s = fmt.Sprintf("%d", i)
+			c.regs[reg].SetString(fmt.Sprintf("%d", i))
 
 			// next instruction
 			c.ip += 1
@@ -295,8 +327,7 @@ func (c *CPU) Run() {
 			r1 := rand.New(s1)
 
 			// New random number
-			c.regs[reg].i = r1.Intn(0xffff)
-			c.regs[reg].t = "int"
+			c.regs[reg].SetInt(r1.Intn(0xffff))
 			c.ip += 1
 		case 0x10:
 			debugPrintf("JUMP\n")
@@ -329,8 +360,9 @@ func (c *CPU) Run() {
 			c.ip += 1
 
 			// store result
-			c.regs[res].i = (c.regs[a].i + c.regs[b].i)
-			c.regs[res].t = "int"
+			a_val := c.regs[a].GetInt()
+			b_val := c.regs[b].GetInt()
+			c.regs[res].SetInt(a_val + b_val)
 		case 0x22:
 			debugPrintf("SUB\n")
 			c.ip += 1
@@ -342,8 +374,9 @@ func (c *CPU) Run() {
 			c.ip += 1
 
 			// store result
-			c.regs[res].i = (c.regs[a].i - c.regs[b].i)
-			c.regs[res].t = "int"
+			a_val := c.regs[a].GetInt()
+			b_val := c.regs[b].GetInt()
+			c.regs[res].SetInt(a_val - b_val)
 
 			// set the zero-flag if the result was zero or less
 			if c.regs[res].i <= 0 {
@@ -357,11 +390,8 @@ func (c *CPU) Run() {
 			c.ip += 1
 			reg := c.mem[c.ip]
 
-			if c.regs[reg].t != "int" {
-				fmt.Printf("BUG: Attempting to increment a non-integer register\n")
-				os.Exit(3)
-			}
-			c.regs[reg].i += 1
+			c.regs[reg].SetInt(c.regs[reg].GetInt() + 1)
+
 			// bump past that
 			c.ip += 1
 
@@ -372,11 +402,7 @@ func (c *CPU) Run() {
 			c.ip += 1
 			reg := c.mem[c.ip]
 
-			if c.regs[reg].t != "int" {
-				fmt.Printf("BUG: Attempting to deccrement a non-integer register\n")
-				os.Exit(3)
-			}
-			c.regs[reg].i -= 1
+			c.regs[reg].SetInt(c.regs[reg].GetInt() - 1)
 			// bump past that
 			c.ip += 1
 		case 0x30:
@@ -393,9 +419,8 @@ func (c *CPU) Run() {
 			str := c.readString()
 			debugPrintf("\tRead String: '%s'\n", str)
 
-			// store the string & type
-			c.regs[reg].s = str
-			c.regs[reg].t = "string"
+			// store the string
+			c.regs[reg].SetString(str)
 
 		case 0x31:
 			debugPrintf("PRINT_STRING\n")
@@ -404,12 +429,7 @@ func (c *CPU) Run() {
 			c.ip += 1
 			reg := c.mem[c.ip]
 
-			if c.regs[reg].t != "string" {
-				fmt.Printf("BUG: Attempting to print_string on a non-string register\n")
-				os.Exit(3)
-			}
-
-			fmt.Printf("%s", c.regs[reg].s)
+			fmt.Printf("%s", c.regs[reg].GetString())
 			c.ip += 1
 
 		case 0x32:
@@ -429,8 +449,10 @@ func (c *CPU) Run() {
 
 			c.ip += 1
 
-			c.regs[res].s = c.regs[a].s + c.regs[b].s
-			c.regs[res].t = "string"
+			a_val := c.regs[a].GetString()
+			b_val := c.regs[b].GetString()
+
+			c.regs[res].SetString(a_val + b_val)
 
 		case 0x33:
 			debugPrintf("SYSTEM\n")
@@ -440,13 +462,8 @@ func (c *CPU) Run() {
 			r := c.mem[c.ip]
 			c.ip += 1
 
-			if c.regs[r].t != "string" {
-				fmt.Printf("BUG: Attempting to exec a non-string register\n")
-				os.Exit(3)
-			}
-
 			// run the command
-			toExec := splitCommand(c.regs[r].s)
+			toExec := splitCommand(c.regs[r].GetString())
 			cmd := exec.Command(toExec[0], toExec[1:]...)
 
 			var out bytes.Buffer
@@ -470,15 +487,11 @@ func (c *CPU) Run() {
 			reg := c.mem[c.ip]
 
 			// get value
-			s := c.regs[reg].s
-
-			// change from int to string
-			c.regs[reg].t = "int"
-			c.regs[reg].s = ""
+			s := c.regs[reg].GetString()
 
 			i, err := strconv.Atoi(s)
 			if err == nil {
-				c.regs[reg].i = i
+				c.regs[reg].SetInt(i)
 			} else {
 				fmt.Printf("Failed to convert '%s' to int: %s", s, err.Error())
 				os.Exit(3)
@@ -497,13 +510,13 @@ func (c *CPU) Run() {
 
 			c.flags.z = false
 
-			if c.regs[r1].t == "int" {
-				if c.regs[r1].i == c.regs[r2].i {
+			switch c.regs[r1].Type() {
+			case "int":
+				if c.regs[r1].GetInt() == c.regs[r2].GetInt() {
 					c.flags.z = true
 				}
-			}
-			if c.regs[r1].t == "string" {
-				if c.regs[r1].s == c.regs[r2].s {
+			case "string":
+				if c.regs[r1].GetString() == c.regs[r2].GetString() {
 					c.flags.z = true
 				}
 			}
@@ -515,7 +528,7 @@ func (c *CPU) Run() {
 			c.ip += 1
 			val := c.read2Val()
 
-			if c.regs[reg].t == "int" && c.regs[reg].i == val {
+			if c.regs[reg].Type() == "int" && c.regs[reg].GetInt() == val {
 				c.flags.z = true
 			} else {
 				c.flags.z = false
@@ -530,7 +543,7 @@ func (c *CPU) Run() {
 			// read it
 			str := c.readString()
 
-			if c.regs[reg].t == "string" && c.regs[reg].s == str {
+			if c.regs[reg].Type() == "string" && c.regs[reg].GetString() == str {
 				c.flags.z = true
 			} else {
 				c.flags.z = false
@@ -542,19 +555,19 @@ func (c *CPU) Run() {
 			reg := int(c.mem[c.ip])
 			c.ip += 1
 
-			if c.regs[reg].t == "string" {
+			if c.regs[reg].Type() == "string" {
 				c.flags.z = true
 			} else {
 				c.flags.z = false
 			}
 		case 0x44:
-			debugPrintf("IS_STRING\n")
+			debugPrintf("IS_INT\n")
 			// register
 			c.ip += 1
 			reg := int(c.mem[c.ip])
 			c.ip += 1
 
-			if c.regs[reg].t == "int" {
+			if c.regs[reg].Type() == "int" {
 				c.flags.z = true
 			} else {
 				c.flags.z = false
@@ -591,8 +604,7 @@ func (c *CPU) Run() {
 			addr := c.regs[src].i
 
 			// store the contents of the given address
-			c.regs[result].i = int(c.mem[addr])
-			c.regs[result].t = "int"
+			c.regs[result].SetInt(int(c.mem[addr]))
 			c.ip += 1
 		case 0x61:
 			debugPrintf("POKE\n")
@@ -627,9 +639,9 @@ func (c *CPU) Run() {
 			c.ip += 1
 
 			// get the addresses from the registers
-			src_addr := c.regs[src].i
-			dst_addr := c.regs[dst].i
-			length := c.regs[len].i
+			src_addr := c.regs[src].GetInt()
+			dst_addr := c.regs[dst].GetInt()
+			length := c.regs[len].GetInt()
 
 			i := 0
 			for i < length {
@@ -655,7 +667,7 @@ func (c *CPU) Run() {
 			c.ip += 1
 
 			// Store the value in the register on the stack
-			c.stack.Push(c.regs[reg].i)
+			c.stack.Push(c.regs[reg].GetInt())
 
 		case 0x71:
 			debugPrintf("POP\n")
@@ -671,8 +683,7 @@ func (c *CPU) Run() {
 				os.Exit(1)
 			}
 			// Store the value in the register on the stack
-			c.regs[reg].i = c.stack.Pop()
-			c.regs[reg].t = "int"
+			c.regs[reg].SetInt(c.stack.Pop())
 
 		case 0x72:
 			debugPrintf("RET\n")
