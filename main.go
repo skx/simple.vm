@@ -365,6 +365,20 @@ func (c *CPU) Run() {
 			// bump past that
 			c.ip += 1
 
+		case 0x26:
+			debugPrintf("DEC\n")
+
+			// register
+			c.ip += 1
+			reg := c.mem[c.ip]
+
+			if c.regs[reg].t != "int" {
+				fmt.Printf("BUG: Attempting to deccrement a non-integer register\n")
+				os.Exit(3)
+			}
+			c.regs[reg].i -= 1
+			// bump past that
+			c.ip += 1
 		case 0x30:
 			debugPrintf("STORE_STRING\n")
 
