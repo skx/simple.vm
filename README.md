@@ -16,6 +16,7 @@ In addition to the virtual machine itself you'll also find:
 * Several [example programs](examples/).
 * An example of [embedding](embedded.c) the virtual machine in a C host program.
     * Along with the definition of a custom-opcode handler.
+* A golang-interpreter for our bytecode.
 
 This particular virtual machine is intentionally simple, but despite that it is hopefully implemented in a readable fashion.  ("Simplicity" here means that we support only a small number of instructions, and the registers the virtual CPU possesses can store strings and integers, but not floating-point values.)
 This particular virtual machine is register-based, having ten registers which can be used to store strings or integer values.
@@ -180,12 +181,14 @@ There are more examples stored beneath the `examples/` subdirectory in this repo
 Golang Port
 -----------
 
-The virtual-machine which executes the bytecode is written in C, so for fun
+The virtual-machine which executes the bytecode is written in C, but for fun
 I thought it would be interesting to port it to golang.
 
-The result is `main.go` which executes some of the programs, it will terminate
-when it reaches an instruction which hasn't been implemented.  For the moment
-it runs a few of the examples:
+The result is `main.go` which executes most of the sample programs, for those
+that it cannot execute it will cleanly terminate when it reaches a bytecode
+instruction which hasn't been implemented.
+
+Sample usage:
 
       $ ./compiler examples/jump.in
       $ go run main.go examples/jump.raw
@@ -202,19 +205,14 @@ Similarly you can run the looping example:
       Counting from ten to zero
       10
       9
-      8
-      7
-      6
-      5
-      4
-      3
-      2
-      1
+      ..
+      ..
       0
       Done
 
 If you wish to submit a pull request implementing the missing opcodes I'd
 be happy to accept it :)
+
 
 Fuzz Testing
 ------------
