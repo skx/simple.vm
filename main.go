@@ -25,7 +25,10 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"os"
+	"strconv"
+	"time"
 )
 
 // Flags holds the CPU flags.
@@ -222,6 +225,35 @@ func (c *CPU) Run() {
 
 			fmt.Printf("%d", c.regs[reg].i)
 			c.ip += 1
+		case 0x03:
+			debugPrintf("INT_TOSTRING\n")
+			// register
+			c.ip += 1
+			reg := c.mem[c.ip]
+
+			// get value
+			i := c.regs[reg].i
+
+			// change from int to string
+			c.regs[reg].t = "string"
+			c.regs[reg].s = fmt.Sprintf("%d", i)
+
+			// next instruction
+			c.ip += 1
+		case 0x04:
+			debugPrintf("INT_RANDOM\n")
+			// register
+			c.ip += 1
+			reg := c.mem[c.ip]
+
+			// New random source
+			s1 := rand.NewSource(time.Now().UnixNano())
+			r1 := rand.New(s1)
+
+			// New random number
+			c.regs[reg].i = r1.Intn(0xffff)
+			c.regs[reg].t = "int"
+			c.ip += 1
 		case 0x10:
 			debugPrintf("JUMP\n")
 			c.ip += 1
@@ -321,6 +353,31 @@ func (c *CPU) Run() {
 
 			fmt.Printf("%s", c.regs[reg].s)
 			c.ip += 1
+		case 0x34:
+			debugPrintf("STRING_TOINT\n")
+
+			// register
+			c.ip += 1
+			reg := c.mem[c.ip]
+
+			// get value
+			s := c.regs[reg].s
+
+			// change from int to string
+			c.regs[reg].t = "int"
+			c.regs[reg].s = ""
+
+			i, err := strconv.Atoi(s)
+			if err == nil {
+				c.regs[reg].i = i
+			} else {
+				fmt.Printf("Failed to convert '%s' to int: %s", s, err.Error())
+				os.Exit(3)
+			}
+
+			// next instruction
+			c.ip += 1
+
 		case 0x40:
 			debugPrintf("CMP_REG\n")
 			c.ip += 1
@@ -369,6 +426,31 @@ func (c *CPU) Run() {
 			} else {
 				c.flags.z = false
 			}
+		case 0x43:
+			debugPrintf("IS_STRING\n")
+			// register
+			c.ip += 1
+			reg := int(c.mem[c.ip])
+			c.ip += 1
+
+			if c.regs[reg].t == "string" {
+				c.flags.z = true
+			} else {
+				c.flags.z = false
+			}
+		case 0x44:
+			debugPrintf("IS_STRING\n")
+			// register
+			c.ip += 1
+			reg := int(c.mem[c.ip])
+			c.ip += 1
+
+			if c.regs[reg].t == "int" {
+				c.flags.z = true
+			} else {
+				c.flags.z = false
+			}
+
 		case 0x50:
 			debugPrintf("NOP\n")
 			c.ip += 1
@@ -475,7 +557,6 @@ func (c *CPU) Run() {
 
 // Main driver
 func main() {
-
 	for _, ent := range os.Args[1:] {
 
 		fmt.Printf("Loading file %s\n", ent)

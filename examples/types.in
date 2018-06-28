@@ -35,4 +35,51 @@
 :ok2
         store #1, "OK - string-test succeeded\n"
         print_str #1
+
+#
+# Now we'll try converting a string to an integer
+#
+        store #1, "32"
+        string2int #1
+        is_integer #1
+        jmpz ok3
+
+        # failed to convert
+        store #1, "Failed to convert string to integer\n"
+        print_str #1
+        exit
+
+:ok3
+        store #1, "Converted string to int!\n"
+        print_str #1
+
+#
+# Now we'll try converting an integer to a string
+#
+        store #1, 32
+        int2string #1
+
+        is_string #1
+        jmpz ok4
+
+        # failed to convert
+        store #1, "Failed to convert integer to string\n"
+        print_str #1
+        exit
+
+:ok4
+        store #1, "Converted int to string!\n"
+        print_str #1
+
+        #
+        # Since we know we have a string the is_integer should faile
+        #
+        is_integer #1
+        jmpz fail2
+        exit
+
+
+:fail2
+        store #1, "We failed though"
+        print_str #1
         exit
