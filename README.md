@@ -184,8 +184,8 @@ Golang Port
 The virtual-machine which executes the bytecode is written in C, but for fun
 I thought it would be interesting to port it to golang.
 
-The result is `main.go` which executes most of the sample programs, for those
-that it cannot execute it will cleanly terminate when it reaches a bytecode
+The result is `main.go` which executes all of the sample programs, for those
+programs it cannot execute it will cleanly terminate when it reaches a bytecode
 instruction which hasn't been implemented.
 
 Sample usage:
@@ -210,8 +210,9 @@ Similarly you can run the looping example:
       0
       Done
 
-If you wish to submit a pull request implementing the missing opcodes I'd
-be happy to accept it :)
+There are a couple of missing math-operations, but I've implemented
+ADD & SUB which are required by a couple of the examples - if you implement
+them I'll be happy to accept a pull-request :)
 
 
 Fuzz Testing
