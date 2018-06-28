@@ -300,7 +300,12 @@ func (c *CPU) Run() {
 			c.ip += 1
 			reg := c.mem[c.ip]
 
-			fmt.Printf("%d", c.regs[reg].GetInt())
+			val := c.regs[reg].GetInt()
+			if val < 256 {
+				fmt.Printf("%02X", val)
+			} else {
+				fmt.Printf("%04X", val)
+			}
 			c.ip += 1
 
 		case 0x03:
