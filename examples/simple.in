@@ -1,4 +1,5 @@
-
+# Test
+nop
 :start
         store #1, "I like loops\n"
         print_str #1
