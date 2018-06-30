@@ -2,13 +2,15 @@
 * Git Repository:
     * http://github.com/skx/simple.vm
 
+**NOTE**: A golang port of the virtual-machine compiler and interpreter is available from the following repository:
+
+* https://github.com/skx/go.vm
+
+
 simple.vm
 ---------
 
 This repository contains the implementation for a simple virtual-machine, along with a driver which will read a program from a file and execute it via that virtual machine.
-
-There are actually two intepreters, one written in C, and another written
-in golang.
 
 In addition to the virtual machine interpreter you'll also find:
 
@@ -30,18 +32,12 @@ Compilation
 Because the compiler and decompiler are written in Perl they need no special
 treatment.
 
-There are two interpretters, one written in C and one in Golang.  To build the
+The interpretter, written in C, can be built like so:
 C intepreter:
 
     $ make
 
 This will generate `simple-vm` and `embedded` from the contents of [src/](src/).
-
-To build the golang interpreter:
-
-    $ go build .
-
-This will generate `simple.vm` from the file [main.go](main.go/)
 
 
 Implementation Notes
@@ -198,39 +194,6 @@ If you wish to debug the execution then run:
       DEBUG=1 ./simple-vm ./examples/simple.raw
 
 There are more examples stored beneath the `examples/` subdirectory in this repository.   The file [examples/quine.in](examples/quine.in) provides a good example of various features - it outputs its own opcodes.
-
-
-Golang Port
------------
-
-The virtual-machine which executes the bytecode is written in C, but for fun
-I thought it would be interesting to rewrite it to golang.
-
-The result is `main.go` which executes all of the [included example programs](examples/).  As with the C-based interpreter it will operate only upon the compiled bytecode files - rather than the input source.
-
-Sample usage:
-
-      $ ./compiler examples/jump.in
-      $ go build .
-      $ ./simple.vm examples/jump.raw
-      Loading file examples/jump.raw
-      Steve Kemp
-      32
-      Kirsi Kemp
-
-Similarly you can run the looping example:
-
-      $ ./compiler examples/loop.in
-      $ ./simple.vm examples/loop.raw
-      Loading file examples/loop.raw
-      Counting from ten to zero
-      10
-      9
-      ..
-      ..
-      0
-      Done
-
 
 
 Fuzz Testing
