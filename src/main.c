@@ -56,14 +56,13 @@ int run_file(const char *filename, int dump_registers, int instructions)
     }
 
     unsigned char *code = malloc(size);
-    memset(code, '\0', size);
-
     if (!code)
     {
         printf("Failed to allocate RAM for program-file %s\n", filename);
         fclose(fp);
         return 1;
     }
+    memset(code, '\0', size);
 
     /**
      * Abort on a short-read, or error.
