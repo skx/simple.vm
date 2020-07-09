@@ -1,16 +1,16 @@
+* [simple.vm](#simplevm)
+* [Compilation](#compilation)
+* [Implementation Notes](#implementation-notes)
+* [Embedding](#embedding)
+* [Instructions](#instructions)
+  * [Simple Example](#simple-example)
+* [Fuzz Testing](#fuzz-testing)
+* [See Also](#see-also)
 
-* Git Repository:
-    * http://github.com/skx/simple.vm
 
-**NOTE**: A golang port of the virtual-machine compiler and interpreter is available from the following repository:
+# simple.vm
 
-* https://github.com/skx/go.vm
-
-
-simple.vm
----------
-
-This repository contains the implementation for a simple virtual-machine, along with a driver which will read a program from a file and execute it via that virtual machine.
+This repository contains the implementation for a __simple__ virtual-machine, along with a driver which will read a program from a file and execute it via that virtual machine.
 
 In addition to the virtual machine interpreter you'll also find:
 
@@ -26,22 +26,19 @@ This particular virtual machine is intentionally simple, but despite that it is 
 This particular virtual machine is register-based, having ten registers which can be used to store strings or integer values.
 
 
-Compilation
------------
+# Compilation
 
 Because the compiler and decompiler are written in Perl they need no special
 treatment.
 
 The interpretter, written in C, can be built like so:
-C intepreter:
 
     $ make
 
 This will generate `simple-vm` and `embedded` from the contents of [src/](src/).
 
 
-Implementation Notes
---------------------
+# Implementation Notes
 
 Implementing a basic virtual machine, like this one, is a pretty well-understood problem:
 
@@ -76,8 +73,7 @@ After compilation is complete all the targets should have been discovered and th
 >**NOTE**: The same thing applies for other instructions which handle labels, such as storing the address of a label, making a call, etc.
 
 
-Embedding
----------
+# Embedding
 
 This virtual machine is designed primarily as a learning experience, but it is built with the idea of embedding in mind.
 
@@ -95,8 +91,7 @@ There is an example of defining a custom opcode in the file `src/embedded.c`.  T
 
 
 
-Instructions
-------------
+# Instructions
 
 There are several instruction-types implemented:
 
@@ -163,8 +158,7 @@ The following are examples of all instructions:
     ret               # Return from a called-routine.
 
 
-Simple Example
---------------
+## Simple Example
 
 The following program will just endlessly output a string:
 
@@ -196,8 +190,7 @@ If you wish to debug the execution then run:
 There are more examples stored beneath the `examples/` subdirectory in this repository.   The file [examples/quine.in](examples/quine.in) provides a good example of various features - it outputs its own opcodes.
 
 
-Fuzz Testing
-------------
+# Fuzz Testing
 
 If you wish to fuzz-test with [afl](http://lcamtuf.coredump.cx/afl/) you should find that pretty straight-forward:
 
@@ -225,6 +218,24 @@ Now you have `./samples/` containing only compiled programs.  You can then mutat
 
 We set the environmental variable `FUZZ` to contain `1` solely to disable the use of the `system()` function.  Which might accidentally remove your home-directory, format your drive, or [send me a donation](https://steve.fi/donate/)!
 
+# See Also
+
+A golang port of the virtual-machine compiler and interpreter is available from the following repository:
+
+* https://github.com/skx/go.vm
+
+In addition to that you can find a _real_ virtual-machine inside the embedded scripting engine I wrote, also for golang.  In that case a scripting language is parsed and converted into a series of bytecode instructions, which are executed by a virtual machine.  Similar to this project, but the bytecode operations are more complex and high-level:
+
+* https://github.com/skx/evalfilter
+
+If you're interested in compilers, and interpreters, generally you might enjoy these other projects too:
+
+* https://github.com/skx/gobasic
+  * A simple BASIC interpreter
+* https://github.com/skx/bfcc
+  * A [brainfuck](https://en.wikipedia.org/wiki/Brainfuck) compiler
+* https://github.com/skx/math-compiler
+  * A simple compiler for mathematical expressions.
 
 Steve
 --
