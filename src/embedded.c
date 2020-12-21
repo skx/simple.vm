@@ -62,7 +62,7 @@ void op_custom(struct svm *svm)
 
 
 /**
- * Run the staticly-defined bytecode at the head of this script, after
+ * Run the statically-defined bytecode at the head of this script, after
  * defining a custom opcode.
  */
 int run_vm()
