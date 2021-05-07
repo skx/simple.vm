@@ -188,6 +188,9 @@ char *string_from_stack(svm_t * svm)
     memset(tmp, '\0', len + 1);
     for (int i = 0; i < (int) len; i++)
     {
+        if (svm->ip >= 0xFFFF)
+            svm->ip = 0;
+        
         tmp[i] = svm->code[svm->ip];
         svm->ip++;
     }
