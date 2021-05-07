@@ -1164,6 +1164,8 @@ void op_stack_call(struct svm *svm)
 
 
     int sp_size = sizeof(svm->stack) / sizeof(svm->stack[0]);
+    svm->SP += 1;
+
     if (svm->SP >= sp_size)
         svm_default_error_handler(svm, "stack overflow - stack is full!");
 
@@ -1172,9 +1174,6 @@ void op_stack_call(struct svm *svm)
      * on the stack so that the "ret(urn)" instruction will go
      * to the correct place.
      */
-    svm->SP += 1;
-
-
     svm->stack[svm->SP] = svm->ip + 1;
 
     /**
